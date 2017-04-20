@@ -13,7 +13,7 @@ borrowed from [Niels Widger's blog post](http://nwidger.github.io/blog/post/writ
     in memory).
 *   no I/O lines, so I/O registers must be mapped into the 16-bit address space.
 *   More details on [Wikipedia](https://en.wikipedia.org/wiki/MOS_Technology_6502#Technical_description),
-    [nesdev.com](http://nesdev.com/6502.txt), and [6502.org](http://www.6502.org/tutorials/6502opcodes.html).
+    [nesdev.com](http://wiki.nesdev.com/w/index.php/CPU_ALL), and [6502.org](http://www.6502.org/tutorials/6502opcodes.html).
 
 ### Registers
 
@@ -56,3 +56,40 @@ All registers are 8-bit, except for `PC` which is 16-bit.
     handler.
 *   `$fffc` - `$fffd`: Contains the address of reset location.
 *   `$fffe` - `$ffff`: Contains the address of BRK/IRQ handler.
+
+### Opcodes
+
+See [6502.org](http://www.6502.org/tutorials/6502opcodes.html) for a list of all the Opcodes.
+
+The NES also included some [unofficial opcodes](http://wiki.nesdev.com/w/index.php/Programming_with_unofficial_opcodes) that were officially discouraged, but still had specific functions and could be made useful for some games.
+
+### Fetch/Execute Cycle
+
+*   Each cycle, CPU fetches instruction at the address stored in `PC`, looks up
+    the opcode in the instruction table, and then executes it.
+*   At the end of each cycle, `PC` should increment.
+*   Each instruction needs to determine how many clock cycles it should use up.
+
+### Clock
+
+*   The 6502 has specific timings in order for the CPU to interact with other
+    components of the NES such as the PPU and API.
+*   CPU clock needs to stay in sync with master clock.
+*   Different instructions can take different amoutns of clock cycles.
+*   Modern machine will almost certainly be executing emulator cycles much
+    faster than a real 6502 chip, so some throttling will be needed.
+
+## APU
+
+The NES has an audio processing unit for generating sound in games. It is implemented in the RP2A03 (NTSC) and RP2A07 (PAL) chips. A good overview can be found at [nesdev.com](http://wiki.nesdev.com/w/index.php/APU).
+
+### Channels
+
+The APU has five channels: two pulse waves, triangle wave, noise, and DMC (sampling).
+
+The channel registers begin at `$4000`, and each channel has four registers devoted to it. All but the triangle wave have 4-bit volume control (the triangle just has a mute/unmute flag).
+
+*   `$4000` - `$4003`: Pulse wave 1
+*   `$4004` - `$4007`: Pulse wave 2
+*   `$4008` - `$400b`: Triangle wave
+*   `$400c` - `$400f`: Noise
