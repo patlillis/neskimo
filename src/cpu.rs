@@ -12,44 +12,44 @@ impl Status {
 
     // Helper function for testing a mask against a status.
     fn matches_bits(&self, mask: u8) -> bool {
-        self.0 & mask == 1
+        self.0 & mask != 0
     }
 
     // Bit 0: Carry flag.
     pub fn c(&self) -> bool {
-        self.matches_bits(0x0)
+        self.matches_bits(1 << 0)
     }
 
     // Bit 1: Zero flag.
     pub fn z(&self) -> bool {
-        self.matches_bits(0x0)
+        self.matches_bits(1 << 1)
     }
 
     // Bit 2: Interrupt flag.
     pub fn i(&self) -> bool {
-        self.matches_bits(0x0)
+        self.matches_bits(1 << 2)
     }
 
     // Bit 3: Decimal mode.
     pub fn d(&self) -> bool {
-        self.matches_bits(0x0)
+        self.matches_bits(1 << 3)
     }
 
     // Bit 4: Break command.
     pub fn b(&self) -> bool {
-        self.matches_bits(0x0)
+        self.matches_bits(1 << 4)
     }
 
     // Bit 5: Unused.
 
     // Bit 6: Overflow flag.
     pub fn v(&self) -> bool {
-        self.matches_bits(0x0)
+        self.matches_bits(1 << 6)
     }
 
     // Bit 7: Negative flag.
     pub fn n(&self) -> bool {
-        self.matches_bits(0x0)
+        self.matches_bits(1 << 7)
     }
 }
 
