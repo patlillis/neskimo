@@ -1,6 +1,6 @@
 use std;
 use memory;
-// use std::fmt;
+use instructions;
 
 // The status of the system processor.
 pub struct Status(pub u8);
@@ -121,5 +121,32 @@ impl Registers {
 
 pub struct Cpu {
     pub registers: Registers,
+    pub instructions: instructions::InstructionTable,
     pub memory: memory::Memory,
+}
+
+impl Cpu {
+    pub fn new() -> Cpu {
+        Cpu {
+            registers: Registers::new(),
+            instructions: instructions::InstructionTable::new(),
+            memory: memory::Memory::new()
+        }
+    }
+
+    pub fn execute(&self, opcode: instructions::Opcode) -> instructions::CycleCount {
+        let inst = match self.instructions.get_instruction(opcode) {
+            Some(i) => i,
+            None => panic!("Unexpected Opcode: {}", opcode),
+        };
+
+        let status = self.instructions.execute_instruction(self, &inst);
+
+        // TODO: do something with status.
+
+        // TODO: do something with page cross.
+
+        return inst.cycles;
+    }
+
 }
