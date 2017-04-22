@@ -1,5 +1,4 @@
 use std;
-use instructions;
 
 use num::FromPrimitive;
 
@@ -15,7 +14,7 @@ pub fn decode(opcode: u8) -> Opcode {
 
 impl std::fmt::Debug for Opcode {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:#04x}", decode(self))
+        write!(f, "{:#04x}", *self as u8)
     }
 }
 
@@ -26,9 +25,10 @@ impl std::fmt::Display for Opcode {
 }
 
 enum_from_primitive! {
-    #[derive(PartialEq)]
+    #[derive(Copy, Clone, PartialEq, Eq, Hash)]
     pub enum Opcode {
-        LDA = 0xa1,
-        STA = 0x85,
+        None,
+        LDA_Imm = 0xa9,
+        STA_Abs = 0x8d,
     }
 }

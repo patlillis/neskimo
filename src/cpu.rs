@@ -1,8 +1,10 @@
 use std;
 use memory;
-use instructions;
 use opcode;
 use utils;
+
+use instruction::Instruction;
+use instruction_definition::InstructionDefinition;
 
 // The status of the system processor.
 pub struct Status(pub u8);
@@ -131,7 +133,7 @@ impl Registers {
 
 pub struct Cpu {
     pub registers: Registers,
-    pub instructions: instructions::InstructionTable,
+    // pub instructions: instructions::InstructionTable,
     pub memory: memory::Memory,
 }
 
@@ -139,32 +141,19 @@ impl Cpu {
     pub fn new() -> Cpu {
         Cpu {
             registers: Registers::new(),
-            instructions: instructions::InstructionTable::new(),
+            // instructions: instructions::InstructionTable::new(),
             memory: memory::Memory::new()
         }
     }
 
     // Executes the instruction at PC.
     pub fn execute(&mut self) {
-        let opcode = self.memory.fetch(self.registers.pc);
-        self.execute_opcode(opcode::decode(opcode));
+        let (instr, definition) = Instruction::parse(self.registers.pc as usize, &self.memory);
+
+         instr.execute(self);
+
+         // Increment program counter.
         self.registers.pc = self.registers.pc + 1;
-    }
-
-    // Executes the given opcode.
-    fn execute_opcode(&self, opcode: opcode::Opcode) -> instructions::CycleCount {
-        let inst = match self.instructions.get_instruction(opcode) {
-            Some(i) => i,
-            None => panic!("Unexpected Opcode: {}", opcode),
-        };
-
-        let status = self.instructions.execute_instruction(self, &inst);
-
-        // TODO: do something with status.
-
-        // TODO: do something with page cross.
-
-        return inst.cycles;
     }
 
     fn set_z_flag(&mut self, value: u8) {
