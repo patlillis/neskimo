@@ -1,20 +1,21 @@
 #![allow(dead_code)]
-#![feature(io)]
 
 // extern crate time;
 // extern crate timer;
+extern crate enum_primitive;
 
 mod clock;
 mod cpu;
+mod instructions;
 mod memory;
 
-use timer;
-use time;
+// use timer;
+// use time;
 
-use cpu::{Status, Registers};
+// use cpu::{Status, Registers};
 
 fn main() {
-    let mut x = Registers::new();
+    let mut x = cpu::Registers::new();
     x.a = 0xf;
     x.pc = 0xfffc;
     println!("{:?}", x);
@@ -23,10 +24,10 @@ fn main() {
 
 fn Execute(cpu: &cpu::Cpu) {
     // Fetch opcode.
-    let opcode = Opcode(cpu.memory.fetch(cpu.registers.pc));
-    let instruction = None;
+    // let opcode = Opcode(cpu.memory.fetch(cpu.registers.pc));
+    // let instruction = None;
 
     // Execute instruction update on CPU, and get number of cycles.
-    let cycles = instruction.exec(cpu);
+    // let cycles = instruction.exec(cpu);
 
 }

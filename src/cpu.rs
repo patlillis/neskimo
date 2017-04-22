@@ -1,5 +1,6 @@
+use std;
 use memory;
-use std::fmt;
+// use std::fmt;
 
 // The status of the system processor.
 pub struct Status(pub u8);
@@ -53,14 +54,14 @@ impl Status {
     }
 }
 
-impl fmt::Display for Status {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "Status({:#04x})", self.0)
     }
 }
 
-impl fmt::Debug for Status {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Debug for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self)
     }
 }
@@ -80,8 +81,8 @@ pub struct Registers {
     pub pc: u16,
 }
 
-impl fmt::Display for Registers {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Display for Registers {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f,
                "Registers(\
                 a: {:#04x}, \
@@ -99,8 +100,8 @@ impl fmt::Display for Registers {
     }
 }
 
-impl fmt::Debug for Registers {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Debug for Registers {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self)
     }
 }
@@ -119,6 +120,6 @@ impl Registers {
 }
 
 pub struct Cpu {
-    registers: Registers,
-    memory: memory::Memory,
+    pub registers: Registers,
+    pub memory: memory::Memory,
 }
