@@ -1,18 +1,16 @@
 #![allow(dead_code)]
 
-// extern crate time;
-// extern crate timer;
+#[macro_use]
 extern crate enum_primitive;
+
+extern crate num;
 
 mod clock;
 mod cpu;
 mod instructions;
 mod memory;
-
-// use timer;
-// use time;
-
-// use cpu::{Status, Registers};
+mod opcode;
+mod utils;
 
 fn main() {
     let mut x = cpu::Registers::new();
@@ -25,12 +23,10 @@ fn main() {
 fn execute(cpu: &mut cpu::Cpu) {
     // Store opcode and set pc to execute it.
     cpu.memory.store(0x0000, 0xa1);
-    cpu.memory.store(0x00ff, 0x85);
+    cpu.memory.store(0x0001, 0x85);
 
     cpu.registers.pc = 0x0000;
     cpu.execute();
-
-    cpu.registers.pc = 0x00ff;
     cpu.execute();
     // Fetch opcode.
     // let opcode = Opcode(cpu.memory.fetch(cpu.registers.pc));

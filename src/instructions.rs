@@ -1,8 +1,8 @@
 use cpu;
+use opcode;
 use std;
 
-// The 8-bit op code corresponding to an instruction.
-pub type Opcode = u8;
+use opcode::Opcode;
 
 // How long an instruction takes.
 pub type CycleCount = u16;
@@ -46,7 +46,7 @@ impl InstructionTable {
         // LDA
         table.add_instruction(Instruction {
                                   mneumonic: "LDA".to_string(),
-                                  opcode: 0xa1,
+                                  opcode: Opcode::LDA,
                                   cycles: 3,
                                   ..Default::default()
                               });
@@ -54,7 +54,7 @@ impl InstructionTable {
         // STA
         table.add_instruction(Instruction {
                                   mneumonic: "STA".to_string(),
-                                  opcode: 0x85,
+                                  opcode: Opcode::STA,
                                   cycles: 3,
                                   ..Default::default()
                               });
@@ -64,11 +64,11 @@ impl InstructionTable {
     pub fn execute_instruction(&self, cpu: &cpu::Cpu, inst: &Instruction) -> InstructionStatus {
         return match inst.opcode {
                    // LDA
-                   0xa1 => {
+                   Opcode::LDA => {
             println!("Executing LDA!");
             15
         }
-                   0x85 => {
+                   Opcode::STA => {
             println!("Executing STA!");
             12
         }
