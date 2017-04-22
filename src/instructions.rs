@@ -43,6 +43,7 @@ impl InstructionTable {
     pub fn new() -> InstructionTable {
         let mut table = InstructionTable { opcodes: std::collections::HashMap::new() };
 
+        // LDA
         table.add_instruction(Instruction {
                                   mneumonic: "LDA".to_string(),
                                   opcode: 0xa1,
@@ -50,6 +51,13 @@ impl InstructionTable {
                                   ..Default::default()
                               });
 
+        // STA
+        table.add_instruction(Instruction {
+                                  mneumonic: "STA".to_string(),
+                                  opcode: 0x85,
+                                  cycles: 3,
+                                  ..Default::default()
+                              });
         return table;
     }
 
@@ -59,6 +67,10 @@ impl InstructionTable {
                    0xa1 => {
             println!("Executing LDA!");
             15
+        }
+                   0x85 => {
+            println!("Executing STA!");
+            12
         }
                    _ => panic!("Unexpected Opcode: {}", inst.opcode),
                };

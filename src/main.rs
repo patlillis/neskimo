@@ -18,14 +18,20 @@ fn main() {
     let mut x = cpu::Registers::new();
     x.a = 0xf;
     x.pc = 0xfffc;
-    let cpu = cpu::Cpu::new();
-    execute(&cpu);
+    let mut cpu = cpu::Cpu::new();
+    execute(&mut cpu);
 }
 
-fn execute(cpu: &cpu::Cpu) {
-    let op = 0xa1;
+fn execute(cpu: &mut cpu::Cpu) {
+    // Store opcode and set pc to execute it.
+    cpu.memory.store(0x0000, 0xa1);
+    cpu.memory.store(0x00ff, 0x85);
 
-    cpu.execute(op);
+    cpu.registers.pc = 0x0000;
+    cpu.execute();
+
+    cpu.registers.pc = 0x00ff;
+    cpu.execute();
     // Fetch opcode.
     // let opcode = Opcode(cpu.memory.fetch(cpu.registers.pc));
     // let instruction = None;

@@ -134,7 +134,16 @@ impl Cpu {
         }
     }
 
-    pub fn execute(&self, opcode: instructions::Opcode) -> instructions::CycleCount {
+    // Executes the instruction at PC.
+    pub fn execute(&self) {
+        let opcode = self.memory.fetch(self.registers.pc);
+        self.execute_opcode(opcode);
+
+        //TODO: increment PC.
+    }
+
+    // Executes the given opcode.
+    fn execute_opcode(&self, opcode: instructions::Opcode) -> instructions::CycleCount {
         let inst = match self.instructions.get_instruction(opcode) {
             Some(i) => i,
             None => panic!("Unexpected Opcode: {}", opcode),

@@ -13,18 +13,18 @@ impl Memory {
     }
 
     // Resets the memory to an initial state.
-    fn reset(&mut self) {
+    pub fn reset(&mut self) {
         self.memory = [0; MEMORY_SIZE];
     }
 
     // Fetches a byte from the specified address in memory.
-    fn fetch(&self, address: u16) -> u8 {
+    pub fn fetch(&self, address: u16) -> u8 {
         self.memory[address as usize]
     }
 
     // Stores value into memory at the specified address,
     // and returns the old value that was there.
-    fn store(&mut self, address: u16, value: u8) -> u8 {
+    pub fn store(&mut self, address: u16, value: u8) -> u8 {
         let s = address as usize;
         let old_value = self.memory[s];
         self.memory[s] = value;
