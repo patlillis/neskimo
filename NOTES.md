@@ -65,7 +65,7 @@ The NES also included some [unofficial opcodes](http://wiki.nesdev.com/w/index.p
 
 ### Addressing Modes
 
-The 6502 uses 16-bit addresses. A good overview can be found at [skilldrick.github.io/easy6502/#addressing](https://skilldrick.github.io/easy6502/#addressing).
+The 6502 uses 16-bit addresses. Good overviews can be found at [skilldrick.github.io/easy6502](https://skilldrick.github.io/easy6502/#addressing) and [www.emulator101.com](http://www.emulator101.com.s3-website-us-east-1.amazonaws.com/6502-addressing-modes.html).
 
 #### Absolute: `$c000`
 
@@ -81,7 +81,7 @@ Similar to absolute addressing, except only the lower byte is specified in the i
 
 #### Zero page,X: `$c0,X`
 
-Similar to zero page addressing, but the value of the `X` register is added to the address. For example:
+Similar to zero page addressing, but the value of the `X` register is added to the address. Note that the target address will wrap around to always be in the zero page. For example:
 
 ```
 LDX #$01  ;Load the value $01 into register X
@@ -118,8 +118,7 @@ LDX $01 ;Load the value at memory location $01 into register X
 
 #### Relative: `$c0` (or label)
 
-Relative addressing is used for branching instructions. These instructions take a single byte, which is used as an
-offset from the following instruction.
+Relative addressing is used for branching instructions. These instructions take a single byte, which is used as an offset from the following instruction. Note that this byte is signed, so it can jump a maximum of 127 bytes forward, or 128 bytes backward.
 
 #### Implicit
 
@@ -138,6 +137,9 @@ Sort of a cross between zero page,X and indirect. Instead of looking up the addr
 
 Similar to Indexed indirect, except instead of adding the `X` register to the address _before_ the zero page address is dereferenced, the zero page address is first dereferenced, and _then_ the `Y` register is added to the resulting address.
 
+#### Implied
+
+For some instructions, the data and/or destination address is implied in the instruction itself, and does not need to be explicitly stated. For example, the `CLC` instruction is implied, it is going to clear the processor's Carry flag.
 
 ### Fetch/Execute Cycle
 

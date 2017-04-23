@@ -3,9 +3,8 @@ use memory;
 use opcode;
 use std;
 use utils;
-use instruction::definition::{InstructionDefinition, lookup_instruction_definition};
 
-use opcode::Opcode;
+use instruction::definition::*;
 
 // An instruction.
 //
@@ -53,24 +52,35 @@ impl Instruction {
         self.2
     }
 
+    fn immediate_value(&self) -> u8 {
+        self.arg1()
+    }
+
     // Get the absolute address from the instruction args.
     fn absolute_address(&self) -> u16 {
         utils::arithmetic::concat_bytes(self.arg1(), self.arg2())
     }
 
+    // Get the zero page address from the instruction args.
+    fn zero_page_address(&self) -> u16 {
+        utils::arithmetic::concat_bytes(0x00, self.arg1())
+    }
+
+    // fn zero_page_address_x(&self) -> u16 {
+    //     self.zero_page_address_x() + self.cpu.
+    // }
+
     // Execute the instruction on the cpu.
     pub fn execute(&self, cpu: &mut cpu::Cpu) {
+        use opcode::Opcode::*;
         let opcode = opcode::decode(self.opcode());
 
         match opcode {
-            Opcode::LDA_Imm => {
-                // Load arg1 directly into accumulator.
-                cpu.lda(self.arg1());
-            }
-            Opcode::STA_Abs => {
-                // Store accumulator into address in arguments.
-                cpu.sta(self.absolute_address());
-            }
+            LDA_Imm => cpu.lda(self.immediate_value()),
+
+            STA_Zero => cpu.sta(self.zero_page_address()),
+            // STA_Zero_X => cpu.sta
+            STA_Abs => cpu.sta(self.absolute_address()),
             _ => panic!("Unexpected opcode: {}", self.opcode()),
         }
     }
