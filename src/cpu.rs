@@ -1,6 +1,5 @@
 use std;
 use memory;
-use opcode;
 use utils;
 
 use instruction::Instruction;
@@ -150,7 +149,7 @@ impl Cpu {
         instr.execute(self);
 
         // Increment program counter.
-        self.registers.pc = self.registers.pc + 1;
+        self.registers.pc = self.registers.pc + definition.len;
     }
 
     fn set_z_flag(&mut self, value: u8) {
@@ -168,7 +167,7 @@ impl Cpu {
         }
     }
 
-    // Loads a byte of memory into the accumulator setting the zero and
+    // Loads a byte into the accumulator setting the zero and
     // negative flags as appropriate.
     //
     //         C 	Carry Flag 	  Not affected
@@ -178,8 +177,7 @@ impl Cpu {
     //         B 	Break Command 	  Not affected
     //         V 	Overflow Flag 	  Not affected
     //         N 	Negative Flag 	  Set if bit 7 of A is set
-    pub fn lda(&mut self, address: u16) {
-        let value = self.memory.fetch(address);
+    pub fn lda(&mut self, value: u8) {
         self.registers.a = value;
         self.set_z_flag(value);
         self.set_n_flag(value);
@@ -197,32 +195,4 @@ impl Cpu {
     pub fn sta(&mut self, address: u16) {
         self.memory.store(address, self.registers.a);
     }
-
-    // func (cpu *M6502) load(address uint16, register *uint8) {
-    // 	value := cpu.setZNFlags(cpu.Memory.Fetch(address))
-    // 	*register = value
-
-    // 	if cpu.decode.enabled {
-    // 		if !strings.HasPrefix(cpu.decode.decodedArgs, "#") &&
-    // 			!strings.HasSuffix(cpu.decode.decodedArgs, " = ") {
-    // 			cpu.decode.decodedArgs += fmt.Sprintf(" = ")
-    // 		}
-
-    // 		cpu.decode.decodedArgs += fmt.Sprintf("%02X", value)
-    // 	}
-    // }
-
-    // Loads a byte of memory into the accumulator setting the zero and
-    // negative flags as appropriate.
-    //
-    //         C 	Carry Flag 	  Not affected
-    //         Z 	Zero Flag 	  Set if A = 0
-    //         I 	Interrupt Disable Not affected
-    //         D 	Decimal Mode Flag Not affected
-    //         B 	Break Command 	  Not affected
-    //         V 	Overflow Flag 	  Not affected
-    //         N 	Negative Flag 	  Set if bit 7 of A is set
-    // func (cpu *M6502) Lda(address uint16) {
-    // 	cpu.load(address, &cpu.Registers.A)
-    // }
 }

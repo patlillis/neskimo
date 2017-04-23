@@ -10,7 +10,7 @@ use std::collections::HashMap;
 pub struct InstructionDefinition {
     pub opcode: Opcode,
     pub mneumonic: &'static str,
-    pub len: u8,
+    pub len: u16,
     pub cycles: u8,
 }
 
@@ -22,9 +22,16 @@ lazy_static! {
             mneumonic: "LDA",
             opcode: Opcode::LDA_Imm,
             len: 2,
-            cycles: 3
+            cycles: 2
         });
 
+        m.insert(Opcode::STA_Abs, InstructionDefinition {
+            mneumonic: "STA",
+            opcode: Opcode::STA_Abs,
+            len:3,
+            cycles: 4
+        });
+        
         m
     };
 }
@@ -40,7 +47,7 @@ pub fn lookup_instruction_definition<'a, 'b>(opcode: &'a Opcode) -> &'b Instruct
 // An instruction.
 //
 // First byte is opcode. Seconds and third are optional arguments.
-pub struct Instruction(u8, u8, u8);
+pub struct Instruction(pub u8, pub u8, pub u8);
 
 impl std::fmt::Debug for Instruction {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -58,7 +65,7 @@ impl Instruction {
     // Parse an instruction from a specifc point in memory.
     //
     // If the instruction takes arguments, they will be read from subsequent locations.
-    pub fn parse(pc: u16, memory: &memory::Memory) -> (Instruction, &InstructionDefinition) {
+    pub fn parse<'a>(pc: u16, memory: &memory::Memory) -> (Instruction, &'a InstructionDefinition) {
         let raw_opcode = memory.fetch(pc);
         let opcode = opcode::decode(raw_opcode);
         let def = lookup_instruction_definition(&opcode);
@@ -72,31 +79,20 @@ impl Instruction {
     }
 
     // Execute the instruction on the cpu.
-    pub fn execute(&self, cpu: &cpu::Cpu) {
+    pub fn execute(&self, cpu: &mut cpu::Cpu) {
         let opcode = self.0;
         let arg1 = self.1;
         let arg2 = self.2;
 
         match opcode::decode(opcode) {
             Opcode::LDA_Imm => {
-                println!("Executing LDA!");
+                cpu.lda(arg1);
+            }
+            Opcode::STA_Abs => {
+                let address: u16 = ((arg1 as u16) << 8) | (arg2 as u16);
+                cpu.sta(address);
             }
             _ => panic!("Unexpected opcode: {}", opcode),
         }
-
-        //     return match inst.opcode {
-        //                // LDA
-        //                Opcode::LDA => {
-        //         println!("Executing LDA!");
-        //         15
-        //     }
-        //                // STA (for now only stores to 0xffff)
-        //                Opcode::STA => {
-        //         println!("Executing STA!");
-        //         12
-        //     }
-        //                _ => panic!("Unexpected Opcode: {}", inst.opcode),
-        //            };
-        // }
     }
 }

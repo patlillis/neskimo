@@ -22,12 +22,14 @@ impl Memory {
         self.memory[address as usize]
     }
 
-    // Stores value into memory at the specified address,
-    // and returns the old value that was there.
-    pub fn store(&mut self, address: u16, value: u8) -> u8 {
-        let s = address as usize;
-        let old_value = self.memory[s];
-        self.memory[s] = value;
-        old_value
+    // Stores value into memory at the specified address.
+    pub fn store(&mut self, address: u16, value: u8) {
+        self.memory[address as usize] = value;
+    }
+
+    pub fn store_bytes(&mut self, address: u16, bytes: &[u8]) {
+        for (offset, byte) in bytes.iter().enumerate() {
+            self.store(address + offset as u16, *byte);
+        }
     }
 }

@@ -24,10 +24,24 @@ fn main() {
 }
 
 fn execute(cpu: &mut cpu::Cpu) {
-    // Simple program that shuffles data around, with 0xff ending
-    // up in the accumulator.
+    // Simple program that shuffles data around.
 
-    cpu.memory.store(0x0000, Opcode::LDA_Imm as u8);
-    cpu.registers.pc = 0x0000;
+    let val = 18;
+    let final_address = 0xab;
+
+    // Store program in memory.
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[Opcode::LDA_Imm as u8,
+                       val,
+                       Opcode::STA_Abs as u8,
+                       0x00,
+                       final_address]);
+
+    // Execute 2 instructions.
     cpu.execute();
+    cpu.execute();
+
+    // Check value in final_address.
+    println!("Value in final address: {}", cpu.memory.fetch(final_address as u16));
 }

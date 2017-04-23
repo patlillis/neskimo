@@ -26,6 +26,7 @@ impl std::fmt::Display for Opcode {
 
 enum_from_primitive! {
     #[derive(Copy, Clone, PartialEq, Eq, Hash)]
+    #[allow(non_camel_case_types)]
     pub enum Opcode {
         None,
         LDA_Imm = 0xa9,
