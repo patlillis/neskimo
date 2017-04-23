@@ -28,10 +28,10 @@ impl Instruction {
     // Parse an instruction from a specifc point in memory.
     //
     // If the instruction takes arguments, they will be read from subsequent locations.
-    pub fn parse<'a>(pc: u16, memory: &memory::Memory) -> (Instruction, &'a InstructionDefinition) {
+    pub fn parse(pc: u16, memory: &memory::Memory) -> (Instruction, InstructionDefinition) {
         let raw_opcode = memory.fetch(pc);
         let opcode = opcode::decode(raw_opcode);
-        let def = lookup_instruction_definition(&opcode);
+        let def = lookup_instruction_definition(opcode);
         (match def.len {
              1 => Instruction(raw_opcode, 0, 0),
              2 => Instruction(raw_opcode, memory.fetch(pc + 1), 0),
@@ -41,21 +41,37 @@ impl Instruction {
          def)
     }
 
+    fn opcode(&self) -> u8 {
+        self.0
+    }
+
+    fn arg1(&self) -> u8 {
+        self.1
+    }
+
+    fn arg2(&self) -> u8 {
+        self.2
+    }
+
+    // Get the absolute address from the instruction args.
+    fn absolute_address(&self) -> u16 {
+        utils::arithmetic::concat_bytes(self.arg1(), self.arg2())
+    }
+
     // Execute the instruction on the cpu.
     pub fn execute(&self, cpu: &mut cpu::Cpu) {
-        let opcode = self.0;
-        let arg1 = self.1;
-        let arg2 = self.2;
+        let opcode = opcode::decode(self.opcode());
 
-        match opcode::decode(opcode) {
+        match opcode {
             Opcode::LDA_Imm => {
-                cpu.lda(arg1);
+                // Load arg1 directly into accumulator.
+                cpu.lda(self.arg1());
             }
             Opcode::STA_Abs => {
-                let address = utils::arithmetic::concat_bytes(arg1, arg2);
-                cpu.sta(address);
+                // Store accumulator into address in arguments.
+                cpu.sta(self.absolute_address());
             }
-            _ => panic!("Unexpected opcode: {}", opcode),
+            _ => panic!("Unexpected opcode: {}", self.opcode()),
         }
     }
 }

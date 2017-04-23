@@ -12,20 +12,21 @@ pub fn decode(opcode: u8) -> Opcode {
     }
 }
 
-impl std::fmt::Debug for Opcode {
+impl std::fmt::Display for Opcode {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:#04x}", *self as u8)
+        let name = format!("{:?}", self);
+        write!(f, "{}", &name[..3])
     }
 }
 
-impl std::fmt::Display for Opcode {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        std::fmt::Debug::fmt(self, f)
+impl Opcode {
+    pub fn val(&self) -> String {
+        format!("{:#04x}", *self as u8)
     }
 }
 
 enum_from_primitive! {
-    #[derive(Copy, Clone, PartialEq, Eq, Hash)]
+    #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
     #[allow(non_camel_case_types)]
     pub enum Opcode {
         // LoaD Accumulator
