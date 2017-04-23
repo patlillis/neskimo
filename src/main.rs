@@ -43,5 +43,6 @@ fn execute(cpu: &mut cpu::Cpu) {
     cpu.execute();
 
     // Check value in final_address.
-    println!("Value in final address: {}", cpu.memory.fetch(final_address as u16));
+    println!("Value in final address: {}",
+             cpu.memory.fetch(final_address as u16));
 }

@@ -28,8 +28,23 @@ enum_from_primitive! {
     #[derive(Copy, Clone, PartialEq, Eq, Hash)]
     #[allow(non_camel_case_types)]
     pub enum Opcode {
-        None,
-        LDA_Imm = 0xa9,
-        STA_Abs = 0x8d,
+        // LoaD Accumulator
+        LDA_Imm     = 0xa9,
+        // LDA_Zero    = 0xa5,
+        // LDA_Zero_X  = 0xb5,
+        // LDA_Abs     = 0xad,
+        // LDA_Abs_X   = 0x9d,
+        // LDA_Abs_Y   = 0x99,
+        // LDA_Ind_X   = 0x81,
+        // LDA_Ind_Y   = 0x91
+
+        // STore Accumulator
+        STA_Zero    = 0x85,
+        STA_Zero_X  = 0x95,
+        STA_Abs     = 0x8d,
+        STA_Abs_X   = 0x9d,
+        STA_Abs_Y   = 0x99,
+        STA_Ind_X   = 0x81,
+        STA_Ind_Y   = 0x91
     }
 }

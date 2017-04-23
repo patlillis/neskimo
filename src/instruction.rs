@@ -2,13 +2,13 @@ use cpu;
 use memory;
 use opcode;
 use std;
+use utils;
 
 use opcode::Opcode;
 use std::collections::HashMap;
 
 // Details about an instruction.
 pub struct InstructionDefinition {
-    pub opcode: Opcode,
     pub mneumonic: &'static str,
     pub len: u16,
     pub cycles: u8,
@@ -20,18 +20,52 @@ lazy_static! {
 
         m.insert(Opcode::LDA_Imm, InstructionDefinition {
             mneumonic: "LDA",
-            opcode: Opcode::LDA_Imm,
             len: 2,
             cycles: 2
         });
 
+        m.insert(Opcode::STA_Zero, InstructionDefinition {
+            mneumonic: "STA",
+            len: 2,
+            cycles: 3
+        });
+
+        m.insert(Opcode::STA_Zero_X, InstructionDefinition {
+            mneumonic: "STA",
+            len: 2,
+            cycles: 4
+        });
+
         m.insert(Opcode::STA_Abs, InstructionDefinition {
             mneumonic: "STA",
-            opcode: Opcode::STA_Abs,
             len:3,
             cycles: 4
         });
-        
+
+        m.insert(Opcode::STA_Abs_X, InstructionDefinition {
+            mneumonic: "STA",
+            len: 3,
+            cycles: 5
+        });
+
+        m.insert(Opcode::STA_Abs_Y, InstructionDefinition {
+            mneumonic: "STA",
+            len: 3,
+            cycles: 5
+        });
+
+        m.insert(Opcode::STA_Ind_X, InstructionDefinition {
+            mneumonic: "STA",
+            len: 2,
+            cycles: 6
+        });
+
+        m.insert(Opcode::STA_Ind_Y, InstructionDefinition {
+            mneumonic: "STA",
+            len: 2,
+            cycles: 6
+        });
+
         m
     };
 }
@@ -89,7 +123,7 @@ impl Instruction {
                 cpu.lda(arg1);
             }
             Opcode::STA_Abs => {
-                let address: u16 = ((arg1 as u16) << 8) | (arg2 as u16);
+                let address = utils::arithmetic::concat_bytes(arg1, arg2);
                 cpu.sta(address);
             }
             _ => panic!("Unexpected opcode: {}", opcode),
