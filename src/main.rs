@@ -12,11 +12,7 @@ mod opcode;
 mod utils;
 
 fn main() {
-    let mut x = cpu::Registers::new();
-    x.a = 0xf;
-    x.pc = 0xfffc;
-    let mut cpu = cpu::Cpu::new();
-    test(&mut cpu);
+    test(&mut cpu::Cpu::new());
 }
 
 // Tests several instructions.
