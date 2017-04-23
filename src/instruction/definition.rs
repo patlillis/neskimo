@@ -21,7 +21,5 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         STA_Abs_Y => def { len: 3, cycles: 5 },
         STA_Ind_X => def { len: 2, cycles: 6 },
         STA_Ind_Y => def { len: 2, cycles: 6 },
-
-        // _ => panic!("Unexpected opcode: {}", opcode),
     }
 }

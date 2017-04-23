@@ -94,6 +94,21 @@ impl Instruction {
         self.arg1().wrapping_add(cpu.registers.y) as u16
     }
 
+    // Calculates a memory address using by adding X to the 8-bit value in the
+    // instruction, THEN use that address to find ANOTHER address, then return
+    // THAT address.
+    fn indirect_address_x(&self, cpu: &cpu::Cpu) -> u16 {
+        let address = self.zero_page_address_x(cpu);
+        cpu.memory.fetch_u16(address)
+    }
+
+    fn indirect_address_y(&self, cpu: &cpu::Cpu) -> u16 {
+        let address = self.zero_page_address();
+        cpu.memory
+            .fetch_u16(address)
+            .wrapping_add(cpu.registers.y as u16)
+    }
+
     // Execute the instruction on the cpu.
     pub fn execute(&self, cpu: &mut cpu::Cpu) {
         use opcode::Opcode::*;
@@ -101,18 +116,21 @@ impl Instruction {
 
         match opcode {
             LDA_Imm => {
-                cpu.lda(self.immediate_value());
+                let value = self.immediate_value();
+                cpu.lda(value);
             }
 
             STA_Zero => {
-                cpu.sta(self.zero_page_address());
+                let address = self.zero_page_address();
+                cpu.sta(address);
             }
             STA_Zero_X => {
                 let address = self.zero_page_address_x(cpu);
                 cpu.sta(address);
             }
             STA_Abs => {
-                cpu.sta(self.absolute_address());
+                let address = self.absolute_address();
+                cpu.sta(address);
             }
             STA_Abs_X => {
                 let address = self.absolute_address_x(cpu);
@@ -122,7 +140,14 @@ impl Instruction {
                 let address = self.absolute_address_y(cpu);
                 cpu.sta(address);
             }
-            _ => panic!("Unexpected opcode: {}", self.opcode()),
+            STA_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu.sta(address);
+            }
+            STA_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu.sta(address);
+            }
         }
     }
 }
