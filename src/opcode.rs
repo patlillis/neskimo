@@ -7,7 +7,7 @@ pub fn decode(opcode: u8) -> Opcode {
     match Opcode::from_u8(opcode) {
         Some(opcode) => opcode,
         None => {
-            panic!("Unexpected Opcode: {}", opcode);
+            panic!("Unexpected Opcode: {:#04x}", opcode);
         }
     }
 }
