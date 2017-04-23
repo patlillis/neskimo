@@ -61,14 +61,38 @@ impl Instruction {
         utils::arithmetic::concat_bytes(self.arg1(), self.arg2())
     }
 
-    // Get the zero page address from the instruction args.
-    fn zero_page_address(&self) -> u16 {
-        utils::arithmetic::concat_bytes(0x00, self.arg1())
+    // Get the absolute address from the instruction args, and add an offset
+    // from the X index register.
+    fn absolute_address_x(&self, cpu: &cpu::Cpu) -> u16 {
+        self.absolute_address()
+            .wrapping_add(cpu.registers.x as u16)
     }
 
-    // fn zero_page_address_x(&self) -> u16 {
-    //     self.zero_page_address_x() + self.cpu.
-    // }
+    // Get the absolute address from the instruction args, and add an offset
+    // from the Y index register.
+    fn absolute_address_y(&self, cpu: &cpu::Cpu) -> u16 {
+        self.absolute_address()
+            .wrapping_add(cpu.registers.y as u16)
+    }
+
+    // Get the zero page address from the instruction args.
+    fn zero_page_address(&self) -> u16 {
+        self.arg1() as u16
+    }
+
+    // Get the zero page address from the instruciton args, and add an offset
+    // from the X index register. Note that this add wraps around to always be
+    // on the zero page.
+    fn zero_page_address_x(&self, cpu: &cpu::Cpu) -> u16 {
+        self.arg1().wrapping_add(cpu.registers.x) as u16
+    }
+
+    // Get the zero page address from the instruciton args, and add an offset
+    // from the Y index register. Note that this add wraps around to always be
+    // on the zero page.
+    fn zero_page_address_y(&self, cpu: &cpu::Cpu) -> u16 {
+        self.arg1().wrapping_add(cpu.registers.y) as u16
+    }
 
     // Execute the instruction on the cpu.
     pub fn execute(&self, cpu: &mut cpu::Cpu) {
@@ -76,11 +100,28 @@ impl Instruction {
         let opcode = opcode::decode(self.opcode());
 
         match opcode {
-            LDA_Imm => cpu.lda(self.immediate_value()),
+            LDA_Imm => {
+                cpu.lda(self.immediate_value());
+            }
 
-            STA_Zero => cpu.sta(self.zero_page_address()),
-            // STA_Zero_X => cpu.sta
-            STA_Abs => cpu.sta(self.absolute_address()),
+            STA_Zero => {
+                cpu.sta(self.zero_page_address());
+            }
+            STA_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.sta(address);
+            }
+            STA_Abs => {
+                cpu.sta(self.absolute_address());
+            }
+            STA_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.sta(address);
+            }
+            STA_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu.sta(address);
+            }
             _ => panic!("Unexpected opcode: {}", self.opcode()),
         }
     }

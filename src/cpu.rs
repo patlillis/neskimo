@@ -130,7 +130,6 @@ impl Registers {
 
 pub struct Cpu {
     pub registers: Registers,
-    // pub instructions: instructions::InstructionTable,
     pub memory: memory::Memory,
 }
 
@@ -138,9 +137,13 @@ impl Cpu {
     pub fn new() -> Cpu {
         Cpu {
             registers: Registers::new(),
-            // instructions: instructions::InstructionTable::new(),
             memory: memory::Memory::new(),
         }
+    }
+
+    pub fn reset(&mut self) {
+        self.memory.reset();
+        self.registers = Registers::new();
     }
 
     // Executes the instruction at PC.
