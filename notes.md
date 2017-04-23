@@ -63,6 +63,82 @@ See [6502.org](http://www.6502.org/tutorials/6502opcodes.html) for a list of all
 
 The NES also included some [unofficial opcodes](http://wiki.nesdev.com/w/index.php/Programming_with_unofficial_opcodes) that were officially discouraged, but still had specific functions and could be made useful for some games.
 
+### Addressing Modes
+
+The 6502 uses 16-bit addresses. A good overview can be found at [skilldrick.github.io/easy6502/#addressing](https://skilldrick.github.io/easy6502/#addressing).
+
+#### Absolute: `$c000`
+
+With absolute addressing, the full memory location is included as an argument to the instruction. For example:
+
+```
+STA $c000 ;Store the value in the accumulator to memory location $c000
+```
+
+#### Zero page: `$c0`
+
+Similar to absolute addressing, except only the lower byte is specified in the instruction; the high-order byte is `$00`. This means that only the first page (the first 256 bytes) of memory is accessible - hence the term "zero page" addressing. This is faster, as only one byte needs to be looked up, and takes up less space in the assembled code as well.
+
+#### Zero page,X: `$c0,X`
+
+Similar to zero page addressing, but the value of the `X` register is added to the address. For example:
+
+```
+LDX #$01  ;Load the value $01 into register X
+STA $a0,X ;Store the value in the accumulator to memory location $00a1
+```
+
+#### Zero page,Y: `$c0,Y`
+
+The equivalent of zero page,X addressing, but can only be used with `LDX` and `STX`.
+
+#### Absolute,X and absolute,Y: `$c000,X` and `$c000,Y`
+
+These are the absolute addressing versions of zero page,X and zero page,Y. For example:
+
+```
+LDX #$01    ;Load the value $01 into register X
+STA $0200,X ;Store the value in the accumulator to memory location $0201
+```
+
+#### Immediate: `#$c0`
+
+Immediate addressing doesn't strictly deal with memory addresses. Instead, actual values are specified directly
+in the instruction. For example:
+
+```
+LDX #$01 ;Load the value $01 into register X
+```
+
+Contrast this with immediate addressing:
+
+```
+LDX $01 ;Load the value at memory location $01 into register X
+```
+
+#### Relative: `$c0` (or label)
+
+Relative addressing is used for branching instructions. These instructions take a single byte, which is used as an
+offset from the following instruction.
+
+#### Implicit
+
+Some instructions don't deal with memory locations (for example `INX` which just increments the `X` register). These are said to have implicit addressing; the argument is implied by the instruction.
+
+#### Indirect: `($c000)`
+
+Indirect addressing uses an absolute address to look up another address. The address specified in the instruction
+is the location of where to look up the least significant byte of the address. The most significant byte is at the following location in memory.
+
+#### Indexed indirect: `($c0,X)`
+
+Sort of a cross between zero page,X and indirect. Instead of looking up the address at the location specified (as in indirect mode), you take the zero page address, add the value of the `X` register to it, then use that to look up a two-byte address. Note that the `X` register is added to the zero page address _before_ dereferencing.
+
+#### Indirect indexed: `($c0),Y`
+
+Similar to Indexed indirect, except instead of adding the `X` register to the address _before_ the zero page address is dereferenced, the zero page address is first dereferenced, and _then_ the `Y` register is added to the resulting address.
+
+
 ### Fetch/Execute Cycle
 
 *   Each cycle, CPU fetches instruction at the address stored in `PC`, looks up
