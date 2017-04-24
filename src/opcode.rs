@@ -29,6 +29,15 @@ enum_from_primitive! {
     #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
     #[allow(non_camel_case_types)]
     pub enum Opcode {
+        // Flag (processor status)
+        CLC         = 0x18, // CLear Carry
+        SEC         = 0x38, // SEt Carry
+        CLI         = 0x58, // CLear Interrupt
+        SEI         = 0x78, // SEt Interrupt
+        CLV         = 0xB8, // CLear oVerflow
+        CLD         = 0xD8, // CLear Decimal
+        SED         = 0xF8, // SEt Decimal
+
         // DECrement memory
         DEC_Zero    = 0xc6,
         DEC_Zero_X  = 0xd6,

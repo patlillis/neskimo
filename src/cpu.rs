@@ -22,7 +22,16 @@ impl Status {
 
     // Helper function for testing a mask against a status.
     fn matches_bits(&self, mask: u8) -> bool {
-        self.0 & mask != 0
+        self.0 & mask == mask
+    }
+
+    // Helper function for setting bits against a mask.
+    fn set_bits(&mut self, mask: u8, value: bool) {
+        if value {
+            self.0 |= mask
+        } else {
+            self.0 &= !mask;
+        }
     }
 
     // Bit 0: Carry flag.
@@ -30,9 +39,17 @@ impl Status {
         self.matches_bits(C_FLAG)
     }
 
+    pub fn set_c(&mut self, value: bool) {
+        self.set_bits(C_FLAG, value);
+    }
+
     // Bit 1: Zero flag.
     pub fn z(&self) -> bool {
         self.matches_bits(Z_FLAG)
+    }
+
+    pub fn set_z(&mut self, value: bool) {
+        self.set_bits(Z_FLAG, value);
     }
 
     // Bit 2: Interrupt flag.
@@ -40,14 +57,26 @@ impl Status {
         self.matches_bits(I_FLAG)
     }
 
+    pub fn set_i(&mut self, value: bool) {
+        self.set_bits(I_FLAG, value);
+    }
+
     // Bit 3: Decimal mode.
     pub fn d(&self) -> bool {
         self.matches_bits(D_FLAG)
     }
 
+    pub fn set_d(&mut self, value: bool) {
+        self.set_bits(D_FLAG, value);
+    }
+
     // Bit 4: Break command.
     pub fn b(&self) -> bool {
         self.matches_bits(B_FLAG)
+    }
+
+    pub fn set_b(&mut self, value: bool) {
+        self.set_bits(B_FLAG, value);
     }
 
     // Bit 5: Unused.
@@ -57,9 +86,17 @@ impl Status {
         self.matches_bits(V_FLAG)
     }
 
+    pub fn set_v(&mut self, value: bool) {
+        self.set_bits(V_FLAG, value);
+    }
+
     // Bit 7: Negative flag.
     pub fn n(&self) -> bool {
         self.matches_bits(N_FLAG)
+    }
+
+    pub fn set_n(&mut self, value: bool) {
+        self.set_bits(N_FLAG, value);
     }
 }
 
@@ -168,6 +205,99 @@ impl Cpu {
         } else {
             self.registers.p.0 &= !N_FLAG;
         }
+    }
+
+    // Set the carry flag to zero.
+    //
+    //         C    Carry Flag          Set to 0
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn clc(&mut self) {
+        self.registers.p.set_c(false);
+    }
+
+    // Set the decimal mode flag to zero.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Set to 0
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn cld(&mut self) {
+        self.registers.p.set_d(false);
+    }
+
+    // Clears the interrupt disable flag allowing normal interrupt
+    // requests to be serviced.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Set to 0
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn cli(&mut self) {
+        self.registers.p.set_i(false);
+    }
+
+    // Clears the interrupt disable flag allowing normal interrupt
+    // requests to be serviced.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Set to 0
+    //         N    Negative Flag       Not affected
+    pub fn clv(&mut self) {
+        self.registers.p.set_v(false);
+    }
+
+    // Set the carry flag to one.
+    //
+    //         C    Carry Flag          Set to 1
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn sec(&mut self) {
+        self.registers.p.set_c(true);
+    }
+
+    // Set the decimal mode flag to one.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Set to 1
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn sed(&mut self) {
+        self.registers.p.set_d(true);
+    }
+
+    // Set the interrupt disable flag to one.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Set to 1
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn sei(&mut self) {
+        self.registers.p.set_i(true);
     }
 
     // Adds one to the value held at a specified memory location setting

@@ -17,6 +17,15 @@ fn def(len: u16, cycles: u8) -> InstructionDefinition {
 // Get an instruction definition, based on opcode.
 pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefinition {
     match opcode {
+        // Flag (processor status)
+        CLC => def(1, 2),
+        SEC => def(1, 2),
+        CLI => def(1, 2),
+        SEI => def(1, 2),
+        CLV => def(1, 2),
+        CLD => def(1, 2),
+        SED => def(1, 2),
+
         // DECrement memory
         DEC_Zero => def(2, 5),
         DEC_Zero_X => def(2, 6),

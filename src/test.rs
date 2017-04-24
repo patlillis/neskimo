@@ -2,6 +2,51 @@ use cpu;
 use opcode::Opcode::*;
 
 #[test]
+fn test_flags() {
+    let mut cpu = cpu::Cpu::new();
+
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[// Carry flag
+                       SEC as u8,
+                       CLC as u8,
+
+                       // Interrupt flag
+                       SEI as u8,
+                       CLI as u8,
+
+                       // Overflow flag
+                       CLV as u8,
+
+                       // Decimal flag
+                       SED as u8,
+                       CLD as u8]);
+
+    // Carry flag
+    cpu.execute();
+    assert!(cpu.registers.p.c() == true, "Carry flag not set");
+    cpu.execute();
+    assert!(cpu.registers.p.c() == false, "Carry flag not cleared");
+
+    // Interrupt flag
+    cpu.execute();
+    assert!(cpu.registers.p.i() == true, "Interrupt flag not set");
+    cpu.execute();
+    assert!(cpu.registers.p.i() == false, "Interrupt flag not cleared");
+
+    // Overflow flag
+    cpu.registers.p.set_v(true);
+    cpu.execute();
+    assert!(cpu.registers.p.v() == false, "Overflow flag not cleared");
+
+    // Decimal flag
+    cpu.execute();
+    assert!(cpu.registers.p.d() == true, "Decimal flag not set");
+    cpu.execute();
+    assert!(cpu.registers.p.d() == false, "Decimal flag not cleared");
+}
+
+#[test]
 fn test_dec() {
     let mut cpu = cpu::Cpu::new();
 

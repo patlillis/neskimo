@@ -115,6 +115,15 @@ impl Instruction {
         let opcode = opcode::decode(self.opcode());
 
         match opcode {
+            // Flag (processor status)
+            CLC => cpu.clc(),
+            SEC => cpu.sec(),
+            CLI => cpu.cli(),
+            SEI => cpu.sei(),
+            CLV => cpu.clv(),
+            CLD => cpu.cld(),
+            SED => cpu.sed(),
+
             // DECrement memory
             DEC_Zero => {
                 let address = self.zero_page_address();
