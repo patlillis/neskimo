@@ -17,6 +17,12 @@ fn def(len: u16, cycles: u8) -> InstructionDefinition {
 // Get an instruction definition, based on opcode.
 pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefinition {
     match opcode {
+        // DECrement memory
+        DEC_Zero => def(2, 5),
+        DEC_Zero_X => def(2, 6),
+        DEC_Abs => def(3, 6),
+        DEC_Abs_X => def(3, 7),
+
         // INCrement memory
         INC_Zero => def(2, 5),
         INC_Zero_X => def(2, 6),

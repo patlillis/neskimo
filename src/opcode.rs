@@ -29,11 +29,17 @@ enum_from_primitive! {
     #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
     #[allow(non_camel_case_types)]
     pub enum Opcode {
+        // DECrement memory
+        DEC_Zero    = 0xc6,
+        DEC_Zero_X  = 0xd6,
+        DEC_Abs     = 0xce,
+        DEC_Abs_X   = 0xde,
+
         // INCrement memory
         INC_Zero    = 0xe6,
         INC_Zero_X  = 0xf6,
         INC_Abs     = 0xee,
-        INC_Abs_X   = 0xde,
+        INC_Abs_X   = 0xfe,
 
         // LoaD Accumulator
         LDA_Imm     = 0xa9,

@@ -187,6 +187,23 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
+    // Subtracts one from the value held at a specified memory location setting
+    // the zero and negative flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if result is zero
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the result is set
+    pub fn dec(&mut self, address: u16) {
+        let value = self.memory.fetch(address).wrapping_sub(1);
+        self.memory.store(address, value);
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
     // Loads a byte into the accumulator setting the zero and
     // negative flags as appropriate.
     //
