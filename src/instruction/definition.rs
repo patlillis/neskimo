@@ -34,6 +34,13 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         LDX_Abs => def(3, 4),
         LDX_Abs_Y => def(3, 4),
 
+        // LoaD Y register
+        LDY_Imm => def(2, 2),
+        LDY_Zero => def(2, 3),
+        LDY_Zero_X => def(2, 4),
+        LDY_Abs => def(3, 4),
+        LDY_Abs_X => def(3, 4),
+
         // STore Accumulator
         STA_Zero => def(2, 3),
         STA_Zero_X => def(2, 4),

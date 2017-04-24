@@ -212,6 +212,27 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
+    // Loads a byte of memory into the Y register setting the zero and
+    // negative flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if Y = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of Y is set
+    pub fn ldy(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        self.ldy_value(value);
+    }
+
+    pub fn ldy_value(&mut self, value: u8) {
+        self.registers.y = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
     // Stores the contents of the accumulator into memory.
     //
     //         C    Carry Flag          Not affected

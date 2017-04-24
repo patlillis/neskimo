@@ -121,12 +121,68 @@ fn test_ldx() {
     // Check that the results were loaded properly.
     for addr in addresses.iter() {
         // Reset accumulator, and store value in memory for test.
-        cpu.registers.a = 0x00;
+        cpu.registers.x = 0x00;
         cpu.memory.store(*addr as u16, val);
 
         // Execute and make sure accumulator was populated.
         cpu.execute();
         assert!(val == cpu.registers.x,
+                "Bad value loaded from addr {:#06x}",
+                addr);
+    }
+}
+
+#[test]
+fn test_ldy() {
+    let mut cpu = cpu::Cpu::new();
+
+    // The value to load from various memory addresses.
+    let val = 18;
+
+    // Set up CPU state for testing.
+    cpu.registers.x = 0xfe;
+
+    // Store program in memory.
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[// Load from instruction.
+                       LDY_Imm as u8,
+                       val,
+
+                       // Load from  0x00ab
+                       LDY_Zero as u8,
+                       0xab,
+
+                       // Load from 0x00ac
+                       LDY_Zero_X as u8,
+                       0xad,
+
+                       // Load from 0xffab
+                       LDY_Abs as u8,
+                       0xff,
+                       0xab,
+
+                       // Load from 0x00a9
+                       LDY_Abs_X as u8,
+                       0xff,
+                       0xab]);
+
+    // Test once for immediate load.
+    cpu.execute();
+    assert!(val == cpu.registers.y, "Bad value from immediate load.");
+
+    // Check value loaded from addresses.
+    let addresses = [0x00ab, 0x00ac, 0xffab, 0x00a9];
+
+    // Check that the results were loaded properly.
+    for addr in addresses.iter() {
+        // Reset accumulator, and store value in memory for test.
+        cpu.registers.y = 0x00;
+        cpu.memory.store(*addr as u16, val);
+
+        // Execute and make sure accumulator was populated.
+        cpu.execute();
+        assert!(val == cpu.registers.y,
                 "Bad value loaded from addr {:#06x}",
                 addr);
     }
