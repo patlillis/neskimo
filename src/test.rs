@@ -1,6 +1,51 @@
 use cpu;
 use opcode::Opcode::*;
 
+#[test]
+fn test_inc() {
+    let mut cpu = cpu::Cpu::new();
+
+    // The value in memory before incrementing.
+    let val = 18;
+
+    // Set up CPU state for testing.
+    cpu.registers.x = 0xfe;
+
+    // Store program in memory.
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[// Increment at 0x00ab
+                       INC_Zero as u8,
+                       0xab,
+
+                       // Increment at 0x009f
+                       INC_Zero_X as u8,
+                       0xa1,
+
+                       // Increment at 0xffab
+                       INC_Abs as u8,
+                       0xff,
+                       0xab,
+
+                       // Increment at 0x00a9
+                       INC_Abs_X as u8,
+                       0xff,
+                       0xab]);
+
+    // Check value incremented at these addresses.
+    let addresses = [0x00ab, 0x009f, 0xffab, 0x00a9];
+
+    // Check that the results were loaded properly.
+    for addr in addresses.iter() {
+        cpu.memory.store(*addr as u16, val);
+
+        // Execute and make sure value was incremented.
+        cpu.execute();
+        assert!(val + 1 == cpu.memory.fetch(*addr as u16),
+                "Bad value loaded from addr {:#06x}",
+                addr);
+    }
+}
 
 #[test]
 fn test_lda() {
@@ -153,9 +198,9 @@ fn test_ldy() {
                        LDY_Zero as u8,
                        0xab,
 
-                       // Load from 0x00ac
+                       // Load from 0x009f
                        LDY_Zero_X as u8,
-                       0xad,
+                       0xa1,
 
                        // Load from 0xffab
                        LDY_Abs as u8,
@@ -172,7 +217,7 @@ fn test_ldy() {
     assert!(val == cpu.registers.y, "Bad value from immediate load.");
 
     // Check value loaded from addresses.
-    let addresses = [0x00ab, 0x00ac, 0xffab, 0x00a9];
+    let addresses = [0x00ab, 0x009f, 0xffab, 0x00a9];
 
     // Check that the results were loaded properly.
     for addr in addresses.iter() {

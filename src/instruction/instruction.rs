@@ -115,6 +115,24 @@ impl Instruction {
         let opcode = opcode::decode(self.opcode());
 
         match opcode {
+            // INCrement memory
+            INC_Zero => {
+                let address = self.zero_page_address();
+                cpu.inc(address);
+            }
+            INC_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.inc(address);
+            }
+            INC_Abs => {
+                let address = self.absolute_address();
+                cpu.inc(address);
+            }
+            INC_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.inc(address);
+            }
+
             // LoaD Accumulator
             LDA_Imm => {
                 let value = self.immediate_value();
