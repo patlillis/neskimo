@@ -115,11 +115,41 @@ impl Instruction {
         let opcode = opcode::decode(self.opcode());
 
         match opcode {
+            // LoaD Accumulator
             LDA_Imm => {
                 let value = self.immediate_value();
-                cpu.lda(value);
+                cpu.lda_value(value);
+            }
+            LDA_Zero => {
+                let address = self.zero_page_address();
+                cpu.lda(address);
+            }
+            LDA_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.lda(address);
+            }
+            LDA_Abs => {
+                let address = self.absolute_address();
+                cpu.lda(address);
+            }
+            LDA_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.lda(address);
+            }
+            LDA_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu.lda(address);
+            }
+            LDA_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu.lda(address);
+            }
+            LDA_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu.lda(address);
             }
 
+            // STore Accumulator
             STA_Zero => {
                 let address = self.zero_page_address();
                 cpu.sta(address);

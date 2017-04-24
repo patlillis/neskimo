@@ -180,7 +180,12 @@ impl Cpu {
     //         B 	Break Command 	  Not affected
     //         V 	Overflow Flag 	  Not affected
     //         N 	Negative Flag 	  Set if bit 7 of A is set
-    pub fn lda(&mut self, value: u8) {
+    pub fn lda(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        self.lda_value(value);
+    }
+
+    pub fn lda_value(&mut self, value: u8) {
         self.registers.a = value;
         self.set_z_flag(value);
         self.set_n_flag(value);

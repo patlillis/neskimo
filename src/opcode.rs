@@ -31,13 +31,13 @@ enum_from_primitive! {
     pub enum Opcode {
         // LoaD Accumulator
         LDA_Imm     = 0xa9,
-        // LDA_Zero    = 0xa5,
-        // LDA_Zero_X  = 0xb5,
-        // LDA_Abs     = 0xad,
-        // LDA_Abs_X   = 0x9d,
-        // LDA_Abs_Y   = 0x99,
-        // LDA_Ind_X   = 0x81,
-        // LDA_Ind_Y   = 0x91
+        LDA_Zero    = 0xa5,
+        LDA_Zero_X  = 0xb5,
+        LDA_Abs     = 0xad,
+        LDA_Abs_X   = 0xbd,
+        LDA_Abs_Y   = 0xb9,
+        LDA_Ind_X   = 0xa1,
+        LDA_Ind_Y   = 0xb1,
 
         // STore Accumulator
         STA_Zero    = 0x85,
