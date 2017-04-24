@@ -173,13 +173,13 @@ impl Cpu {
     // Loads a byte into the accumulator setting the zero and
     // negative flags as appropriate.
     //
-    //         C 	Carry Flag 	  Not affected
-    //         Z 	Zero Flag 	  Set if A = 0
-    //         I 	Interrupt Disable Not affected
-    //         D 	Decimal Mode Flag Not affected
-    //         B 	Break Command 	  Not affected
-    //         V 	Overflow Flag 	  Not affected
-    //         N 	Negative Flag 	  Set if bit 7 of A is set
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if A = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of A is set
     pub fn lda(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.lda_value(value);
@@ -191,15 +191,36 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
+    // Loads a byte of memory into the X register setting the zero and
+    // negative flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if X = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of X is set
+    pub fn ldx(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        self.ldx_value(value);
+    }
+
+    pub fn ldx_value(&mut self, value: u8) {
+        self.registers.x = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
     // Stores the contents of the accumulator into memory.
     //
-    //         C 	Carry Flag          Not affected
-    //         Z 	Zero Flag           Not affected
-    //         I 	Interrupt Disable   Not affected
-    //         D 	Decimal Mode Flag   Not affected
-    //         B 	Break Command       Not affected
-    //         V 	Overflow Flag       Not affected
-    //         N 	Negative Flag       Not affected
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
     pub fn sta(&mut self, address: u16) {
         self.memory.store(address, self.registers.a);
     }

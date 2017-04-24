@@ -39,6 +39,13 @@ enum_from_primitive! {
         LDA_Ind_X   = 0xa1,
         LDA_Ind_Y   = 0xb1,
 
+        // LoaD X register
+        LDX_Imm     = 0xa2,
+        LDX_Zero    = 0xa6,
+        LDX_Zero_Y  = 0xb6,
+        LDX_Abs     = 0xae,
+        LDX_Abs_Y   = 0xbe,
+
         // STore Accumulator
         STA_Zero    = 0x85,
         STA_Zero_X  = 0x95,

@@ -17,6 +17,7 @@ fn def(len: u16, cycles: u8) -> InstructionDefinition {
 // Get an instruction definition, based on opcode.
 pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefinition {
     match opcode {
+        // LoaD Accumulator
         LDA_Imm => def(2, 2),
         LDA_Zero => def(2, 3),
         LDA_Zero_X => def(2, 4),
@@ -26,6 +27,14 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         LDA_Ind_X => def(2, 6), 
         LDA_Ind_Y => def(2, 5),
 
+        // LoaD X register
+        LDX_Imm => def(2, 2),
+        LDX_Zero => def(2, 3),
+        LDX_Zero_Y => def(2, 4),
+        LDX_Abs => def(3, 4),
+        LDX_Abs_Y => def(3, 4),
+
+        // STore Accumulator
         STA_Zero => def(2, 3),
         STA_Zero_X => def(2, 4),
         STA_Abs => def(3, 4),

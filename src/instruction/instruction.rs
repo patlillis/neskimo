@@ -149,6 +149,28 @@ impl Instruction {
                 cpu.lda(address);
             }
 
+            // LoaD X register
+            LDX_Imm => {
+                let value = self.immediate_value();
+                cpu.ldx_value(value);
+            }
+            LDX_Zero => {
+                let address = self.zero_page_address();
+                cpu.ldx(address);
+            }
+            LDX_Zero_Y => {
+                let address = self.zero_page_address_y(cpu);
+                cpu.ldx(address);
+            }
+            LDX_Abs => {
+                let address = self.absolute_address();
+                cpu.ldx(address);
+            }
+            LDX_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu.ldx(address);
+            }
+
             // STore Accumulator
             STA_Zero => {
                 let address = self.zero_page_address();
