@@ -282,6 +282,11 @@ impl Instruction {
                 cpu.stx(address);
             }
 
+            // No OPeration
+            NOP => {
+                cpu.nop();
+            }
+
             // STore Y register
             STY_Zero => {
                 let address = self.zero_page_address();

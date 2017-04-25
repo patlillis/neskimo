@@ -62,6 +62,9 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         LDY_Abs => def(3, 4),
         LDY_Abs_X => def(3, 4),
 
+        // No OPeration
+        NOP => def(1, 2),
+
         // STore Accumulator
         STA_Zero => def(2, 3),
         STA_Zero_X => def(2, 4),

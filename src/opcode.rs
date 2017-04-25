@@ -74,6 +74,9 @@ enum_from_primitive! {
         LDY_Abs     = 0xac,
         LDY_Abs_X   = 0xbc,
 
+        // No OPeration
+        NOP         = 0xea,
+
         // STore Accumulator
         STA_Zero    = 0x85,
         STA_Zero_X  = 0x95,

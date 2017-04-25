@@ -40,7 +40,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * `LSR` (Logical Shift Right)
 
-* `NOP` (No OPeration)
+* ~~`NOP` (No OPeration)~~
 
 * `ORA` (bitwise OR with Accumulator)
 

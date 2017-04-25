@@ -397,6 +397,18 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
+    // Causes no chage to the processor other than normal incrementing
+    // of the program counter.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn nop(&mut self) {}
+
     // Stores the contents of the accumulator into memory.
     //
     //         C    Carry Flag          Not affected
