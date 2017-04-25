@@ -60,6 +60,6 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * Stack Instructions
 
-* `STX` (STore X register)
+* ~~`STX` (STore X register)~~
 
 * `STY` (STore Y register)

@@ -267,6 +267,20 @@ impl Instruction {
                 let address = self.indirect_address_y(cpu);
                 cpu.sta(address);
             }
+
+            // STore X register
+            STX_Zero => {
+                let address = self.zero_page_address();
+                cpu.stx(address);
+            }
+            STX_Zero_Y => {
+                let address = self.zero_page_address_y(cpu);
+                cpu.stx(address);
+            }
+            STX_Abs => {
+                let address = self.absolute_address();
+                cpu.stx(address);
+            }
         }
     }
 }

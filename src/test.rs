@@ -164,19 +164,19 @@ fn test_lda() {
                        LDA_Zero as u8,
                        0xab,
 
-                       // Load from 0x00ac
+                       // Load from 0x00a0
                        LDA_Zero_X as u8,
-                       0xad,
+                       0xa1,
 
                        // Load from 0xffab
                        LDA_Abs as u8,
                        0xff,
                        0xab,
 
-                       // Load from 0x00aa
+                       // Load from 0x00ca
                        LDA_Abs_X as u8,
                        0xff,
-                       0xab,
+                       0xcb,
 
                        // Load from 0x00a9
                        LDA_Abs_Y as u8,
@@ -196,7 +196,7 @@ fn test_lda() {
     assert!(val == cpu.registers.a, "Bad value from immediate load.");
 
     // Check value loaded from addresses.
-    let addresses = [0x00ab, 0x00ac, 0xffab, 0x00aa, 0x00a9, 0xffd0, 0x00de];
+    let addresses = [0x00ab, 0x00a0, 0xffab, 0x00ca, 0x00a9, 0xffd0, 0x00de];
 
     // Check that the results were loaded properly.
     for addr in addresses.iter() {
@@ -233,26 +233,26 @@ fn test_ldx() {
                        LDX_Zero as u8,
                        0xab,
 
-                       // Load from 0x00ac
+                       // Load from 0x00b7
                        LDX_Zero_Y as u8,
-                       0xad,
+                       0xb9,
 
                        // Load from 0xffab
                        LDX_Abs as u8,
                        0xff,
                        0xab,
 
-                       // Load from 0x00a9
+                       // Load from 0x00cb
                        LDX_Abs_Y as u8,
                        0xff,
-                       0xab]);
+                       0xcd]);
 
     // Test once for immediate load.
     cpu.execute();
     assert!(val == cpu.registers.x, "Bad value from immediate load.");
 
     // Check value loaded from addresses.
-    let addresses = [0x00ab, 0x00ac, 0xffab, 0x00a9];
+    let addresses = [0x00ab, 0x00b7, 0xffab, 0x00cb];
 
     // Check that the results were loaded properly.
     for addr in addresses.iter() {
@@ -376,6 +376,45 @@ fn test_sta() {
 
     // Check value in addresses.
     let addresses = [0x00ab, 0x00ac, 0xffab, 0x00aa, 0x00a9, 0xffd0, 0x00de];
+
+    // Check the results in memory.
+    for addr in addresses.iter() {
+        cpu.execute();
+        assert!(val == cpu.memory.fetch(*addr),
+                "Bad value at addr {:#06x}",
+                addr);
+    }
+}
+
+#[test]
+fn test_stx() {
+    let mut cpu = cpu::Cpu::new();
+
+    // The value to pass around and test.
+    let val = 18;
+
+    // Set up CPU state for testing.
+    cpu.registers.x = val;
+    cpu.registers.y = 0xfe;
+
+    // Store program in memory.
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[// Store to 0x00ab
+                       STX_Zero as u8,
+                       0xab,
+
+                       // Store to 0x00ac
+                       STX_Zero_Y as u8,
+                       0xae,
+
+                       // Store to 0xffab
+                       STX_Abs as u8,
+                       0xff,
+                       0xab]);
+
+    // Check value in addresses.
+    let addresses = [0x00ab, 0x00ac, 0xffab];
 
     // Check the results in memory.
     for addr in addresses.iter() {

@@ -409,4 +409,17 @@ impl Cpu {
     pub fn sta(&mut self, address: u16) {
         self.memory.store(address, self.registers.a);
     }
+
+    // Stores the contents of the X register into memory.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn stx(&mut self, address: u16) {
+        self.memory.store(address, self.registers.x);
+    }
 }

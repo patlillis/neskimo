@@ -81,6 +81,11 @@ enum_from_primitive! {
         STA_Abs_X   = 0x9d,
         STA_Abs_Y   = 0x99,
         STA_Ind_X   = 0x81,
-        STA_Ind_Y   = 0x91
+        STA_Ind_Y   = 0x91,
+
+        // STore X register
+        STX_Zero    = 0x86,
+        STX_Zero_Y  = 0x96,
+        STX_Abs     = 0x8e,
     }
 }
