@@ -90,6 +90,11 @@ fn test_bit() {
 }
 
 #[test]
+fn test_cmp() {
+    assert!(false, "TODO: add tests for CMP instructions");
+}
+
+#[test]
 fn test_flags() {
     let mut cpu = cpu::Cpu::new();
 

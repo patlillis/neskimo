@@ -33,6 +33,16 @@ enum_from_primitive! {
         BIT_Zero    = 0x24,
         BIT_Abs     = 0x2c,
 
+        // CoMPare accumulator
+        CMP_Imm     = 0xc9,
+        CMP_Zero    = 0xc5,
+        CMP_Zero_X  = 0xd5,
+        CMP_Abs     = 0xcd,
+        CMP_Abs_X   = 0xdd,
+        CMP_Abs_Y   = 0xd9,
+        CMP_Ind_X   = 0xc1,
+        CMP_Ind_Y   = 0xd1,
+
         // Flag (processor status)
         CLC         = 0x18, // CLear Carry
         SEC         = 0x38, // SEt Carry

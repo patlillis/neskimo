@@ -30,6 +30,16 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         CLD => def(1, 2),
         SED => def(1, 2),
 
+        // CoMPare accumulator
+        CMP_Imm => def(2, 2),
+        CMP_Zero => def(2, 3),
+        CMP_Zero_X => def(2, 4),
+        CMP_Abs => def(3, 4),
+        CMP_Abs_X => def(3, 4),
+        CMP_Abs_Y => def(3, 4),
+        CMP_Ind_X => def(2, 6),
+        CMP_Ind_Y => def(2, 5),
+
         // DECrement memory
         DEC_Zero => def(2, 5),
         DEC_Zero_X => def(2, 6),

@@ -14,7 +14,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * `BRK` (BReaK)
 
-* `CMP` (CoMPare accumulator)
+* ~~`CMP` (CoMPare accumulator)~~
 
 * `CPX` (ComPare X register)
 

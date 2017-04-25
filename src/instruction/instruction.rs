@@ -134,6 +134,40 @@ impl Instruction {
             CLD => cpu.cld(),
             SED => cpu.sed(),
 
+            // CoMPare accumulator
+            CMP_Imm => {
+                let value = self.immediate_value();
+                cpu.cmp_value(value);
+            }
+            CMP_Zero => {
+                let address = self.zero_page_address();
+                cpu.cmp(address);
+            }
+            CMP_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.cmp(address);
+            }
+            CMP_Abs => {
+                let address = self.absolute_address();
+                cpu.cmp(address);
+            }
+            CMP_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.cmp(address);
+            }
+            CMP_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu.cmp(address);
+            }
+            CMP_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu.cmp(address);
+            }
+            CMP_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu.cmp(address);
+            }
+
             // DECrement memory
             DEC_Zero => {
                 let address = self.zero_page_address();
