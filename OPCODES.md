@@ -62,4 +62,4 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~`STX` (STore X register)~~
 
-* `STY` (STore Y register)
+* ~~`STY` (STore Y register)~~

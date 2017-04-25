@@ -75,5 +75,10 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         STX_Zero => def(2, 3),
         STX_Zero_Y => def(2, 4),
         STX_Abs => def(3, 4),
+
+        // STore Y register
+        STY_Zero => def(2, 3),
+        STY_Zero_X => def(2, 4),
+        STY_Abs => def(3, 4),
     }
 }

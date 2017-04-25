@@ -424,3 +424,42 @@ fn test_stx() {
                 addr);
     }
 }
+
+#[test]
+fn test_sty() {
+    let mut cpu = cpu::Cpu::new();
+
+    // The value to pass around and test.
+    let val = 18;
+
+    // Set up CPU state for testing.
+    cpu.registers.x = 0xfe;
+    cpu.registers.y = val;
+
+    // Store program in memory.
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[// Store to 0x00ab
+                       STY_Zero as u8,
+                       0xab,
+
+                       // Store to 0x00ac
+                       STY_Zero_X as u8,
+                       0xae,
+
+                       // Store to 0xffab
+                       STY_Abs as u8,
+                       0xff,
+                       0xab]);
+
+    // Check value in addresses.
+    let addresses = [0x00ab, 0x00ac, 0xffab];
+
+    // Check the results in memory.
+    for addr in addresses.iter() {
+        cpu.execute();
+        assert!(val == cpu.memory.fetch(*addr),
+                "Bad value at addr {:#06x}",
+                addr);
+    }
+}

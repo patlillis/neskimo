@@ -87,5 +87,10 @@ enum_from_primitive! {
         STX_Zero    = 0x86,
         STX_Zero_Y  = 0x96,
         STX_Abs     = 0x8e,
+
+        // STore Y register
+        STY_Zero    = 0x84,
+        STY_Zero_X  = 0x94,
+        STY_Abs     = 0x8c,
     }
 }
