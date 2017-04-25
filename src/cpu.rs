@@ -447,4 +447,140 @@ impl Cpu {
     pub fn sty(&mut self, address: u16) {
         self.memory.store(address, self.registers.y);
     }
+
+    // Copies the contents of the accumulator into the X register,
+    // setting the zero and negative flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if X = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of X is set
+    pub fn tax(&mut self) {
+        let value = self.registers.a;
+        self.registers.x = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
+    // Copies the contents of the X register into the accumulator,
+    // setting the zero and negative flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if A = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of A is set
+    pub fn txa(&mut self) {
+        let value = self.registers.x;
+        self.registers.a = self.registers.x;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
+    // Subtracts one from the X register, setting the zero and negative
+    // flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if X is zero
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the X is set
+    pub fn dex(&mut self) {
+        let value = self.registers.x.wrapping_sub(1);
+        self.registers.x = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
+    // Adds one from the X register, setting the zero and negative
+    // flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if X is zero
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the X is set
+    pub fn inx(&mut self) {
+        let value = self.registers.x.wrapping_add(1);
+        self.registers.x = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
+    // Copies the contents of the accumulator into the Y register,
+    // setting the zero and negative flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if Y = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of Y is set
+    pub fn tay(&mut self) {
+        let value = self.registers.a;
+        self.registers.y = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
+    // Copies the contents of the Y register into the accumulator,
+    // setting the zero and negative flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if A = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of A is set
+    pub fn tya(&mut self) {
+        let value = self.registers.y;
+        self.registers.a = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
+    // Subtracts one from the Y register, setting the zero and negative
+    // flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if Y is zero
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the Y is set
+    pub fn dey(&mut self) {
+        let value = self.registers.y.wrapping_sub(1);
+        self.registers.y = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
+    // Adds one from the Y register, setting the zero and negative
+    // flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if Y is zero
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the Y is set
+    pub fn iny(&mut self) {
+        let value = self.registers.y.wrapping_add(1);
+        self.registers.y = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
 }

@@ -325,6 +325,72 @@ fn test_ldy() {
 }
 
 #[test]
+fn test_registers() {
+    let mut cpu = cpu::Cpu::new();
+
+    let val = 18;
+
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[// X register
+                       TAX as u8,
+                       TXA as u8,
+                       DEX as u8,
+                       INX as u8,
+
+                       // Y register
+                       TAY as u8,
+                       TYA as u8,
+                       DEY as u8,
+                       INY as u8]);
+
+    // TAX
+    cpu.registers.a = val;
+    cpu.registers.x = 0x00;
+    cpu.execute();
+    assert!(cpu.registers.x == val, "Bad TAX");
+
+    // TXA
+    cpu.registers.a = 0x00;
+    cpu.registers.x = val;
+    cpu.execute();
+    assert!(cpu.registers.a == val, "Bad TXA");
+
+    // DEX
+    cpu.registers.x = val;
+    cpu.execute();
+    assert!(cpu.registers.x == val - 1, "Bad DEX");
+
+    // INX
+    cpu.registers.x = val;
+    cpu.execute();
+    assert!(cpu.registers.x == val + 1, "Bad INX");
+
+    // TAY
+    cpu.registers.a = val;
+    cpu.registers.y = 0x00;
+    cpu.execute();
+    assert!(cpu.registers.y == val, "Bad TAY");
+
+    // TYA
+    cpu.registers.a = 0x00;
+    cpu.registers.y = val;
+    cpu.execute();
+    assert!(cpu.registers.a == val, "Bad TYA");
+
+    // DEY
+    cpu.registers.y = val;
+    cpu.execute();
+    assert!(cpu.registers.y == val - 1, "Bad DEY");
+
+    // INY
+    cpu.registers.y = val;
+    cpu.execute();
+    assert!(cpu.registers.y == val + 1, "Bad INY");
+
+}
+
+#[test]
 fn test_sta() {
     let mut cpu = cpu::Cpu::new();
 

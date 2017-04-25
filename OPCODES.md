@@ -44,7 +44,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * `ORA` (bitwise OR with Accumulator)
 
-* Register Instructions
+* ~~Register Instructions~~
 
 * `ROL` (ROtate Left)
 

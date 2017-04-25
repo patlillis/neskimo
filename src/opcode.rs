@@ -77,6 +77,16 @@ enum_from_primitive! {
         // No OPeration
         NOP         = 0xea,
 
+        // Register Instructions
+        TAX         = 0xaa,
+        TXA         = 0x8a,
+        DEX         = 0xca,
+        INX         = 0xe8,
+        TAY         = 0xa8,
+        TYA         = 0x98,
+        DEY         = 0x88,
+        INY         = 0xc8,
+
         // STore Accumulator
         STA_Zero    = 0x85,
         STA_Zero_X  = 0x95,

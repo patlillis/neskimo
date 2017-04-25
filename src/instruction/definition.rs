@@ -65,6 +65,16 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         // No OPeration
         NOP => def(1, 2),
 
+        // Register Instructions
+        TAX => def(1, 2),
+        TXA => def(1, 2),
+        DEX => def(1, 2),
+        INX => def(1, 2),
+        TAY => def(1, 2),
+        TYA => def(1, 2),
+        DEY => def(1, 2),
+        INY => def(1, 2),
+
         // STore Accumulator
         STA_Zero => def(2, 3),
         STA_Zero_X => def(2, 4),

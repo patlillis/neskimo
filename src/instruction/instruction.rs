@@ -287,6 +287,16 @@ impl Instruction {
                 cpu.nop();
             }
 
+            // Register Instructions
+            TAX => cpu.tax(),
+            TXA => cpu.txa(),
+            DEX => cpu.dex(),
+            INX => cpu.inx(),
+            TAY => cpu.tay(),
+            TYA => cpu.tya(),
+            DEY => cpu.dey(),
+            INY => cpu.iny(),
+
             // STore Y register
             STY_Zero => {
                 let address = self.zero_page_address();
