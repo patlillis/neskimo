@@ -6,13 +6,13 @@ use instruction::Instruction;
 // The status of the system processor.
 pub struct Status(pub u8);
 
-const C_FLAG: u8 = 1 << 0;
-const Z_FLAG: u8 = 1 << 1;
-const I_FLAG: u8 = 1 << 2;
-const D_FLAG: u8 = 1 << 3;
-const B_FLAG: u8 = 1 << 4;
-const V_FLAG: u8 = 1 << 6;
-const N_FLAG: u8 = 1 << 7;
+pub const C_FLAG: u8 = 1 << 0;
+pub const Z_FLAG: u8 = 1 << 1;
+pub const I_FLAG: u8 = 1 << 2;
+pub const D_FLAG: u8 = 1 << 3;
+pub const B_FLAG: u8 = 1 << 4;
+pub const V_FLAG: u8 = 1 << 6;
+pub const N_FLAG: u8 = 1 << 7;
 
 impl Status {
     // Constructs a new status with all flags set to 0.
@@ -298,6 +298,25 @@ impl Cpu {
     //         N    Negative Flag       Not affected
     pub fn sei(&mut self) {
         self.registers.p.set_i(true);
+    }
+
+    // Used to test if one or more bits are set at the specified memory
+    // location. The value in A is ANDed with the value in memory to
+    // set or unset the zero flag, but the result is not kept. Bits 6 and 7
+    // of the value in memory are copied into the V and N flags respectively.
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if (value & accumulator) = 0
+    //         I    Interrupt Disable   Set to 1
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Set to bit 6 of value
+    //         N    Negative Flag       Set to bit 7 of value
+    pub fn bit(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        let zero_test = self.registers.a & value;
+        self.set_z_flag(zero_test);
+        self.registers.p.set_v(value & V_FLAG == V_FLAG);
+        self.registers.p.set_n(value & N_FLAG == N_FLAG);
     }
 
     // Adds one to the value held at a specified memory location setting

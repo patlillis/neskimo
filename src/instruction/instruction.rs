@@ -115,6 +115,16 @@ impl Instruction {
         let opcode = opcode::decode(self.opcode());
 
         match opcode {
+            // test BITs
+            BIT_Zero => {
+                let address = self.zero_page_address();
+                cpu.bit(address);
+            }
+            BIT_Abs => {
+                let address = self.absolute_address();
+                cpu.bit(address);
+            }
+
             // Flag (processor status)
             CLC => cpu.clc(),
             SEC => cpu.sec(),

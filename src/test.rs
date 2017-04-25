@@ -2,6 +2,94 @@ use cpu;
 use opcode::Opcode::*;
 
 #[test]
+fn test_bit() {
+    let mut cpu = cpu::Cpu::new();
+
+    // Z flag test is ANDed with the accumulator.
+    cpu.registers.a = 0xc8;
+
+    // For testing the Z flag.
+    cpu.memory.store(0x0023, 0x00);
+    cpu.memory.store(0x00f0, 0x0a);
+    cpu.memory.store(0x0d23, 0x00);
+    cpu.memory.store(0xf0f0, 0x0a);
+
+    // For testing the V flag.
+    cpu.memory.store(0x00dd, 0x40);
+    cpu.memory.store(0x0099, 0x3f);
+    cpu.memory.store(0xdddd, 0x40);
+    cpu.memory.store(0x5599, 0x3f);
+
+    // For testing the N flag.
+    cpu.memory.store(0x006a, 0x80);
+    cpu.memory.store(0x00ab, 0x3f);
+    cpu.memory.store(0xaa6a, 0x80);
+    cpu.memory.store(0x90ab, 0x3f);
+
+    let expected_status_flags = [cpu::Z_FLAG,
+                                 0x00,
+                                 cpu::Z_FLAG,
+                                 0x00,
+                                 cpu::V_FLAG,
+                                 0x00,
+                                 cpu::V_FLAG,
+                                 0x00,
+                                 cpu::N_FLAG,
+                                 0x00,
+                                 cpu::N_FLAG,
+                                 0x00];
+
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[// Test Z flag
+                       BIT_Zero as u8,
+                       0x23,
+                       BIT_Zero as u8,
+                       0xf0,
+                       BIT_Abs as u8,
+                       0x0d,
+                       0x23,
+                       BIT_Abs as u8,
+                       0xf0,
+                       0xf0,
+
+                       // Test V flag
+                       BIT_Zero as u8,
+                       0xdd,
+                       BIT_Zero as u8,
+                       0x99,
+                       BIT_Abs as u8,
+                       0xdd,
+                       0xdd,
+                       BIT_Abs as u8,
+                       0x55,
+                       0x99,
+
+                       // Test N flag
+                       BIT_Zero as u8,
+                       0x6a,
+                       BIT_Zero as u8,
+                       0xab,
+                       BIT_Abs as u8,
+                       0xaa,
+                       0x6a,
+                       BIT_Abs as u8,
+                       0x90,
+                       0xab]);
+
+    // Check that the status flags are set properly.
+    for flag in expected_status_flags.iter() {
+        cpu.registers.p.0 = 0x00;
+
+        // Execute and make sure flag was properly set.
+        cpu.execute();
+        assert!(cpu.registers.p.0 == *flag,
+                "Bad flag: {:08b}",
+                cpu.registers.p.0);
+    }
+}
+
+#[test]
 fn test_flags() {
     let mut cpu = cpu::Cpu::new();
 

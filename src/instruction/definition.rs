@@ -17,6 +17,10 @@ fn def(len: u16, cycles: u8) -> InstructionDefinition {
 // Get an instruction definition, based on opcode.
 pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefinition {
     match opcode {
+        // test BITs
+        BIT_Zero => def(2, 3),
+        BIT_Abs => def(3, 4),
+
         // Flag (processor status)
         CLC => def(1, 2),
         SEC => def(1, 2),

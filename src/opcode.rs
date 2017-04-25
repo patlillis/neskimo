@@ -29,6 +29,10 @@ enum_from_primitive! {
     #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
     #[allow(non_camel_case_types)]
     pub enum Opcode {
+        // test BITs
+        BIT_Zero    = 0x24,
+        BIT_Abs     = 0x2c,
+
         // Flag (processor status)
         CLC         = 0x18, // CLear Carry
         SEC         = 0x38, // SEt Carry
@@ -78,14 +82,14 @@ enum_from_primitive! {
         NOP         = 0xea,
 
         // Register Instructions
-        TAX         = 0xaa,
-        TXA         = 0x8a,
-        DEX         = 0xca,
-        INX         = 0xe8,
-        TAY         = 0xa8,
-        TYA         = 0x98,
-        DEY         = 0x88,
-        INY         = 0xc8,
+        TAX         = 0xaa, // Transfer A to X
+        TXA         = 0x8a, // Transfer X to A
+        DEX         = 0xca, // Decrement X
+        INX         = 0xe8, // Increment X
+        TAY         = 0xa8, // Transfer A to Y
+        TYA         = 0x98, // Transfer Y to A
+        DEY         = 0x88, // Decrement Y
+        INY         = 0xc8, // Increment Y
 
         // STore Accumulator
         STA_Zero    = 0x85,
