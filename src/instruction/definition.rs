@@ -83,6 +83,13 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         LDY_Abs => def(3, 4),
         LDY_Abs_X => def(3, 4),
 
+        // Logical Shift Right
+        LSR_Acc => def(1, 2),
+        LSR_Zero => def(2, 5),
+        LSR_Zero_X => def(2, 6),
+        LSR_Abs => def(3, 6),
+        LSR_Abs_X => def(3, 7),
+
         // No OPeration
         NOP => def(1, 2),
 

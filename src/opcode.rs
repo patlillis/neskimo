@@ -25,6 +25,10 @@ impl Opcode {
     }
 }
 
+// Opcodes.
+//
+// "enum_from_primitive" allows for doing "Opcode::from_u8(0xab)",
+// which is cool. Can also do "Opcode::NOP as u8", or use the "decode()" fn.
 enum_from_primitive! {
     #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
     #[allow(non_camel_case_types)]
@@ -94,6 +98,13 @@ enum_from_primitive! {
         LDY_Zero_X  = 0xb4,
         LDY_Abs     = 0xac,
         LDY_Abs_X   = 0xbc,
+
+        // Logical Shift Right
+        LSR_Acc     = 0x4a,
+        LSR_Zero    = 0x46,
+        LSR_Zero_X  = 0x56,
+        LSR_Abs     = 0x4e,
+        LSR_Abs_X   = 0x5e,
 
         // No OPeration
         NOP         = 0xea,

@@ -38,7 +38,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~`LDY` (LoaD Y register)~~
 
-* `LSR` (Logical Shift Right)
+* ~~`LSR` (Logical Shift Right)~~
 
 * ~~`NOP` (No OPeration)~~
 

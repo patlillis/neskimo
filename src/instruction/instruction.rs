@@ -303,6 +303,27 @@ impl Instruction {
                 cpu.ldy(address);
             }
 
+            // Logical Shift Right
+            LSR_Acc => {
+                cpu.lsr_a();
+            }
+            LSR_Zero => {
+                let address = self.zero_page_address();
+                cpu.lsr(address);
+            }
+            LSR_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.lsr(address);
+            }
+            LSR_Abs => {
+                let address = self.absolute_address();
+                cpu.lsr(address);
+            }
+            LSR_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.lsr(address);
+            }
+
             // STore Accumulator
             STA_Zero => {
                 let address = self.zero_page_address();

@@ -303,7 +303,6 @@ impl Cpu {
     // Shifts all bits of the value one bit left. Bit 0 is set to 0,
     // and bit 7 is placed in the carry flag. This multiplies the value
     // by 2, setting the carry if the result will not fit in 8 bits.
-    // The shifted value is returned.
     //
     //         C    Carry Flag          Set to contents of old bit 7
     //         Z    Zero Flag           Set if value = 0
@@ -324,10 +323,46 @@ impl Cpu {
         self.registers.a = shifted_value;
     }
 
+    // Shifts the value, sets status flags, and returns the shifted value.
     fn shift_l(&mut self, value: u8) -> u8 {
         let shifted_value = value << 1;
 
         let carry = value & 0x80 == 0x80;
+        self.registers.p.set_c(carry);
+
+        self.set_z_flag(shifted_value);
+        self.set_n_flag(shifted_value);
+
+        shifted_value
+    }
+
+    // Shifts all bits of the value one bit right. Bit 7 is set to 0,
+    // and bit 0 is placed in the carry flag.
+    //
+    //         C    Carry Flag          Set to contents of old bit 0
+    //         Z    Zero Flag           Set if value = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the result is set
+    pub fn lsr(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        let shifted_value = self.shift_r(value);
+        self.memory.store(address, shifted_value);
+    }
+
+    pub fn lsr_a(&mut self) {
+        let value = self.registers.a;
+        let shifted_value = self.shift_r(value);
+        self.registers.a = shifted_value;
+    }
+
+    // Shifts the value, sets status flags, and returns the shifted value.
+    fn shift_r(&mut self, value: u8) -> u8 {
+        let shifted_value = value >> 1;
+
+        let carry = value & 0x01 == 0x01;
         self.registers.p.set_c(carry);
 
         self.set_z_flag(shifted_value);
