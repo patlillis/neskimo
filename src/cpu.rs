@@ -300,13 +300,50 @@ impl Cpu {
         self.registers.p.set_i(true);
     }
 
+    // Shifts all bits of the value one bit left. Bit 0 is set to 0,
+    // and bit 7 is placed in the carry flag. This multiplies the value
+    // by 2, setting the carry if the result will not fit in 8 bits.
+    // The shifted value is returned.
+    //
+    //         C    Carry Flag          Set to contents of old bit 7
+    //         Z    Zero Flag           Set if value = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the result is set
+    pub fn asl(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        let shifted_value = self.shift_l(value);
+        self.memory.store(address, shifted_value);
+    }
+
+    pub fn asl_a(&mut self) {
+        let value = self.registers.a;
+        let shifted_value = self.shift_l(value);
+        self.registers.a = shifted_value;
+    }
+
+    fn shift_l(&mut self, value: u8) -> u8 {
+        let shifted_value = value << 1;
+
+        let carry = value & 0x80 == 0x80;
+        self.registers.p.set_c(carry);
+
+        self.set_z_flag(shifted_value);
+        self.set_n_flag(shifted_value);
+
+        shifted_value
+    }
+
     // Used to test if one or more bits are set at the specified memory
     // location. The value in A is ANDed with the value in memory to
     // set or unset the zero flag, but the result is not kept. Bits 6 and 7
     // of the value in memory are copied into the V and N flags respectively.
+    //
     //         C    Carry Flag          Not affected
     //         Z    Zero Flag           Set if (value & accumulator) = 0
-    //         I    Interrupt Disable   Set to 1
+    //         I    Interrupt Disable   Not affected
     //         D    Decimal Mode Flag   Not affected
     //         B    Break Command       Not affected
     //         V    Overflow Flag       Set to bit 6 of value

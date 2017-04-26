@@ -17,6 +17,13 @@ fn def(len: u16, cycles: u8) -> InstructionDefinition {
 // Get an instruction definition, based on opcode.
 pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefinition {
     match opcode {
+        // Arithmetic Shift Left
+        ASL_Acc => def(1, 2),
+        ASL_Zero => def(2, 5),
+        ASL_Zero_X => def(2, 6),
+        ASL_Abs => def(3, 6),
+        ASL_Abs_X => def(3, 7),
+
         // test BITs
         BIT_Zero => def(2, 3),
         BIT_Abs => def(3, 4),

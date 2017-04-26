@@ -29,6 +29,13 @@ enum_from_primitive! {
     #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
     #[allow(non_camel_case_types)]
     pub enum Opcode {
+        // Arithmetic Shift Left
+        ASL_Acc     = 0x0a,
+        ASL_Zero    = 0x06,
+        ASL_Zero_X  = 0x16,
+        ASL_Abs     = 0x0e,
+        ASL_Abs_X   = 0x1e,
+
         // test BITs
         BIT_Zero    = 0x24,
         BIT_Abs     = 0x2c,

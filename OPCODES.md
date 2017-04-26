@@ -6,7 +6,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * `AND` (bitwise AND with accumulator)
 
-* `ASL` (Arithmetic Shift Left)
+* ~~`ASL` (Arithmetic Shift Left)~~
 
 * ~~`BIT` (test BITs)~~
 

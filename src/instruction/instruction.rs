@@ -115,6 +115,27 @@ impl Instruction {
         let opcode = opcode::decode(self.opcode());
 
         match opcode {
+            // Arithmetic Shift Left
+            ASL_Acc => {
+                cpu.asl_a();
+            }
+            ASL_Zero => {
+                let address = self.zero_page_address();
+                cpu.asl(address);
+            }
+            ASL_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.asl(address);
+            }
+            ASL_Abs => {
+                let address = self.absolute_address();
+                cpu.asl(address);
+            }
+            ASL_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.asl(address);
+            }
+
             // test BITs
             BIT_Zero => {
                 let address = self.zero_page_address();

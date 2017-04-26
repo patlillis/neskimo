@@ -2,6 +2,67 @@ use cpu;
 use opcode::Opcode::*;
 
 #[test]
+fn test_asl() {
+    let mut cpu = cpu::Cpu::new();
+
+    // Test asl on accumulator.
+    cpu.memory.store(0x0000, ASL_Acc as u8);
+    cpu.execute();
+    assert!(cpu.registers.a == 0x00, "Bad ASL on accumulator");
+
+    // First entry in tuple is value that should be shifted.
+    // Second entry is expected processor status flags after that shift.
+    let asl_results = [(0x80, 0b00000011), (0xc0, 0b10000001), (0x4f, 0b10000000)];
+
+    // Test asl on memory.
+    for asl_result in asl_results.iter() {
+        // Reset from last round.
+        cpu.reset();
+        cpu.registers.x = 0xff;
+
+        // Store the value in several memory locations for lookup during ASL instructions.
+        let asl_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
+        for addr in asl_addresses.iter() {
+            cpu.memory.store(*addr as u16, asl_result.0);
+        }
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// Shift location 0x002a
+                           ASL_Zero as u8,
+                           0x2a,
+
+                           // Shift location 0x003a
+                           ASL_Zero_X as u8,
+                           0x3b,
+
+                           // Shift location 0x123a
+                           ASL_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // Shift location 0x234a
+                           ASL_Abs_X as u8,
+                           0x22,
+                           0x4b]);
+
+        // Test that processor status is set correctly after each instruction.
+        for addr in asl_addresses.iter() {
+            cpu.registers.p.0 = 0x00;
+            cpu.execute();
+            assert!(cpu.registers.p.0 == asl_result.1,
+                    "Bad flag: {:08b}",
+                    cpu.registers.p.0);
+            let shift_result = cpu.memory.fetch(*addr);
+            assert!(shift_result == (asl_result.0 << 1),
+                    "Bad shift result {:#04x} in memory {:#06x}",
+                    shift_result,
+                    addr);
+        }
+    }
+}
+
+#[test]
 fn test_bit() {
     let mut cpu = cpu::Cpu::new();
 
