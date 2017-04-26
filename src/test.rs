@@ -91,7 +91,79 @@ fn test_bit() {
 
 #[test]
 fn test_cmp() {
-    assert!(false, "TODO: add tests for CMP instructions");
+    let mut cpu = cpu::Cpu::new();
+
+    let accumulator_value = 15;
+    // First entry in tuple is value that should be used for comparison.
+    // Second entry is expected processor status flags after that comparison.
+    let cmp_results = [(5, 0b00000001), (15, 0b00000011), (100, 0b10000000)];
+
+    for cmp_result in cmp_results.iter() {
+        // Reset from previous tests.
+        cpu.reset();
+
+        // Set accumulator for comparisons.
+        cpu.registers.a = accumulator_value;
+
+        // Set index registers for zero, abs, and ind instructions.
+        cpu.registers.x = 0xff;
+        cpu.registers.y = 0xfe;
+
+        // Store the value in several memory locations for lookup during CMP instructions.
+        for addr in [0x002a, 0x003a, 0x004a, 0x005a, 0x123a, 0x223a, 0x423a].iter() {
+            cpu.memory.store(*addr as u16, cmp_result.0);
+        }
+
+        // For indirect instructions.
+        cpu.memory.store_u16(0x00ff, 0x004a);
+        cpu.memory.store_u16(0x00af, 0xff5c);
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// Compare with value 0x00
+                           CMP_Imm as u8,
+                           cmp_result.0,
+
+                           // Compare with 0x002a
+                           CMP_Zero as u8,
+                           0x2a,
+
+                           // Compare with 0x003a
+                           CMP_Zero_X as u8,
+                           0x3b,
+
+                           // Compare with 0x123a
+                           CMP_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // Compare with 0x223a
+                           CMP_Abs_X as u8,
+                           0x21,
+                           0x3b,
+
+                           // Compare with 0x423a
+                           CMP_Abs_Y as u8,
+                           0x41,
+                           0x3c,
+
+                           // Compare with 0x004a (thru 0x00ff)
+                           CMP_Ind_X as u8,
+                           0x00,
+
+                           // Compare with 0x005a (thru 0x00af)
+                           CMP_Ind_Y as u8,
+                           0xaf]);
+
+        // Test that processor status is set correctly after each instruction.
+        for _ in 0..8 {
+            cpu.registers.p.0 = 0x00;
+            cpu.execute();
+            assert!(cpu.registers.p.0 == cmp_result.1,
+                    "Bad flag: {:08b}",
+                    cpu.registers.p.0);
+        }
+    }
 }
 
 #[test]
