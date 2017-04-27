@@ -300,6 +300,7 @@ impl Cpu {
         self.registers.p.set_i(true);
     }
 
+
     // Shifts all bits of the value one bit left. Bit 0 is set to 0,
     // and bit 7 is placed in the carry flag. This multiplies the value
     // by 2, setting the carry if the result will not fit in 8 bits.
@@ -336,6 +337,7 @@ impl Cpu {
         shifted_value
     }
 
+
     // Shifts all bits of the value one bit right. Bit 7 is set to 0,
     // and bit 0 is placed in the carry flag.
     //
@@ -370,6 +372,7 @@ impl Cpu {
 
         shifted_value
     }
+
 
     // Used to test if one or more bits are set at the specified memory
     // location. The value in A is ANDed with the value in memory to
@@ -425,57 +428,64 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
-    // Compares the contents of the accumulator with another value, and sets
-    // the carry, zero, and negative flags as appropriate.
+
+    // Compares the contents of A, X, or Y register with another value,
+    // and sets the carry, zero, and negative flags as appropriate.
     //
-    //         C    Carry Flag          Set if A >= value
-    //         Z    Zero Flag           Set if A = value
+    //         C    Carry Flag          Set if register >= value
+    //         Z    Zero Flag           Set if register = value
     //         I    Interrupt Disable   Not affected
     //         D    Decimal Mode Flag   Not affected
     //         B    Break Command       Not affected
     //         V    Overflow Flag       Not affected
-    //         N    Negative Flag       Set if A < value
+    //         N    Negative Flag       Set if register < value
+    fn compare(&mut self, register: u8, value: u8) {
+        let carry = register >= value;
+        self.registers.p.set_c(carry);
+
+        let zero = register == value;
+        self.registers.p.set_z(zero);
+
+        let comparison = register.wrapping_sub(value);
+        self.set_n_flag(comparison);
+    }
+
+    // Compare with Accumulator.
     pub fn cmp(&mut self, address: u16) {
         let value = self.memory.fetch(address);
-        self.cmp_value(value);
+        let register = self.registers.a;
+        self.compare(register, value);
     }
 
     pub fn cmp_value(&mut self, value: u8) {
-        let carry = self.registers.a >= value;
-        self.registers.p.set_c(carry);
-
-        let zero = self.registers.a == value;
-        self.registers.p.set_z(zero);
-
-        let comparison = self.registers.a.wrapping_sub(value);
-        self.set_n_flag(comparison);
+        let register = self.registers.a;
+        self.compare(register, value);
     }
 
-    // Compares the contents of the X register with another value, and sets
-    // the carry, zero, and negative flags as appropriate.
-    //
-    //         C    Carry Flag          Set if X >= value
-    //         Z    Zero Flag           Set if X = value
-    //         I    Interrupt Disable   Not affected
-    //         D    Decimal Mode Flag   Not affected
-    //         B    Break Command       Not affected
-    //         V    Overflow Flag       Not affected
-    //         N    Negative Flag       Set if X < value
+    // Compare with X register.
     pub fn cpx(&mut self, address: u16) {
         let value = self.memory.fetch(address);
-        self.cpx_value(value);
+        let register = self.registers.x;
+        self.compare(register, value);
     }
 
     pub fn cpx_value(&mut self, value: u8) {
-        let carry = self.registers.x >= value;
-        self.registers.p.set_c(carry);
-
-        let zero = self.registers.x == value;
-        self.registers.p.set_z(zero);
-
-        let comparison = self.registers.x.wrapping_sub(value);
-        self.set_n_flag(comparison);
+        let register = self.registers.x;
+        self.compare(register, value);
     }
+
+    // Compare with Y register.
+    pub fn cpy(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        let register = self.registers.y;
+        self.compare(register, value);
+    }
+
+    pub fn cpy_value(&mut self, value: u8) {
+        let register = self.registers.y;
+        self.compare(register, value);
+    }
+
 
     // Loads a byte into the accumulator setting the zero and
     // negative flags as appropriate.
@@ -498,6 +508,7 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
+
     // Loads a byte of memory into the X register setting the zero and
     // negative flags as appropriate.
     //
@@ -519,6 +530,7 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
+
     // Loads a byte of memory into the Y register setting the zero and
     // negative flags as appropriate.
     //
@@ -539,6 +551,7 @@ impl Cpu {
         self.set_z_flag(value);
         self.set_n_flag(value);
     }
+
 
     // Causes no chage to the processor other than normal incrementing
     // of the program counter.

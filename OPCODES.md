@@ -18,7 +18,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~`CPX` (ComPare X register)~~
 
-* `CPY` (ComPare Y register)
+* ~~`CPY` (ComPare Y register)~~
 
 * ~~`DEC` (DECrement memory)~~
 

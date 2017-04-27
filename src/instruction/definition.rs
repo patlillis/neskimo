@@ -52,6 +52,11 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         CPX_Zero => def(2, 3),
         CPX_Abs => def(3, 4),
 
+        // ComPare Y register
+        CPY_Imm => def(2, 2),
+        CPY_Zero => def(2, 3),
+        CPY_Abs => def(3, 4),
+
         // DECrement memory
         DEC_Zero => def(2, 5),
         DEC_Zero_X => def(2, 6),

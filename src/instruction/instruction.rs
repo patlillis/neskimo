@@ -203,6 +203,20 @@ impl Instruction {
                 cpu.cpx(address);
             }
 
+            // ComPare Y register
+            CPY_Imm => {
+                let value = self.immediate_value();
+                cpu.cpy_value(value);
+            }
+            CPY_Zero => {
+                let address = self.zero_page_address();
+                cpu.cpy(address);
+            }
+            CPY_Abs => {
+                let address = self.absolute_address();
+                cpu.cpy(address);
+            }
+
             // DECrement memory
             DEC_Zero => {
                 let address = self.zero_page_address();

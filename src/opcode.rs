@@ -59,6 +59,11 @@ enum_from_primitive! {
         CPX_Zero    = 0xe4,
         CPX_Abs     = 0xec,
 
+        // ComPare Y register
+        CPY_Imm     = 0xc0,
+        CPY_Zero    = 0xc4,
+        CPY_Abs     = 0xcc,
+
         // Flag (processor status)
         CLC         = 0x18, // CLear Carry
         SEC         = 0x38, // SEt Carry
