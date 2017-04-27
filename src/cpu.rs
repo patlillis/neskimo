@@ -428,13 +428,13 @@ impl Cpu {
     // Compares the contents of the accumulator with another value, and sets
     // the carry, zero, and negative flags as appropriate.
     //
-    //         C    Carry Flag          Set if A >= M
-    //         Z    Zero Flag           Set if A = M
+    //         C    Carry Flag          Set if A >= value
+    //         Z    Zero Flag           Set if A = value
     //         I    Interrupt Disable   Not affected
     //         D    Decimal Mode Flag   Not affected
     //         B    Break Command       Not affected
     //         V    Overflow Flag       Not affected
-    //         N    Negative Flag       Set if A < M
+    //         N    Negative Flag       Set if A < value
     pub fn cmp(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.cmp_value(value);
@@ -448,6 +448,32 @@ impl Cpu {
         self.registers.p.set_z(zero);
 
         let comparison = self.registers.a.wrapping_sub(value);
+        self.set_n_flag(comparison);
+    }
+
+    // Compares the contents of the X register with another value, and sets
+    // the carry, zero, and negative flags as appropriate.
+    //
+    //         C    Carry Flag          Set if X >= value
+    //         Z    Zero Flag           Set if X = value
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if X < value
+    pub fn cpx(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        self.cpx_value(value);
+    }
+
+    pub fn cpx_value(&mut self, value: u8) {
+        let carry = self.registers.x >= value;
+        self.registers.p.set_c(carry);
+
+        let zero = self.registers.x == value;
+        self.registers.p.set_z(zero);
+
+        let comparison = self.registers.x.wrapping_sub(value);
         self.set_n_flag(comparison);
     }
 

@@ -189,6 +189,20 @@ impl Instruction {
                 cpu.cmp(address);
             }
 
+            // ComPare X register
+            CPX_Imm => {
+                let value = self.immediate_value();
+                cpu.cpx_value(value);
+            }
+            CPX_Zero => {
+                let address = self.zero_page_address();
+                cpu.cpx(address);
+            }
+            CPX_Abs => {
+                let address = self.absolute_address();
+                cpu.cpx(address);
+            }
+
             // DECrement memory
             DEC_Zero => {
                 let address = self.zero_page_address();

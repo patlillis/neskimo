@@ -16,7 +16,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~`CMP` (CoMPare accumulator)~~
 
-* `CPX` (ComPare X register)
+* ~~`CPX` (ComPare X register)~~
 
 * `CPY` (ComPare Y register)
 

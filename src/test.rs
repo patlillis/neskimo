@@ -309,6 +309,53 @@ fn test_cmp() {
 }
 
 #[test]
+fn test_cpx() {
+    let mut cpu = cpu::Cpu::new();
+
+    let x_value = 15;
+    // First entry in tuple is value that should be used for comparison.
+    // Second entry is expected processor status flags after that comparison.
+    let cpx_results = [(5, 0b00000001), (15, 0b00000011), (100, 0b10000000)];
+
+    for cpx_result in cpx_results.iter() {
+        // Reset from previous tests.
+        cpu.reset();
+
+        // Set X register for comparisons.
+        cpu.registers.x = x_value;
+
+        // Store the value in several memory locations for lookup during CMP instructions.
+        for addr in [0x002a, 0x423a].iter() {
+            cpu.memory.store(*addr as u16, cpx_result.0);
+        }
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// Compare with value
+                           CPX_Imm as u8,
+                           cpx_result.0,
+
+                           // Compare with 0x002a
+                           CPX_Zero as u8,
+                           0x2a,
+
+                           // Compare with 0x423a
+                           CPX_Abs as u8,
+                           0x42,
+                           0x3a]);
+
+        // Test that processor status is set correctly after each instruction.
+        for _ in 0..3 {
+            cpu.registers.p.0 = 0x00;
+            cpu.execute();
+            assert!(cpu.registers.p.0 == cpx_result.1,
+                    "Bad flag: {:08b}",
+                    cpu.registers.p.0);
+        }
+    }
+}
+
+#[test]
 fn test_flags() {
     let mut cpu = cpu::Cpu::new();
 
