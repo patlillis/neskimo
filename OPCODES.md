@@ -54,7 +54,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * `RTS` (ReTurn from Subroutine)
 
-* `SBC` (SuBtract with Carry)
+* ~~`SBC` (SuBtract with Carry)~~
 
 * ~~`STA` (STore Accumulator)~~
 

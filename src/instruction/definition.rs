@@ -47,20 +47,6 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         CLD => def(1, 2),
         SED => def(1, 2),
 
-        // ROtate Left
-        ROL_Acc => def(1, 2),
-        ROL_Zero => def(2, 5),
-        ROL_Zero_X => def(2, 6),
-        ROL_Abs => def(3, 6),
-        ROL_Abs_X => def(3, 7),
-
-        // ROtate Right
-        ROR_Acc => def(1, 2),
-        ROR_Zero => def(2, 5),
-        ROR_Zero_X => def(2, 6),
-        ROR_Abs => def(3, 6),
-        ROR_Abs_X => def(3, 7),
-
         // CoMPare accumulator
         CMP_Imm => def(2, 2),
         CMP_Zero => def(2, 3),
@@ -136,6 +122,30 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         TYA => def(1, 2),
         DEY => def(1, 2),
         INY => def(1, 2),
+
+        // ROtate Left
+        ROL_Acc => def(1, 2),
+        ROL_Zero => def(2, 5),
+        ROL_Zero_X => def(2, 6),
+        ROL_Abs => def(3, 6),
+        ROL_Abs_X => def(3, 7),
+
+        // ROtate Right
+        ROR_Acc => def(1, 2),
+        ROR_Zero => def(2, 5),
+        ROR_Zero_X => def(2, 6),
+        ROR_Abs => def(3, 6),
+        ROR_Abs_X => def(3, 7),
+
+        // SuBtract with Carry
+        SBC_Imm => def(2, 2),
+        SBC_Zero => def(2, 3),
+        SBC_Zero_X => def(2, 4),
+        SBC_Abs => def(3, 4),
+        SBC_Abs_X => def(3, 4),
+        SBC_Abs_Y => def(3, 4),
+        SBC_Ind_X => def(2, 6),
+        SBC_Ind_Y => def(2, 5),
 
         // STore Accumulator
         STA_Zero => def(2, 3),

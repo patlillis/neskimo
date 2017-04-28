@@ -345,6 +345,28 @@ impl Cpu {
         self.registers.p.set_v(overflow);
     }
 
+    // This instruction subtracts the contents a memory location from
+    // the accumulator, adding the carry bit, and stores the result
+    // in the accumulator. If overflow does not occur, the carry bit is set.
+    // This enables multiple byte subtraction to be performed.
+    // TODO: Decimal mode.
+    //
+    //         C    Carry Flag          Clear if overflow in bit 7
+    //         Z    Zero Flag           Set if result = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Set if sign bit is incorrect
+    //         N    Negative Flag       Set if bit 7 of the result is set
+    pub fn sbc(&mut self, address: u16) {
+        let arg = self.memory.fetch(address);
+        self.sbc_value(arg);
+    }
+
+    pub fn sbc_value(&mut self, arg: u8) {
+        self.adc_value(!arg);
+    }
+
 
     // Rotates bits in the memory address to the left. Bit 7 is placed in
     // the carry flag, and bit 0 is set to the old value of the carry flag.

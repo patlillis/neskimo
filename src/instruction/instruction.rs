@@ -189,48 +189,6 @@ impl Instruction {
             CLD => cpu.cld(),
             SED => cpu.sed(),
 
-            // ROtate Left
-            ROL_Acc => {
-                cpu.rol_a();
-            }
-            ROL_Zero => {
-                let address = self.zero_page_address();
-                cpu.rol(address);
-            }
-            ROL_Zero_X => {
-                let address = self.zero_page_address_x(cpu);
-                cpu.rol(address);
-            }
-            ROL_Abs => {
-                let address = self.absolute_address();
-                cpu.rol(address);
-            }
-            ROL_Abs_X => {
-                let address = self.absolute_address_x(cpu);
-                cpu.rol(address);
-            }
-
-            // ROtate Right
-            ROR_Acc => {
-                cpu.ror_a();
-            }
-            ROR_Zero => {
-                let address = self.zero_page_address();
-                cpu.ror(address);
-            }
-            ROR_Zero_X => {
-                let address = self.zero_page_address_x(cpu);
-                cpu.ror(address);
-            }
-            ROR_Abs => {
-                let address = self.absolute_address();
-                cpu.ror(address);
-            }
-            ROR_Abs_X => {
-                let address = self.absolute_address_x(cpu);
-                cpu.ror(address);
-            }
-
             // CoMPare accumulator
             CMP_Imm => {
                 let value = self.immediate_value();
@@ -428,6 +386,87 @@ impl Instruction {
                 cpu.lsr(address);
             }
 
+            // No OPeration
+            NOP => {
+                cpu.nop();
+            }
+
+            // ROtate Left
+            ROL_Acc => {
+                cpu.rol_a();
+            }
+            ROL_Zero => {
+                let address = self.zero_page_address();
+                cpu.rol(address);
+            }
+            ROL_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.rol(address);
+            }
+            ROL_Abs => {
+                let address = self.absolute_address();
+                cpu.rol(address);
+            }
+            ROL_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.rol(address);
+            }
+
+            // ROtate Right
+            ROR_Acc => {
+                cpu.ror_a();
+            }
+            ROR_Zero => {
+                let address = self.zero_page_address();
+                cpu.ror(address);
+            }
+            ROR_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.ror(address);
+            }
+            ROR_Abs => {
+                let address = self.absolute_address();
+                cpu.ror(address);
+            }
+            ROR_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.ror(address);
+            }
+
+            // SuBtract with Carry
+            SBC_Imm => {
+                let value = self.immediate_value();
+                cpu.sbc_value(value);
+            }
+            SBC_Zero => {
+                let address = self.zero_page_address();
+                cpu.sbc(address);
+            }
+            SBC_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.sbc(address);
+            }
+            SBC_Abs => {
+                let address = self.absolute_address();
+                cpu.sbc(address);
+            }
+            SBC_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.sbc(address);
+            }
+            SBC_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu.sbc(address);
+            }
+            SBC_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu.sbc(address);
+            }
+            SBC_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu.sbc(address);
+            }
+
             // STore Accumulator
             STA_Zero => {
                 let address = self.zero_page_address();
@@ -470,11 +509,6 @@ impl Instruction {
             STX_Abs => {
                 let address = self.absolute_address();
                 cpu.stx(address);
-            }
-
-            // No OPeration
-            NOP => {
-                cpu.nop();
             }
 
             // Register Instructions

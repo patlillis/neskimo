@@ -158,77 +158,6 @@ fn test_asl() {
 }
 
 #[test]
-fn test_lsr() {
-    let mut cpu = cpu::Cpu::new();
-
-    // First entry in tuple is value that should be shifted.
-    // Second entry is expected processor status flags after that shift.
-    let lsr_results = [(0x01, 0b00000011), (0x03, 0b00000001), (0xf2, 0b00000000)];
-
-    for lsr_result in lsr_results.iter() {
-        // Reset from last round.
-        cpu.reset();
-
-        // Test accumulator shift.
-        cpu.registers.a = lsr_result.0;
-        cpu.memory.store(0x0000, LSR_Acc as u8);
-        cpu.execute();
-        assert!(cpu.registers.p.0 == lsr_result.1,
-                "Bad flags after LSR on accumulator: {:08b}",
-                cpu.registers.p.0);
-        assert!(cpu.registers.a == (lsr_result.0 >> 1),
-                "Bad shift result {:#04x} in accumulator",
-                cpu.registers.a);
-
-        // Test asl on memory.
-        cpu.reset();
-
-        // Store the value in several memory locations for lookup during LSR instructions.
-        let lsr_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
-        for addr in lsr_addresses.iter() {
-            cpu.memory.store(*addr as u16, lsr_result.0);
-        }
-
-        // X register for zero_x and abs_x.
-        cpu.registers.x = 0xff;
-
-        cpu.memory
-            .store_bytes(0x0000,
-                         &[// Shift location 0x002a
-                           LSR_Zero as u8,
-                           0x2a,
-
-                           // Shift location 0x003a
-                           LSR_Zero_X as u8,
-                           0x3b,
-
-                           // Shift location 0x123a
-                           LSR_Abs as u8,
-                           0x12,
-                           0x3a,
-
-                           // Shift location 0x234a
-                           LSR_Abs_X as u8,
-                           0x22,
-                           0x4b]);
-
-        // Test that processor status is set correctly after each instruction.
-        for addr in lsr_addresses.iter() {
-            cpu.registers.p.0 = 0x00;
-            cpu.execute();
-            assert!(cpu.registers.p.0 == lsr_result.1,
-                    "Bad flag: {:08b}",
-                    cpu.registers.p.0);
-            let shift_result = cpu.memory.fetch(*addr);
-            assert!(shift_result == (lsr_result.0 >> 1),
-                    "Bad shift result {:#04x} in memory {:#06x}",
-                    shift_result,
-                    addr);
-        }
-    }
-}
-
-#[test]
 fn test_bit() {
     let mut cpu = cpu::Cpu::new();
 
@@ -488,51 +417,6 @@ fn test_cpy() {
 }
 
 #[test]
-fn test_flags() {
-    let mut cpu = cpu::Cpu::new();
-
-    cpu.memory
-        .store_bytes(0x0000,
-                     &[// Carry flag
-                       SEC as u8,
-                       CLC as u8,
-
-                       // Interrupt flag
-                       SEI as u8,
-                       CLI as u8,
-
-                       // Overflow flag
-                       CLV as u8,
-
-                       // Decimal flag
-                       SED as u8,
-                       CLD as u8]);
-
-    // Carry flag
-    cpu.execute();
-    assert!(cpu.registers.p.c() == true, "Carry flag not set");
-    cpu.execute();
-    assert!(cpu.registers.p.c() == false, "Carry flag not cleared");
-
-    // Interrupt flag
-    cpu.execute();
-    assert!(cpu.registers.p.i() == true, "Interrupt flag not set");
-    cpu.execute();
-    assert!(cpu.registers.p.i() == false, "Interrupt flag not cleared");
-
-    // Overflow flag
-    cpu.registers.p.set_v(true);
-    cpu.execute();
-    assert!(cpu.registers.p.v() == false, "Overflow flag not cleared");
-
-    // Decimal flag
-    cpu.execute();
-    assert!(cpu.registers.p.d() == true, "Decimal flag not set");
-    cpu.execute();
-    assert!(cpu.registers.p.d() == false, "Decimal flag not cleared");
-}
-
-#[test]
 fn test_dec() {
     let mut cpu = cpu::Cpu::new();
 
@@ -576,6 +460,51 @@ fn test_dec() {
                 "Bad value loaded from addr {:#06x}",
                 addr);
     }
+}
+
+#[test]
+fn test_flags() {
+    let mut cpu = cpu::Cpu::new();
+
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[// Carry flag
+                       SEC as u8,
+                       CLC as u8,
+
+                       // Interrupt flag
+                       SEI as u8,
+                       CLI as u8,
+
+                       // Overflow flag
+                       CLV as u8,
+
+                       // Decimal flag
+                       SED as u8,
+                       CLD as u8]);
+
+    // Carry flag
+    cpu.execute();
+    assert!(cpu.registers.p.c() == true, "Carry flag not set");
+    cpu.execute();
+    assert!(cpu.registers.p.c() == false, "Carry flag not cleared");
+
+    // Interrupt flag
+    cpu.execute();
+    assert!(cpu.registers.p.i() == true, "Interrupt flag not set");
+    cpu.execute();
+    assert!(cpu.registers.p.i() == false, "Interrupt flag not cleared");
+
+    // Overflow flag
+    cpu.registers.p.set_v(true);
+    cpu.execute();
+    assert!(cpu.registers.p.v() == false, "Overflow flag not cleared");
+
+    // Decimal flag
+    cpu.execute();
+    assert!(cpu.registers.p.d() == true, "Decimal flag not set");
+    cpu.execute();
+    assert!(cpu.registers.p.d() == false, "Decimal flag not cleared");
 }
 
 #[test]
@@ -811,6 +740,77 @@ fn test_ldy() {
 }
 
 #[test]
+fn test_lsr() {
+    let mut cpu = cpu::Cpu::new();
+
+    // First entry in tuple is value that should be shifted.
+    // Second entry is expected processor status flags after that shift.
+    let lsr_results = [(0x01, 0b00000011), (0x03, 0b00000001), (0xf2, 0b00000000)];
+
+    for lsr_result in lsr_results.iter() {
+        // Reset from last round.
+        cpu.reset();
+
+        // Test accumulator shift.
+        cpu.registers.a = lsr_result.0;
+        cpu.memory.store(0x0000, LSR_Acc as u8);
+        cpu.execute();
+        assert!(cpu.registers.p.0 == lsr_result.1,
+                "Bad flags after LSR on accumulator: {:08b}",
+                cpu.registers.p.0);
+        assert!(cpu.registers.a == (lsr_result.0 >> 1),
+                "Bad shift result {:#04x} in accumulator",
+                cpu.registers.a);
+
+        // Test asl on memory.
+        cpu.reset();
+
+        // Store the value in several memory locations for lookup during LSR instructions.
+        let lsr_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
+        for addr in lsr_addresses.iter() {
+            cpu.memory.store(*addr as u16, lsr_result.0);
+        }
+
+        // X register for zero_x and abs_x.
+        cpu.registers.x = 0xff;
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// Shift location 0x002a
+                           LSR_Zero as u8,
+                           0x2a,
+
+                           // Shift location 0x003a
+                           LSR_Zero_X as u8,
+                           0x3b,
+
+                           // Shift location 0x123a
+                           LSR_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // Shift location 0x234a
+                           LSR_Abs_X as u8,
+                           0x22,
+                           0x4b]);
+
+        // Test that processor status is set correctly after each instruction.
+        for addr in lsr_addresses.iter() {
+            cpu.registers.p.0 = 0x00;
+            cpu.execute();
+            assert!(cpu.registers.p.0 == lsr_result.1,
+                    "Bad flag: {:08b}",
+                    cpu.registers.p.0);
+            let shift_result = cpu.memory.fetch(*addr);
+            assert!(shift_result == (lsr_result.0 >> 1),
+                    "Bad shift result {:#04x} in memory {:#06x}",
+                    shift_result,
+                    addr);
+        }
+    }
+}
+
+#[test]
 fn test_registers() {
     let mut cpu = cpu::Cpu::new();
 
@@ -1030,6 +1030,90 @@ fn test_ror() {
                     "Bad rotate result {:#04x} in address {:#06x}",
                     value,
                     *addr);
+        }
+    }
+}
+
+#[test]
+fn test_sbc() {
+    let mut cpu = cpu::Cpu::new();
+
+    // First entry is value to be subtracted.
+    // Second entry is value in accumulator before the subtraction.
+    // Third entry is carry bit.
+    // Fourth entry is expected outcome.
+    // Fifth value is expected status register value.
+    let sbc_results = [(0x01, 0x00, true, 0xff, 0b10000000),
+                       (0x01, 0x80, true, 0x7f, 0b01000001),
+                       (0xff, 0x7f, false, 0x7f, 0b00000000)];
+
+    for sbc_result in sbc_results.iter() {
+        // Reset from the last round.
+        cpu.reset();
+
+        // Store value in memory locations for testing.
+        let sbc_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        for addr in sbc_addresses.iter() {
+            cpu.memory.store(*addr, sbc_result.0);
+        }
+
+        // Store extra memory values for indirect lookups.
+        cpu.memory.store_u16(0x005a, 0xfada);
+        cpu.memory.store_u16(0x006a, 0xbdec);
+
+        // Store x and y registers.
+        cpu.registers.x = 0xff;
+        cpu.registers.y = 0xfe;
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// Subtract immediate instruction arg.
+                           SBC_Imm as u8,
+                           sbc_result.0,
+
+                           // Subtract 0x003a
+                           SBC_Zero as u8,
+                           0x3a,
+
+                           // Subtract 0x004a
+                           SBC_Zero_X as u8,
+                           0x4b,
+
+                           // Subtract 0x123a
+                           SBC_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // Subtract 0x234a
+                           SBC_Abs_X as u8,
+                           0x22,
+                           0x4b,
+
+                           // Subtract 0x345a
+                           SBC_Abs_Y as u8,
+                           0x33,
+                           0x5c,
+
+                           // Subtract 0xfada (thru 0x005a)
+                           SBC_Ind_X as u8,
+                           0x5b,
+
+                           // Subtract 0xbeea (thru 0x006a)
+                           SBC_Ind_Y as u8,
+                           0x6a]);
+
+        for _ in 0..sbc_addresses.len() + 1 {
+            cpu.registers.a = sbc_result.1;
+            cpu.registers.p.0 = 0x00;
+            cpu.registers.p.set_c(sbc_result.2);
+            cpu.execute();
+
+            assert!(cpu.registers.a == sbc_result.3,
+                    "Bad result {:#04x} in A after SBC",
+                    cpu.registers.a);
+            assert!(cpu.registers.p.0 == sbc_result.4,
+                    "Bad flag: {:08b}",
+                    cpu.registers.p.0);
         }
     }
 }

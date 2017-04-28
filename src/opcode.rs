@@ -153,6 +153,16 @@ enum_from_primitive! {
         ROR_Abs     = 0x6e,
         ROR_Abs_X   = 0x7e,
 
+        // SuBtract with Carry
+        SBC_Imm     = 0xe9,
+        SBC_Zero    = 0xe5,
+        SBC_Zero_X  = 0xf5,
+        SBC_Abs     = 0xed,
+        SBC_Abs_X   = 0xfd,
+        SBC_Abs_Y   = 0xf9,
+        SBC_Ind_X   = 0xe1,
+        SBC_Ind_Y   = 0xf1,
+
         // STore Accumulator
         STA_Zero    = 0x85,
         STA_Zero_X  = 0x95,
