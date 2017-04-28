@@ -303,6 +303,40 @@ impl Instruction {
                 cpu.dec(address);
             }
 
+            // bitwise Exclusive OR
+            EOR_Imm => {
+                let value = self.immediate_value();
+                cpu.eor_value(value);
+            }
+            EOR_Zero => {
+                let address = self.zero_page_address();
+                cpu.eor(address);
+            }
+            EOR_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.eor(address);
+            }
+            EOR_Abs => {
+                let address = self.absolute_address();
+                cpu.eor(address);
+            }
+            EOR_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.eor(address);
+            }
+            EOR_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu.eor(address);
+            }
+            EOR_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu.eor(address);
+            }
+            EOR_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu.eor(address);
+            }
+
             // INCrement memory
             INC_Zero => {
                 let address = self.zero_page_address();

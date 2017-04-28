@@ -83,6 +83,16 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         DEC_Abs => def(3, 6),
         DEC_Abs_X => def(3, 7),
 
+        // bitwise Exclusive OR
+        EOR_Imm => def(2, 2),
+        EOR_Zero => def(2, 3),
+        EOR_Zero_X => def(2, 4),
+        EOR_Abs => def(3, 4),
+        EOR_Abs_X => def(3, 4),
+        EOR_Abs_Y => def(3, 4),
+        EOR_Ind_X => def(2, 6),
+        EOR_Ind_Y => def(2, 5),
+
         // INCrement memory
         INC_Zero => def(2, 5),
         INC_Zero_X => def(2, 6),

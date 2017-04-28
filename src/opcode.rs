@@ -99,6 +99,16 @@ enum_from_primitive! {
         DEC_Abs     = 0xce,
         DEC_Abs_X   = 0xde,
 
+        // bitwise Exclusive OR
+        EOR_Imm     = 0x49,
+        EOR_Zero    = 0x45,
+        EOR_Zero_X  = 0x55,
+        EOR_Abs     = 0x4d,
+        EOR_Abs_X   = 0x5d,
+        EOR_Abs_Y   = 0x59,
+        EOR_Ind_X   = 0x41,
+        EOR_Ind_Y   = 0x51,
+
         // INCrement memory
         INC_Zero    = 0xe6,
         INC_Zero_X  = 0xf6,

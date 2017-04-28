@@ -546,6 +546,90 @@ fn test_dec() {
 }
 
 #[test]
+fn test_eor() {
+    let mut cpu = cpu::Cpu::new();
+
+    // First entry is value to be xor.
+    // Second entry is value in accumulator before the xor.
+    // Third entry is expected result.
+    // Fourth value is expected status register value.
+    let eor_results = [(0x00, 0x00, 0x00, 0b00000010),
+                       (0xff, 0x80, 0x7f, 0b00000000),
+                       (0xc0, 0xfd, 0x3d, 0b00000000),
+                       (0xa5, 0x5a, 0xff, 0b10000000),
+                       (0x33, 0x33, 0x00, 0b00000010)];
+
+    for eor_result in eor_results.iter() {
+        // Reset from the last round.
+        cpu.reset();
+
+        // Store value in memory locations for testing.
+        let eor_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        for addr in eor_addresses.iter() {
+            cpu.memory.store(*addr, eor_result.0);
+        }
+
+        // Store extra memory values for indirect lookups.
+        cpu.memory.store_u16(0x005a, 0xfada);
+        cpu.memory.store_u16(0x006a, 0xbdec);
+
+        // Store x and y registers.
+        cpu.registers.x = 0xff;
+        cpu.registers.y = 0xfe;
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// XOR immediate instruction arg.
+                           EOR_Imm as u8,
+                           eor_result.0,
+
+                           // XOR with 0x003a
+                           EOR_Zero as u8,
+                           0x3a,
+
+                           // XOR with 0x004a
+                           EOR_Zero_X as u8,
+                           0x4b,
+
+                           // XOR with 0x123a
+                           EOR_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // XOR with 0x234a
+                           EOR_Abs_X as u8,
+                           0x22,
+                           0x4b,
+
+                           // XOR with 0x345a
+                           EOR_Abs_Y as u8,
+                           0x33,
+                           0x5c,
+
+                           // XOR with 0xfada (thru 0x005a)
+                           EOR_Ind_X as u8,
+                           0x5b,
+
+                           // XOR with 0xbeea (thru 0x006a)
+                           EOR_Ind_Y as u8,
+                           0x6a]);
+
+        for _ in 0..eor_addresses.len() + 1 {
+            cpu.registers.a = eor_result.1;
+            cpu.registers.p.0 = 0x00;
+            cpu.execute();
+
+            assert!(cpu.registers.a == eor_result.2,
+                    "Bad xor result {:#04x} in A after AND",
+                    cpu.registers.a);
+            assert!(cpu.registers.p.0 == eor_result.3,
+                    "Bad flag: {:08b}",
+                    cpu.registers.p.0);
+        }
+    }
+}
+
+#[test]
 fn test_flags() {
     let mut cpu = cpu::Cpu::new();
 

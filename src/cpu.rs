@@ -598,6 +598,29 @@ impl Cpu {
     }
 
 
+    // Performs a bitwise exclusive or of the contents of a memory location
+    // with the accumulator, storing the result back in the accumulator.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if result = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the result is set
+    pub fn eor(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        self.eor_value(value);
+    }
+
+    pub fn eor_value(&mut self, value: u8) {
+        let result = self.registers.a ^ value;
+        self.registers.a = result;
+        self.set_z_flag(result);
+        self.set_n_flag(result);
+    }
+
+
     // Compares the contents of A, X, or Y register with another value,
     // and sets the carry, zero, and negative flags as appropriate.
     //

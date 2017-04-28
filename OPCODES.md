@@ -22,7 +22,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~`DEC` (DECrement memory)~~
 
-* `EOR` (bitwise Exclusive OR)
+* ~~`EOR` (bitwise Exclusive OR)~~
 
 * ~~Flag (Processor Status) Instructions~~
 
