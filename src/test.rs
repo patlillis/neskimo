@@ -77,7 +77,7 @@ fn test_adc() {
             cpu.execute();
 
             assert!(cpu.registers.a == adc_result.3,
-                    "Bad shift result {:#04x} in A after ADC",
+                    "Bad result {:#04x} in A after ADC",
                     cpu.registers.a);
             assert!(cpu.registers.p.0 == adc_result.4,
                     "Bad flag: {:08b}",
@@ -160,7 +160,7 @@ fn test_and() {
             cpu.execute();
 
             assert!(cpu.registers.a == and_result.2,
-                    "Bad shift result {:#04x} in A after AND",
+                    "Bad result {:#04x} in A after AND",
                     cpu.registers.a);
             assert!(cpu.registers.p.0 == and_result.3,
                     "Bad flag: {:08b}",
@@ -620,7 +620,7 @@ fn test_eor() {
             cpu.execute();
 
             assert!(cpu.registers.a == eor_result.2,
-                    "Bad xor result {:#04x} in A after AND",
+                    "Bad result {:#04x} in A after EOR",
                     cpu.registers.a);
             assert!(cpu.registers.p.0 == eor_result.3,
                     "Bad flag: {:08b}",
@@ -973,6 +973,89 @@ fn test_lsr() {
                     "Bad shift result {:#04x} in memory {:#06x}",
                     shift_result,
                     addr);
+        }
+    }
+}
+
+#[test]
+fn test_ora() {
+    let mut cpu = cpu::Cpu::new();
+
+    // First entry is value to be or.
+    // Second entry is value in accumulator before the or.
+    // Third entry is expected result.
+    // Fourth value is expected status register value.
+    let ora_results = [(0x00, 0x00, 0x00, 0b00000010),
+                       (0xff, 0x80, 0xff, 0b10000000),
+                       (0xc0, 0xfd, 0xfd, 0b10000000),
+                       (0xa5, 0x5a, 0xff, 0b10000000)];
+
+    for ora_result in ora_results.iter() {
+        // Reset from the last round.
+        cpu.reset();
+
+        // Store value in memory locations for testing.
+        let ora_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        for addr in ora_addresses.iter() {
+            cpu.memory.store(*addr, ora_result.0);
+        }
+
+        // Store extra memory values for indirect lookups.
+        cpu.memory.store_u16(0x005a, 0xfada);
+        cpu.memory.store_u16(0x006a, 0xbdec);
+
+        // Store x and y registers.
+        cpu.registers.x = 0xff;
+        cpu.registers.y = 0xfe;
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// XOR immediate instruction arg.
+                           ORA_Imm as u8,
+                           ora_result.0,
+
+                           // XOR with 0x003a
+                           ORA_Zero as u8,
+                           0x3a,
+
+                           // XOR with 0x004a
+                           ORA_Zero_X as u8,
+                           0x4b,
+
+                           // XOR with 0x123a
+                           ORA_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // XOR with 0x234a
+                           ORA_Abs_X as u8,
+                           0x22,
+                           0x4b,
+
+                           // XOR with 0x345a
+                           ORA_Abs_Y as u8,
+                           0x33,
+                           0x5c,
+
+                           // XOR with 0xfada (thru 0x005a)
+                           ORA_Ind_X as u8,
+                           0x5b,
+
+                           // XOR with 0xbeea (thru 0x006a)
+                           ORA_Ind_Y as u8,
+                           0x6a]);
+
+        for _ in 0..ora_addresses.len() + 1 {
+            cpu.registers.a = ora_result.1;
+            cpu.registers.p.0 = 0x00;
+            cpu.execute();
+
+            assert!(cpu.registers.a == ora_result.2,
+                    "Bad result {:#04x} in A after ORA",
+                    cpu.registers.a);
+            assert!(cpu.registers.p.0 == ora_result.3,
+                    "Bad flag: {:08b}",
+                    cpu.registers.p.0);
         }
     }
 }

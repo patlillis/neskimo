@@ -42,7 +42,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~`NOP` (No OPeration)~~
 
-* `ORA` (bitwise OR with Accumulator)
+* ~~`ORA` (bitwise OR with Accumulator)~~
 
 * ~~Register Instructions~~
 

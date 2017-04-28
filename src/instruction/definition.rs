@@ -130,6 +130,16 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         LSR_Abs => def(3, 6),
         LSR_Abs_X => def(3, 7),
 
+        // bitwise OR with Accumulator
+        ORA_Imm => def(2, 2),
+        ORA_Zero => def(2, 3),
+        ORA_Zero_X => def(2, 4),
+        ORA_Abs => def(3, 4),
+        ORA_Abs_X => def(3, 4),
+        ORA_Abs_Y => def(3, 4),
+        ORA_Ind_X => def(2, 6),
+        ORA_Ind_Y => def(2, 5),
+
         // No OPeration
         NOP => def(1, 2),
 

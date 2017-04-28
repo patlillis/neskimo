@@ -146,6 +146,16 @@ enum_from_primitive! {
         LSR_Abs     = 0x4e,
         LSR_Abs_X   = 0x5e,
 
+        // bitwise OR with Accumulator
+        ORA_Imm     = 0x09,
+        ORA_Zero    = 0x05,
+        ORA_Zero_X  = 0x15,
+        ORA_Abs     = 0x0d,
+        ORA_Abs_X   = 0x1d,
+        ORA_Abs_Y   = 0x19,
+        ORA_Ind_X   = 0x01,
+        ORA_Ind_Y   = 0x11,
+
         // No OPeration
         NOP         = 0xea,
 
