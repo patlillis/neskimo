@@ -4,7 +4,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~`ADC` (ADd with Carry)~~
 
-* `AND` (bitwise AND with accumulator)
+* ~~`AND` (bitwise AND with accumulator)~~
 
 * ~~`ASL` (Arithmetic Shift Left)~~
 

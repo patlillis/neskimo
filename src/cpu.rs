@@ -300,6 +300,7 @@ impl Cpu {
         self.registers.p.set_i(true);
     }
 
+
     // This instruction adds the contents of a memory location to the
     // accumulator together with the carry bit, and stores the sum
     // in the accumulator. If overflow occurs the carry bit is set.
@@ -318,18 +319,18 @@ impl Cpu {
         self.adc_value(arg);
     }
 
-    pub fn adc_value(&mut self, arg: u8) {
+    pub fn adc_value(&mut self, value: u8) {
         let initial_carry = if self.registers.p.c() { 1 } else { 0 };
         let (sum, carry) = self.registers
             .a
-            .overflowing_add(arg.wrapping_add(initial_carry));
+            .overflowing_add(value.wrapping_add(initial_carry));
 
         // The overflow flag is set when the sign of the addends is the same and
         // differs from the sign of the sum
-        //  !(self.registers.a ^ arg) ====> Do the addends sign match?
+        //  !(self.registers.a ^ value) ==> Do the addends sign match?
         // & (self.registers.a ^ sum) ====> Do A and result have different signs?
         // & 0x80                     ====> Extract sign bit.
-        let overflow = !(self.registers.a ^ arg) & (self.registers.a ^ sum) & 0x80 == 0x80;
+        let overflow = !(self.registers.a ^ value) & (self.registers.a ^ sum) & 0x80 == 0x80;
 
         // Store result in accumulator.
         self.registers.a = sum;
@@ -344,6 +345,30 @@ impl Cpu {
         // Set overflow flag if sign is incorrect.
         self.registers.p.set_v(overflow);
     }
+
+
+    // Performs a bitwise and of the contents of a memory location
+    // with the accumulator, storing the result back in the accumulator.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if result = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the result is set
+    pub fn and(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        self.and_value(value);
+    }
+
+    pub fn and_value(&mut self, value: u8) {
+        let result = self.registers.a & value;
+        self.registers.a = result;
+        self.set_z_flag(result);
+        self.set_n_flag(result);
+    }
+
 
     // This instruction subtracts the contents a memory location from
     // the accumulator, adding the carry bit, and stores the result

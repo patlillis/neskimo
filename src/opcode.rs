@@ -43,6 +43,16 @@ enum_from_primitive! {
         ADC_Ind_X   = 0x61,
         ADC_Ind_Y   = 0x71,
 
+        // bitwise AND with accumulator
+        AND_Imm     = 0x29,
+        AND_Zero    = 0x25,
+        AND_Zero_X  = 0x35,
+        AND_Abs     = 0x2d,
+        AND_Abs_X   = 0x3d,
+        AND_Abs_Y   = 0x39,
+        AND_Ind_X   = 0x21,
+        AND_Ind_Y   = 0x31,
+
         // Arithmetic Shift Left
         ASL_Acc     = 0x0a,
         ASL_Zero    = 0x06,

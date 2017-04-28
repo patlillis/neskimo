@@ -27,6 +27,16 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         ADC_Ind_X => def(2, 6),
         ADC_Ind_Y => def(2, 5),
 
+        // bitwise AND with accumulator
+        AND_Imm => def(2, 2),
+        AND_Zero => def(2, 3),
+        AND_Zero_X => def(2, 4),
+        AND_Abs => def(3, 4),
+        AND_Abs_X => def(3, 4),
+        AND_Abs_Y => def(3, 4),
+        AND_Ind_X => def(2, 6),
+        AND_Ind_Y => def(2, 5),
+
         // Arithmetic Shift Left
         ASL_Acc => def(1, 2),
         ASL_Zero => def(2, 5),

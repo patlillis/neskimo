@@ -87,6 +87,89 @@ fn test_adc() {
 }
 
 #[test]
+fn test_and() {
+    let mut cpu = cpu::Cpu::new();
+
+    // First entry is value to be anded.
+    // Second entry is value in accumulator before the and.
+    // Third entry is expected result.
+    // Fourth value is expected status register value.
+    let and_results = [(0x00, 0x00, 0x00, 0b00000010),
+                       (0xff, 0x80, 0x80, 0b10000000),
+                       (0xc0, 0xfd, 0xc0, 0b10000000),
+                       (0xa5, 0x5a, 0x00, 0b00000010)];
+
+    for and_result in and_results.iter() {
+        // Reset from the last round.
+        cpu.reset();
+
+        // Store value in memory locations for testing.
+        let and_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        for addr in and_addresses.iter() {
+            cpu.memory.store(*addr, and_result.0);
+        }
+
+        // Store extra memory values for indirect lookups.
+        cpu.memory.store_u16(0x005a, 0xfada);
+        cpu.memory.store_u16(0x006a, 0xbdec);
+
+        // Store x and y registers.
+        cpu.registers.x = 0xff;
+        cpu.registers.y = 0xfe;
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// And immediate instruction arg.
+                           AND_Imm as u8,
+                           and_result.0,
+
+                           // And with 0x003a
+                           AND_Zero as u8,
+                           0x3a,
+
+                           // And with 0x004a
+                           AND_Zero_X as u8,
+                           0x4b,
+
+                           // And with 0x123a
+                           AND_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // And with 0x234a
+                           AND_Abs_X as u8,
+                           0x22,
+                           0x4b,
+
+                           // And with 0x345a
+                           AND_Abs_Y as u8,
+                           0x33,
+                           0x5c,
+
+                           // And with 0xfada (thru 0x005a)
+                           AND_Ind_X as u8,
+                           0x5b,
+
+                           // And with 0xbeea (thru 0x006a)
+                           AND_Ind_Y as u8,
+                           0x6a]);
+
+        for _ in 0..and_addresses.len() + 1 {
+            cpu.registers.a = and_result.1;
+            cpu.registers.p.0 = 0x00;
+            cpu.execute();
+
+            assert!(cpu.registers.a == and_result.2,
+                    "Bad shift result {:#04x} in A after AND",
+                    cpu.registers.a);
+            assert!(cpu.registers.p.0 == and_result.3,
+                    "Bad flag: {:08b}",
+                    cpu.registers.p.0);
+        }
+    }
+}
+
+#[test]
 fn test_asl() {
     let mut cpu = cpu::Cpu::new();
 

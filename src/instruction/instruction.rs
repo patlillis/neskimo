@@ -149,6 +149,40 @@ impl Instruction {
                 cpu.adc(address);
             }
 
+            // bitwise AND with accumulator
+            AND_Imm => {
+                let value = self.immediate_value();
+                cpu.and_value(value);
+            }
+            AND_Zero => {
+                let address = self.zero_page_address();
+                cpu.and(address);
+            }
+            AND_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.and(address);
+            }
+            AND_Abs => {
+                let address = self.absolute_address();
+                cpu.and(address);
+            }
+            AND_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.and(address);
+            }
+            AND_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu.and(address);
+            }
+            AND_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu.and(address);
+            }
+            AND_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu.and(address);
+            }
+
             // Arithmetic Shift Left
             ASL_Acc => {
                 cpu.asl_a();
