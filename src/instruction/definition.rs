@@ -17,6 +17,16 @@ fn def(len: u16, cycles: u8) -> InstructionDefinition {
 // Get an instruction definition, based on opcode.
 pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefinition {
     match opcode {
+        // ADd with Carry
+        ADC_Imm => def(2, 2),
+        ADC_Zero => def(2, 3),
+        ADC_Zero_X => def(2, 4),
+        ADC_Abs => def(3, 3),
+        ADC_Abs_X => def(3, 4),
+        ADC_Abs_Y => def(3, 4),
+        ADC_Ind_X => def(2, 6),
+        ADC_Ind_Y => def(2, 5),
+
         // Arithmetic Shift Left
         ASL_Acc => def(1, 2),
         ASL_Zero => def(2, 5),
@@ -36,6 +46,20 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         CLV => def(1, 2),
         CLD => def(1, 2),
         SED => def(1, 2),
+
+        // ROtate Left
+        ROL_Acc => def(1, 2),
+        ROL_Zero => def(2, 5),
+        ROL_Zero_X => def(2, 6),
+        ROL_Abs => def(3, 6),
+        ROL_Abs_X => def(3, 7),
+
+        // ROtate Right
+        ROR_Acc => def(1, 2),
+        ROR_Zero => def(2, 5),
+        ROR_Zero_X => def(2, 6),
+        ROR_Abs => def(3, 6),
+        ROR_Abs_X => def(3, 7),
 
         // CoMPare accumulator
         CMP_Imm => def(2, 2),

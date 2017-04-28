@@ -2,6 +2,91 @@ use cpu;
 use opcode::Opcode::*;
 
 #[test]
+fn test_adc() {
+    let mut cpu = cpu::Cpu::new();
+
+    // First entry is value to be added.
+    // Second entry is value in accumulator before the add.
+    // Third entry is carry bit.
+    // Fourth entry is expected sum.
+    // Fifth value is expected status register value.
+    let adc_results = [(0x00, 0x00, false, 0x00, 0b00000010),
+                       (0x01, 0x01, true, 0x03, 0b00000000),
+                       (0x01, 0x7f, false, 0x80, 0b11000000),
+                       (0xff, 0x80, false, 0x7F, 0b01000001)];
+
+    for adc_result in adc_results.iter() {
+        // Reset from the last round.
+        cpu.reset();
+
+        // Store value in memory locations for testing.
+        let adc_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        for addr in adc_addresses.iter() {
+            cpu.memory.store(*addr, adc_result.0);
+        }
+
+        // Store extra memory values for indirect lookups.
+        cpu.memory.store_u16(0x005a, 0xfada);
+        cpu.memory.store_u16(0x006a, 0xbdec);
+
+        // Store x and y registers.
+        cpu.registers.x = 0xff;
+        cpu.registers.y = 0xfe;
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// Add immediate instruction arg.
+                           ADC_Imm as u8,
+                           adc_result.0,
+
+                           // Add with 0x003a
+                           ADC_Zero as u8,
+                           0x3a,
+
+                           // Add with 0x004a
+                           ADC_Zero_X as u8,
+                           0x4b,
+
+                           // Add with 0x123a
+                           ADC_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // Add with 0x234a
+                           ADC_Abs_X as u8,
+                           0x22,
+                           0x4b,
+
+                           // Add with 0x345a
+                           ADC_Abs_Y as u8,
+                           0x33,
+                           0x5c,
+
+                           // Add with 0xfada (thru 0x005a)
+                           ADC_Ind_X as u8,
+                           0x5b,
+
+                           // Add with 0xbeea (thru 0x006a)
+                           ADC_Ind_Y as u8,
+                           0x6a]);
+
+        for _ in 0..adc_addresses.len() + 1 {
+            cpu.registers.a = adc_result.1;
+            cpu.registers.p.0 = 0x00;
+            cpu.registers.p.set_c(adc_result.2);
+            cpu.execute();
+
+            assert!(cpu.registers.a == adc_result.3,
+                    "Bad shift result {:#04x} in A after ADC",
+                    cpu.registers.a);
+            assert!(cpu.registers.p.0 == adc_result.4,
+                    "Bad flag: {:08b}",
+                    cpu.registers.p.0);
+        }
+    }
+}
+
+#[test]
 fn test_asl() {
     let mut cpu = cpu::Cpu::new();
 
@@ -789,6 +874,164 @@ fn test_registers() {
     cpu.execute();
     assert!(cpu.registers.y == val + 1, "Bad INY");
 
+}
+
+#[test]
+fn test_rol() {
+    let mut cpu = cpu::Cpu::new();
+
+    // First entry in tuple is value that should be rotated.
+    // Second entry is initial carry flag.
+    // Third enty is expected value after rotating.
+    // Fourth entry is expected processor status flags after rotating.
+    let rol_results = [(0x80, true, 0x01, 0b00000001),
+                       (0x00, false, 0x00, 0b00000010),
+                       (0xff, false, 0xfe, 0b10000001)];
+
+    for rol_result in rol_results.iter() {
+        // Reset from last round.
+        cpu.reset();
+
+        // Test accumulator rotate.
+        cpu.registers.a = rol_result.0;
+        cpu.registers.p.set_c(rol_result.1);
+        cpu.memory.store(0x0000, ROL_Acc as u8);
+        cpu.execute();
+        assert!(cpu.registers.p.0 == rol_result.3,
+                "Bad flags after ROL on accumulator: {:08b}",
+                cpu.registers.p.0);
+        assert!(cpu.registers.a == (rol_result.2),
+                "Bad rotate result {:#04x} in accumulator",
+                cpu.registers.a);
+
+        // Test asl on memory.
+        cpu.reset();
+
+        // Store the value in several memory locations for lookup during ROL instructions.
+        let rol_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
+        for addr in rol_addresses.iter() {
+            cpu.memory.store(*addr as u16, rol_result.0);
+        }
+
+        // X register for zero_x and abs_x.
+        cpu.registers.x = 0xff;
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// Rotate location 0x002a
+                           ROL_Zero as u8,
+                           0x2a,
+
+                           // Rotate location 0x003a
+                           ROL_Zero_X as u8,
+                           0x3b,
+
+                           // Rotate location 0x123a
+                           ROL_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // Rotate location 0x234a
+                           ROL_Abs_X as u8,
+                           0x22,
+                           0x4b]);
+
+        // Test that processor status is set correctly after each instruction.
+        for addr in rol_addresses.iter() {
+            // Carry flag for rotating in to value.
+            cpu.registers.p.0 = 0x00;
+            cpu.registers.p.set_c(rol_result.1);
+            cpu.execute();
+            assert!(cpu.registers.p.0 == rol_result.3,
+                    "Bad flags after ROL: {:08b} in address {:#06x}",
+                    cpu.registers.p.0,
+                    *addr);
+            let value = cpu.memory.fetch(*addr);
+            assert!(value == (rol_result.2),
+                    "Bad rotate result {:#04x} in address {:#06x}",
+                    value,
+                    *addr);
+        }
+    }
+}
+
+#[test]
+fn test_ror() {
+    let mut cpu = cpu::Cpu::new();
+
+    // First entry in tuple is value that should be rotated.
+    // Second entry is initial carry flag.
+    // Third enty is expected value after rotating.
+    // Fourth entry is expected processor status flags after rotating.
+    let ror_results = [(0x01, true, 0x80, 0b10000001),
+                       (0x00, false, 0x00, 0b00000010),
+                       (0xff, false, 0x7f, 0b00000001)];
+
+    for ror_result in ror_results.iter() {
+        // Reset from last round.
+        cpu.reset();
+
+        // Test accumulator rotate.
+        cpu.registers.a = ror_result.0;
+        cpu.registers.p.set_c(ror_result.1);
+        cpu.memory.store(0x0000, ROR_Acc as u8);
+        cpu.execute();
+        assert!(cpu.registers.p.0 == ror_result.3,
+                "Bad flags after ROR on accumulator: {:08b}",
+                cpu.registers.p.0);
+        assert!(cpu.registers.a == (ror_result.2),
+                "Bad rotate result {:#04x} in accumulator",
+                cpu.registers.a);
+
+        // Test asl on memory.
+        cpu.reset();
+
+        // Store the value in several memory locations for lookup during ROR instructions.
+        let ror_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
+        for addr in ror_addresses.iter() {
+            cpu.memory.store(*addr as u16, ror_result.0);
+        }
+
+        // X register for zero_x and abs_x.
+        cpu.registers.x = 0xff;
+
+        cpu.memory
+            .store_bytes(0x0000,
+                         &[// Rotate location 0x002a
+                           ROR_Zero as u8,
+                           0x2a,
+
+                           // Rotate location 0x003a
+                           ROR_Zero_X as u8,
+                           0x3b,
+
+                           // Rotate location 0x123a
+                           ROR_Abs as u8,
+                           0x12,
+                           0x3a,
+
+                           // Rotate location 0x234a
+                           ROR_Abs_X as u8,
+                           0x22,
+                           0x4b]);
+
+        // Test that processor status is set correctly after each instruction.
+        for addr in ror_addresses.iter() {
+            // Carry flag for rotating in to value.
+            cpu.registers.p.0 = 0x00;
+            cpu.registers.p.set_c(ror_result.1);
+            cpu.execute();
+            assert!(cpu.registers.p.0 == ror_result.3,
+                    "Bad flags after ROR: {:08b} in address {:#06x}",
+                    cpu.registers.p.0,
+                    *addr);
+            let value = cpu.memory.fetch(*addr);
+            assert!(value == (ror_result.2),
+                    "Bad rotate result {:#04x} in address {:#06x}",
+                    value,
+                    *addr);
+        }
+    }
 }
 
 #[test]

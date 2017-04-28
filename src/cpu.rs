@@ -300,6 +300,127 @@ impl Cpu {
         self.registers.p.set_i(true);
     }
 
+    // This instruction adds the contents of a memory location to the
+    // accumulator together with the carry bit, and stores the sum
+    // in the accumulator. If overflow occurs the carry bit is set.
+    // This enables multiple byte addition to be performed.
+    // TODO: Decimal mode.
+    //
+    //         C    Carry Flag          Set if overflow in bit 7
+    //         Z    Zero Flag           Set if result = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Set if sign bit is incorrect
+    //         N    Negative Flag       Set if bit 7 of the result is set
+    pub fn adc(&mut self, address: u16) {
+        let arg = self.memory.fetch(address);
+        self.adc_value(arg);
+    }
+
+    pub fn adc_value(&mut self, arg: u8) {
+        let initial_carry = if self.registers.p.c() { 1 } else { 0 };
+        let (sum, carry) = self.registers
+            .a
+            .overflowing_add(arg.wrapping_add(initial_carry));
+
+        // The overflow flag is set when the sign of the addends is the same and
+        // differs from the sign of the sum
+        //  !(self.registers.a ^ arg) ====> Do the addends sign match?
+        // & (self.registers.a ^ sum) ====> Do A and result have different signs?
+        // & 0x80                     ====> Extract sign bit.
+        let overflow = !(self.registers.a ^ arg) & (self.registers.a ^ sum) & 0x80 == 0x80;
+
+        // Store result in accumulator.
+        self.registers.a = sum;
+
+        // Set Z and N flags.
+        self.set_z_flag(sum);
+        self.set_n_flag(sum);
+
+        // Set carry flag if addition overflowed.
+        self.registers.p.set_c(carry);
+
+        // Set overflow flag if sign is incorrect.
+        self.registers.p.set_v(overflow);
+    }
+
+
+    // Rotates bits in the memory address to the left. Bit 7 is placed in
+    // the carry flag, and bit 0 is set to the old value of the carry flag.
+    //
+    //         C    Carry Flag          Set to contents of old bit 7
+    //         Z    Zero Flag           Set if value = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the result is set
+    pub fn rol(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        let rotated_value = self.rotate_l(value);
+        self.memory.store(address, rotated_value);
+    }
+
+    pub fn rol_a(&mut self) {
+        let value = self.registers.a;
+        let rotated_value = self.rotate_l(value);
+        self.registers.a = rotated_value;
+    }
+
+    // Rotates the value left, through the carry flag, and returns
+    // the shifted value. C, Z and N flags are set appropriately.
+    fn rotate_l(&mut self, value: u8) -> u8 {
+        let c_flag_bit = self.registers.p.0 & C_FLAG;
+        let rotated_value = value << 1 | c_flag_bit;
+
+        let carry = value & 0x80 == 0x80;
+        self.registers.p.set_c(carry);
+
+        self.set_z_flag(rotated_value);
+        self.set_n_flag(rotated_value);
+
+        rotated_value
+    }
+
+
+    // Rotates bits in the memory address to the right. Bit 0 is placed in
+    // the carry flag, and bit 7 is set to the old value of the carry flag.
+    //
+    //         C    Carry Flag          Set to contents of old bit 0
+    //         Z    Zero Flag           Set if value = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of the result is set
+    pub fn ror(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        let rotated_value = self.rotate_r(value);
+        self.memory.store(address, rotated_value);
+    }
+
+    pub fn ror_a(&mut self) {
+        let value = self.registers.a;
+        let rotated_value = self.rotate_r(value);
+        self.registers.a = rotated_value;
+    }
+
+    // Rotates the value right, through the carry flag, and returns
+    // the shifted value. C, Z and N flags are set appropriately.
+    fn rotate_r(&mut self, value: u8) -> u8 {
+        let c_flag_bit = (self.registers.p.0 & C_FLAG) << 7;
+        let rotated_value = value >> 1 | c_flag_bit;
+
+        let carry = value & 0x01 == 0x01;
+        self.registers.p.set_c(carry);
+
+        self.set_z_flag(rotated_value);
+        self.set_n_flag(rotated_value);
+
+        rotated_value
+    }
+
 
     // Shifts all bits of the value one bit left. Bit 0 is set to 0,
     // and bit 7 is placed in the carry flag. This multiplies the value
@@ -325,6 +446,7 @@ impl Cpu {
     }
 
     // Shifts the value, sets status flags, and returns the shifted value.
+    // C, Z, and N flags are set appropriately.
     fn shift_l(&mut self, value: u8) -> u8 {
         let shifted_value = value << 1;
 

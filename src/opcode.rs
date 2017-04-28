@@ -33,6 +33,16 @@ enum_from_primitive! {
     #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
     #[allow(non_camel_case_types)]
     pub enum Opcode {
+        // ADd with Carry
+        ADC_Imm     = 0x69,
+        ADC_Zero    = 0x65,
+        ADC_Zero_X  = 0x75,
+        ADC_Abs     = 0x6d,
+        ADC_Abs_X   = 0x7d,
+        ADC_Abs_Y   = 0x79,
+        ADC_Ind_X   = 0x61,
+        ADC_Ind_Y   = 0x71,
+
         // Arithmetic Shift Left
         ASL_Acc     = 0x0a,
         ASL_Zero    = 0x06,
@@ -128,6 +138,20 @@ enum_from_primitive! {
         TYA         = 0x98, // Transfer Y to A
         DEY         = 0x88, // Decrement Y
         INY         = 0xc8, // Increment Y
+
+        // ROtate Left
+        ROL_Acc     = 0x2a,
+        ROL_Zero    = 0x26,
+        ROL_Zero_X  = 0x36,
+        ROL_Abs     = 0x2e,
+        ROL_Abs_X   = 0x3e,
+
+        // ROtate Right
+        ROR_Acc     = 0x6a,
+        ROR_Zero    = 0x66,
+        ROR_Zero_X  = 0x76,
+        ROR_Abs     = 0x6e,
+        ROR_Abs_X   = 0x7e,
 
         // STore Accumulator
         STA_Zero    = 0x85,

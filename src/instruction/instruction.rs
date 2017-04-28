@@ -115,6 +115,40 @@ impl Instruction {
         let opcode = opcode::decode(self.opcode());
 
         match opcode {
+            // ADd with Carry
+            ADC_Imm => {
+                let value = self.immediate_value();
+                cpu.adc_value(value);
+            }
+            ADC_Zero => {
+                let address = self.zero_page_address();
+                cpu.adc(address);
+            }
+            ADC_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.adc(address);
+            }
+            ADC_Abs => {
+                let address = self.absolute_address();
+                cpu.adc(address);
+            }
+            ADC_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.adc(address);
+            }
+            ADC_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu.adc(address);
+            }
+            ADC_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu.adc(address);
+            }
+            ADC_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu.adc(address);
+            }
+
             // Arithmetic Shift Left
             ASL_Acc => {
                 cpu.asl_a();
@@ -154,6 +188,48 @@ impl Instruction {
             CLV => cpu.clv(),
             CLD => cpu.cld(),
             SED => cpu.sed(),
+
+            // ROtate Left
+            ROL_Acc => {
+                cpu.rol_a();
+            }
+            ROL_Zero => {
+                let address = self.zero_page_address();
+                cpu.rol(address);
+            }
+            ROL_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.rol(address);
+            }
+            ROL_Abs => {
+                let address = self.absolute_address();
+                cpu.rol(address);
+            }
+            ROL_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.rol(address);
+            }
+
+            // ROtate Right
+            ROR_Acc => {
+                cpu.ror_a();
+            }
+            ROR_Zero => {
+                let address = self.zero_page_address();
+                cpu.ror(address);
+            }
+            ROR_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu.ror(address);
+            }
+            ROR_Abs => {
+                let address = self.absolute_address();
+                cpu.ror(address);
+            }
+            ROR_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu.ror(address);
+            }
 
             // CoMPare accumulator
             CMP_Imm => {

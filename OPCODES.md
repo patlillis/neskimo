@@ -2,7 +2,7 @@
 
 Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Strikethrough~~ indicates opcodes that have already been implemented.
 
-* `ADC` (ADd with Carry)
+* ~~`ADC` (ADd with Carry)~~
 
 * `AND` (bitwise AND with accumulator)
 
@@ -46,9 +46,9 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~Register Instructions~~
 
-* `ROL` (ROtate Left)
+* ~~`ROL` (ROtate Left)~~
 
-* `ROR` (ROtate Right)
+* ~~`ROR` (ROtate Right)~~
 
 * `RTI` (ReTurn from Interrupt)
 
