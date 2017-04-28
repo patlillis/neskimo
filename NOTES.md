@@ -157,6 +157,27 @@ For some instructions, the data and/or destination address is implied in the ins
 *   Modern machine will almost certainly be executing emulator cycles much
     faster than a real 6502 chip, so some throttling will be needed.
 
+### Interrupts
+
+This is a way for the microprocessor to set the program counter, independent of instructions under control of the programmer, i.e. based on external signals. Certain locations in memory are reserved as "Vector pointers", which store a 16 bit address. On an external signal (e.g. Reset), the value in this vector pointer is loaded into the program counter. These Vector pointers are controllable by a program, and thus provides the means to react to different external signals.
+
+These different signals are:
+
+* NMI (Non-maskable Interrupt)
+* RESET
+* IRQ (Interrupt Request)
+* BRK (Break)
+
+These Vector pointers are located as follows:
+
+
+|SIGNAL  | VECTOR          |
+|--------|-----------------|
+|NMI	 | `$FFFA`/`$FFFB` |
+|RESET	 | `$FFFC`/`$FFFD` |
+|IRQ/BRK | `$FFFE`/`$FFFF` |
+
+
 ## APU
 
 The NES has an audio processing unit for generating sound in games. It is implemented in the RP2A03 (NTSC) and RP2A07 (PAL) chips. A good overview can be found at [nesdev.com](http://wiki.nesdev.com/w/index.php/APU).
