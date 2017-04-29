@@ -106,7 +106,7 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         LDA_Abs => def(3, 4),
         LDA_Abs_X => def(3, 4),
         LDA_Abs_Y => def(3, 4),
-        LDA_Ind_X => def(2, 6), 
+        LDA_Ind_X => def(2, 6),
         LDA_Ind_Y => def(2, 5),
 
         // LoaD X register
@@ -152,6 +152,14 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         TYA => def(1, 2),
         DEY => def(1, 2),
         INY => def(1, 2),
+
+        // Stack Instructions
+        TXS => def(1, 2),
+        TSX => def(1, 3),
+        PHA => def(1, 3),
+        PLA => def(1, 4),
+        PHP => def(1, 3),
+        PLP => def(1, 4),
 
         // ROtate Left
         ROL_Acc => def(1, 2),

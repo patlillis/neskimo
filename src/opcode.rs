@@ -169,6 +169,14 @@ enum_from_primitive! {
         DEY         = 0x88, // Decrement Y
         INY         = 0xc8, // Increment Y
 
+        // Stack Instructions
+        TXS         = 0x9a, // Transfer X to Stack ptr
+        TSX         = 0xba, // Transfer Stack ptr to X
+        PHA         = 0x48, // PusH Accumulator
+        PLA         = 0x68, // PuLl Accumulator
+        PHP         = 0x08, // PusH Processor status
+        PLP         = 0x28, // PuLl Processor status
+
         // ROtate Left
         ROL_Acc     = 0x2a,
         ROL_Zero    = 0x26,

@@ -58,7 +58,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~`STA` (STore Accumulator)~~
 
-* Stack Instructions
+* ~~Stack Instructions~~
 
 * ~~`STX` (STore X register)~~
 

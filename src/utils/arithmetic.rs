@@ -8,6 +8,6 @@ pub fn is_negative(byte: u8) -> bool {
 }
 
 #[inline(always)]
-pub fn concat_bytes(byte1: u8, byte2: u8) -> u16 {
-    ((byte1 as u16) << 8) | (byte2 as u16)
+pub fn concat_bytes(high: u8, low: u8) -> u16 {
+    ((high as u16) << 8) | (low as u16)
 }

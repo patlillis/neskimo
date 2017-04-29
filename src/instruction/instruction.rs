@@ -623,6 +623,14 @@ impl Instruction {
             DEY => cpu.dey(),
             INY => cpu.iny(),
 
+            // Stack Instructions
+            TXS => cpu.txs(),
+            TSX => cpu.tsx(),
+            PHA => cpu.pha(),
+            PLA => cpu.pla(),
+            PHP => cpu.php(),
+            PLP => cpu.plp(),
+
             // STore Y register
             STY_Zero => {
                 let address = self.zero_page_address();

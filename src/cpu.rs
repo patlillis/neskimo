@@ -11,13 +11,14 @@ pub const Z_FLAG: u8 = 1 << 1;
 pub const I_FLAG: u8 = 1 << 2;
 pub const D_FLAG: u8 = 1 << 3;
 pub const B_FLAG: u8 = 1 << 4;
+pub const UNUSED_FLAG: u8 = 1 << 5;
 pub const V_FLAG: u8 = 1 << 6;
 pub const N_FLAG: u8 = 1 << 7;
 
 impl Status {
-    // Constructs a new status with all flags set to 0.
+    // Constructs a new Status object, with only the I flag set.
     pub fn new() -> Status {
-        Status(0x0)
+        Status(I_FLAG | UNUSED_FLAG)
     }
 
     // Helper function for testing a mask against a status.
@@ -153,14 +154,20 @@ impl std::fmt::Debug for Registers {
 }
 
 impl Registers {
+    // Constructs a new Registers object, with SP set to 0xfd,
+    // PC set to 0xfffc (the RESET vector).
     pub fn new() -> Registers {
+        Registers::new_at_pc(0x0000)
+    }
+
+    pub fn new_at_pc(pc: u16) -> Registers {
         Registers {
-            a: 0x0,
-            x: 0x0,
-            y: 0x0,
+            a: 0x00,
+            x: 0x00,
+            y: 0x00,
             p: Status::new(),
-            sp: 0x0,
-            pc: 0x0,
+            sp: 0xfd,
+            pc: pc,
         }
     }
 }
@@ -298,6 +305,117 @@ impl Cpu {
     //         N    Negative Flag       Not affected
     pub fn sei(&mut self) {
         self.registers.p.set_i(true);
+    }
+
+
+    // Copies the current contents of the X register into the stack
+    // register and sets the zero and negative flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if SP = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of SP is set
+    pub fn txs(&mut self) {
+        let value = self.registers.x;
+        self.registers.sp = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
+
+    // Copies the current contents of the stack register into the X
+    // register and sets the zero and negative flags as appropriate.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if X = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of X is set
+    pub fn tsx(&mut self) {
+        let value = self.registers.sp;
+        self.registers.x = value;
+        self.set_z_flag(value);
+        self.set_n_flag(value);
+    }
+
+
+    // Push value onto stack, and decrement stack pointer.
+    pub fn push(&mut self, value: u8) {
+        self.memory
+            .store(utils::arithmetic::concat_bytes(0x01, self.registers.sp),
+                   value);
+        self.registers.sp = self.registers.sp - 1;
+    }
+
+    pub fn push_u16(&mut self, value: u16) {
+        self.push((value >> 8) as u8);
+        self.push(value as u8);
+    }
+
+    // Pull a value off of the stack, and increment stack pointer.
+    pub fn pull(&mut self) -> u8 {
+        self.registers.sp = self.registers.sp + 1;
+        self.memory
+            .fetch(utils::arithmetic::concat_bytes(0x01, self.registers.sp))
+    }
+
+    pub fn pull_u16(&mut self) -> u16 {
+        let low = self.pull();
+        let high = self.pull();
+
+        utils::arithmetic::concat_bytes(high, low)
+    }
+
+    // Pushes a copy of the accumulator on to the stack.
+    //
+    // No processor status flags are affected.
+    pub fn pha(&mut self) {
+        let value = self.registers.a;
+        self.push(value);
+    }
+
+    // Pushes a copy of the processor status flags on to the stack.
+    //
+    // No processor status flags are affected.
+    pub fn php(&mut self) {
+        let value = self.registers.p.0 | B_FLAG | UNUSED_FLAG;
+        self.push(value);
+    }
+
+    // Pulls the value off of the stack, and puts it into the
+    // accumulator.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if A = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of A is set
+    pub fn pla(&mut self) {
+        let value = self.pull();
+        self.registers.a = value;
+        self.set_n_flag(value);
+        self.set_z_flag(value);
+    }
+
+    // Pulls the value off of the stack, and sets the processor flags
+    // based on the result.
+    //         C    Carry Flag          Set from stack
+    //         Z    Zero Flag           Set from stack
+    //         I    Interrupt Disable   Set from stack
+    //         D    Decimal Mode Flag   Set from stack
+    //         B    Break Command       Unset
+    //         V    Overflow Flag       Set from stack
+    //         N    Negative Flag       Set from stack
+    pub fn plp(&mut self) {
+        let value = self.pull();
+        self.registers.p.0 = value & !B_FLAG & !UNUSED_FLAG;
     }
 
 
