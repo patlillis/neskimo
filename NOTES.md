@@ -177,6 +177,16 @@ These Vector pointers are located as follows:
 |RESET	 | `$FFFC`/`$FFFD` |
 |IRQ/BRK | `$FFFE`/`$FFFF` |
 
+### Interrupt Handling
+
+When a peripheral device pulls the interrupt request line low
+
+#### Resources
+
+* High-level overview: [http://6502.org/tutorials/interrupts.html](http://6502.org/tutorials/interrupts.html)
+* Detailed behavior: [https://wiki.nesdev.com/w/index.php/CPU_interrupts](https://wiki.nesdev.com/w/index.php/CPU_interrupts)
+* Timing: [http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling](http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling)
+
 
 ## APU
 
