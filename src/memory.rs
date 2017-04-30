@@ -27,9 +27,9 @@ impl Memory {
 
     // Fetches two bytes stored consecutively in memory.
     pub fn fetch_u16(&self, address: u16) -> u16 {
-        let byte1 = self.fetch(address);
-        let byte2 = self.fetch(address + 1);
-        utils::arithmetic::concat_bytes(byte1, byte2)
+        let low = self.fetch(address);
+        let high = self.fetch(address + 1);
+        utils::arithmetic::concat_bytes(high, low)
     }
 
     // Stores value into memory at the specified address.
@@ -40,10 +40,10 @@ impl Memory {
     // Stores to bytes consecutively in memory, with the first byte at the
     // specified address.
     pub fn store_u16(&mut self, address: u16, value: u16) {
-        let byte1 = (value >> 8) as u8;
-        let byte2 = value as u8;
-        self.store(address, byte1);
-        self.store(address + 1, byte2);
+        let high = (value >> 8) as u8;
+        let low = value as u8;
+        self.store(address, low);
+        self.store(address + 1, high);
     }
 
     // Store a slice of bytes consecutively in memory, starting at the

@@ -1,4 +1,5 @@
 use cpu;
+use cpu::{C_FLAG, Z_FLAG, I_FLAG, D_FLAG, B_FLAG, U_FLAG, V_FLAG, N_FLAG};
 use opcode::Opcode::*;
 
 #[test]
@@ -17,7 +18,7 @@ fn test_adc() {
 
     for adc_result in adc_results.iter() {
         // Reset from the last round.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Store value in memory locations for testing.
         let adc_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
@@ -49,18 +50,18 @@ fn test_adc() {
 
                            // Add with 0x123a
                            ADC_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // Add with 0x234a
                            ADC_Abs_X as u8,
-                           0x22,
                            0x4b,
+                           0x22,
 
                            // Add with 0x345a
                            ADC_Abs_Y as u8,
-                           0x33,
                            0x5c,
+                           0x33,
 
                            // Add with 0xfada (thru 0x005a)
                            ADC_Ind_X as u8,
@@ -101,7 +102,7 @@ fn test_and() {
 
     for and_result in and_results.iter() {
         // Reset from the last round.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Store value in memory locations for testing.
         let and_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
@@ -133,18 +134,18 @@ fn test_and() {
 
                            // And with 0x123a
                            AND_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // And with 0x234a
                            AND_Abs_X as u8,
-                           0x22,
                            0x4b,
+                           0x22,
 
                            // And with 0x345a
                            AND_Abs_Y as u8,
-                           0x33,
                            0x5c,
+                           0x33,
 
                            // And with 0xfada (thru 0x005a)
                            AND_Ind_X as u8,
@@ -175,11 +176,13 @@ fn test_asl() {
 
     // First entry in tuple is value that should be shifted.
     // Second entry is expected processor status flags after that shift.
-    let asl_results = [(0x80, 0b00000011), (0xc0, 0b10000001), (0x4f, 0b10000000)];
+    let asl_results = [(0x80, I_FLAG | C_FLAG | Z_FLAG),
+                       (0xc0, I_FLAG | C_FLAG | N_FLAG),
+                       (0x4f, I_FLAG | N_FLAG)];
 
     for asl_result in asl_results.iter() {
         // Reset from last round.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Test accumulator shift.
         cpu.registers.a = asl_result.0;
@@ -193,9 +196,10 @@ fn test_asl() {
                 cpu.registers.a);
 
         // Test asl on memory.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
-        // Store the value in several memory locations for lookup during ASL instructions.
+        // Store the value in several memory locations for lookup during ASL
+        // instructions.
         let asl_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in asl_addresses.iter() {
             cpu.memory.store(*addr as u16, asl_result.0);
@@ -216,13 +220,13 @@ fn test_asl() {
 
                            // Shift location 0x123a
                            ASL_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // Shift location 0x234a
                            ASL_Abs_X as u8,
-                           0x22,
-                           0x4b]);
+                           0x4b,
+                           0x22]);
 
         // Test that processor status is set correctly after each instruction.
         for addr in asl_addresses.iter() {
@@ -339,7 +343,7 @@ fn test_cmp() {
 
     for cmp_result in cmp_results.iter() {
         // Reset from previous tests.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Set accumulator for comparisons.
         cpu.registers.a = accumulator_value;
@@ -416,7 +420,7 @@ fn test_cpx() {
 
     for cpx_result in cpx_results.iter() {
         // Reset from previous tests.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Set X register for comparisons.
         cpu.registers.x = x_value;
@@ -463,7 +467,7 @@ fn test_cpy() {
 
     for cpy_result in cpy_results.iter() {
         // Reset from previous tests.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Set Y register for comparisons.
         cpu.registers.y = y_value;
@@ -561,7 +565,7 @@ fn test_eor() {
 
     for eor_result in eor_results.iter() {
         // Reset from the last round.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Store value in memory locations for testing.
         let eor_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
@@ -916,7 +920,7 @@ fn test_lsr() {
 
     for lsr_result in lsr_results.iter() {
         // Reset from last round.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Test accumulator shift.
         cpu.registers.a = lsr_result.0;
@@ -930,7 +934,7 @@ fn test_lsr() {
                 cpu.registers.a);
 
         // Test asl on memory.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Store the value in several memory locations for lookup during LSR instructions.
         let lsr_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
@@ -992,7 +996,7 @@ fn test_ora() {
 
     for ora_result in ora_results.iter() {
         // Reset from the last round.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Store value in memory locations for testing.
         let ora_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
@@ -1140,7 +1144,7 @@ fn test_rol() {
 
     for rol_result in rol_results.iter() {
         // Reset from last round.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Test accumulator rotate.
         cpu.registers.a = rol_result.0;
@@ -1155,7 +1159,7 @@ fn test_rol() {
                 cpu.registers.a);
 
         // Test asl on memory.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Store the value in several memory locations for lookup during ROL instructions.
         let rol_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
@@ -1219,7 +1223,7 @@ fn test_ror() {
 
     for ror_result in ror_results.iter() {
         // Reset from last round.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Test accumulator rotate.
         cpu.registers.a = ror_result.0;
@@ -1234,7 +1238,7 @@ fn test_ror() {
                 cpu.registers.a);
 
         // Test asl on memory.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Store the value in several memory locations for lookup during ROR instructions.
         let ror_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
@@ -1299,7 +1303,7 @@ fn test_sbc() {
 
     for sbc_result in sbc_results.iter() {
         // Reset from the last round.
-        cpu.reset();
+        cpu.reset_to_pc(0x0000);
 
         // Store value in memory locations for testing.
         let sbc_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];

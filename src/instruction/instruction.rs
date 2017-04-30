@@ -58,7 +58,7 @@ impl Instruction {
 
     // Get the absolute address from the instruction args.
     fn absolute_address(&self) -> u16 {
-        utils::arithmetic::concat_bytes(self.arg1(), self.arg2())
+        utils::arithmetic::concat_bytes(self.arg2(), self.arg1())
     }
 
     // Get the absolute address from the instruction args, and add an offset

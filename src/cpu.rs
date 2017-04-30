@@ -11,14 +11,14 @@ pub const Z_FLAG: u8 = 1 << 1;
 pub const I_FLAG: u8 = 1 << 2;
 pub const D_FLAG: u8 = 1 << 3;
 pub const B_FLAG: u8 = 1 << 4;
-pub const UNUSED_FLAG: u8 = 1 << 5;
+pub const U_FLAG: u8 = 1 << 5;
 pub const V_FLAG: u8 = 1 << 6;
 pub const N_FLAG: u8 = 1 << 7;
 
 impl Status {
     // Constructs a new Status object, with only the I flag set.
     pub fn new() -> Status {
-        Status(I_FLAG | UNUSED_FLAG)
+        Status(I_FLAG)
     }
 
     // Helper function for testing a mask against a status.
@@ -188,6 +188,11 @@ impl Cpu {
     pub fn reset(&mut self) {
         self.memory.reset();
         self.registers = Registers::new();
+    }
+
+    pub fn reset_to_pc(&mut self, pc: u16) {
+        self.memory.reset();
+        self.registers = Registers::new_at_pc(pc);
     }
 
     // Executes the instruction at PC.
@@ -383,7 +388,7 @@ impl Cpu {
     //
     // No processor status flags are affected.
     pub fn php(&mut self) {
-        let value = self.registers.p.0 | B_FLAG | UNUSED_FLAG;
+        let value = self.registers.p.0 | B_FLAG | U_FLAG;
         self.push(value);
     }
 
@@ -415,7 +420,7 @@ impl Cpu {
     //         N    Negative Flag       Set from stack
     pub fn plp(&mut self) {
         let value = self.pull();
-        self.registers.p.0 = value & !B_FLAG & !UNUSED_FLAG;
+        self.registers.p.0 = value & !B_FLAG & !U_FLAG;
     }
 
 
