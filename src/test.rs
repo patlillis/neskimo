@@ -269,60 +269,61 @@ fn test_bit() {
     cpu.memory.store(0xaa6a, 0x80);
     cpu.memory.store(0x90ab, 0x3f);
 
-    let expected_status_flags = [cpu::Z_FLAG,
-                                 0x00,
-                                 cpu::Z_FLAG,
-                                 0x00,
-                                 cpu::V_FLAG,
-                                 0x00,
-                                 cpu::V_FLAG,
-                                 0x00,
-                                 cpu::N_FLAG,
-                                 0x00,
-                                 cpu::N_FLAG,
-                                 0x00];
+    let expected_status_flags = [// Expected flags.
+                                 I_FLAG | Z_FLAG,
+                                 I_FLAG,
+                                 I_FLAG | Z_FLAG,
+                                 I_FLAG,
+                                 I_FLAG | V_FLAG,
+                                 I_FLAG,
+                                 I_FLAG | V_FLAG,
+                                 I_FLAG,
+                                 I_FLAG | N_FLAG,
+                                 I_FLAG,
+                                 I_FLAG | N_FLAG,
+                                 I_FLAG];
 
     cpu.memory
         .store_bytes(0x0000,
                      &[// Test Z flag
-                       BIT_Zero as u8,
+                       BIT_Zero as u8, // 0x0023
                        0x23,
-                       BIT_Zero as u8,
+                       BIT_Zero as u8, // 0x00f0
                        0xf0,
-                       BIT_Abs as u8,
-                       0x0d,
+                       BIT_Abs as u8, // 0x0d23
                        0x23,
-                       BIT_Abs as u8,
+                       0x0d,
+                       BIT_Abs as u8, // 0xf0f0
                        0xf0,
                        0xf0,
 
                        // Test V flag
-                       BIT_Zero as u8,
+                       BIT_Zero as u8, // 0x00dd
                        0xdd,
-                       BIT_Zero as u8,
+                       BIT_Zero as u8, // 0x0099
                        0x99,
-                       BIT_Abs as u8,
+                       BIT_Abs as u8, // 0xdddd
                        0xdd,
                        0xdd,
-                       BIT_Abs as u8,
+                       BIT_Abs as u8, // 0x5599
+                       0x99,
                        0x55,
-                       0x99,
 
                        // Test N flag
-                       BIT_Zero as u8,
+                       BIT_Zero as u8, // 0x006a
                        0x6a,
-                       BIT_Zero as u8,
+                       BIT_Zero as u8, // 0x00ab
                        0xab,
-                       BIT_Abs as u8,
-                       0xaa,
+                       BIT_Abs as u8, // 0xaa6a
                        0x6a,
-                       BIT_Abs as u8,
-                       0x90,
-                       0xab]);
+                       0xaa,
+                       BIT_Abs as u8, // 0x90ab+
+                       0xab,
+                       0x90]);
 
     // Check that the status flags are set properly.
     for flag in expected_status_flags.iter() {
-        cpu.registers.p.0 = 0x00;
+        cpu.registers.p = cpu::Status::new();
 
         // Execute and make sure flag was properly set.
         cpu.execute();
