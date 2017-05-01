@@ -533,13 +533,13 @@ fn test_dec() {
 
                        // Increment at 0xffab
                        DEC_Abs as u8,
-                       0xff,
                        0xab,
+                       0xff,
 
                        // Increment at 0x00a9
                        DEC_Abs_X as u8,
-                       0xff,
-                       0xab]);
+                       0xab,
+                       0xff]);
 
     // Check value incremented at these addresses.
     let addresses = [0x00ab, 0x009f, 0xffab, 0x00a9];
