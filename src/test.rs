@@ -564,11 +564,11 @@ fn test_eor() {
     // Second entry is value in accumulator before the xor.
     // Third entry is expected result.
     // Fourth value is expected status register value.
-    let eor_results = [(0x00, 0x00, 0x00, 0b00000010),
-                       (0xff, 0x80, 0x7f, 0b00000000),
-                       (0xc0, 0xfd, 0x3d, 0b00000000),
-                       (0xa5, 0x5a, 0xff, 0b10000000),
-                       (0x33, 0x33, 0x00, 0b00000010)];
+    let eor_results = [(0x00, 0x00, 0x00, I_FLAG | Z_FLAG),
+                       (0xff, 0x80, 0x7f, I_FLAG),
+                       (0xc0, 0xfd, 0x3d, I_FLAG),
+                       (0xa5, 0x5a, 0xff, I_FLAG | N_FLAG),
+                       (0x33, 0x33, 0x00, I_FLAG | Z_FLAG)];
 
     for eor_result in eor_results.iter() {
         // Reset from the last round.
@@ -604,18 +604,18 @@ fn test_eor() {
 
                            // XOR with 0x123a
                            EOR_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // XOR with 0x234a
                            EOR_Abs_X as u8,
-                           0x22,
                            0x4b,
+                           0x22,
 
                            // XOR with 0x345a
                            EOR_Abs_Y as u8,
-                           0x33,
                            0x5c,
+                           0x33,
 
                            // XOR with 0xfada (thru 0x005a)
                            EOR_Ind_X as u8,
@@ -627,7 +627,7 @@ fn test_eor() {
 
         for _ in 0..eor_addresses.len() + 1 {
             cpu.registers.a = eor_result.1;
-            cpu.registers.p.0 = 0x00;
+            cpu.registers.p = cpu::Status::new();
             cpu.execute();
 
             assert!(cpu.registers.a == eor_result.2,
