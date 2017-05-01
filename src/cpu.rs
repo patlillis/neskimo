@@ -103,7 +103,7 @@ impl Status {
 
 impl std::fmt::Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Status({:#04x})", self.0)
+        write!(f, "Status({:08b})", self.0)
     }
 }
 
@@ -170,6 +170,19 @@ impl Registers {
             pc: pc,
         }
     }
+
+    pub fn reset(&mut self) {
+        self.reset_to_pc(0x0000);
+    }
+
+    pub fn reset_to_pc(&mut self, pc: u16) {
+        self.a = 0x00;
+        self.x = 0x00;
+        self.y = 0x00;
+        self.p = Status::new();
+        self.sp = 0xfd;
+        self.pc = pc;
+    }
 }
 
 pub struct Cpu {
@@ -186,13 +199,12 @@ impl Cpu {
     }
 
     pub fn reset(&mut self) {
-        self.memory.reset();
-        self.registers = Registers::new();
+        self.reset_to_pc(0x0000);
     }
 
     pub fn reset_to_pc(&mut self, pc: u16) {
         self.memory.reset();
-        self.registers = Registers::new_at_pc(pc);
+        self.registers.reset_to_pc(pc);
     }
 
     // Executes the instruction at PC.

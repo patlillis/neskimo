@@ -40,15 +40,15 @@ impl Instruction {
          def)
     }
 
-    fn opcode(&self) -> u8 {
+    pub fn opcode(&self) -> u8 {
         self.0
     }
 
-    fn arg1(&self) -> u8 {
+    pub fn arg1(&self) -> u8 {
         self.1
     }
 
-    fn arg2(&self) -> u8 {
+    pub fn arg2(&self) -> u8 {
         self.2
     }
 
