@@ -763,18 +763,18 @@ fn test_lda() {
 
                        // Load from 0xffab
                        LDA_Abs as u8,
-                       0xff,
                        0xab,
+                       0xff,
 
                        // Load from 0x00ca
                        LDA_Abs_X as u8,
-                       0xff,
                        0xcb,
+                       0xff,
 
                        // Load from 0x00a9
                        LDA_Abs_Y as u8,
-                       0xff,
                        0xab,
+                       0xff,
 
                        // Load from 0xffd0
                        LDA_Ind_X as u8,
@@ -832,13 +832,13 @@ fn test_ldx() {
 
                        // Load from 0xffab
                        LDX_Abs as u8,
-                       0xff,
                        0xab,
+                       0xff,
 
                        // Load from 0x00cb
                        LDX_Abs_Y as u8,
-                       0xff,
-                       0xcd]);
+                       0xcd,
+                       0xff]);
 
     // Test once for immediate load.
     cpu.execute();
@@ -888,13 +888,13 @@ fn test_ldy() {
 
                        // Load from 0xffab
                        LDY_Abs as u8,
-                       0xff,
                        0xab,
+                       0xff,
 
                        // Load from 0x00a9
                        LDY_Abs_X as u8,
-                       0xff,
-                       0xab]);
+                       0xab,
+                       0xff]);
 
     // Test once for immediate load.
     cpu.execute();
@@ -923,7 +923,9 @@ fn test_lsr() {
 
     // First entry in tuple is value that should be shifted.
     // Second entry is expected processor status flags after that shift.
-    let lsr_results = [(0x01, 0b00000011), (0x03, 0b00000001), (0xf2, 0b00000000)];
+    let lsr_results = [(0x01, I_FLAG | Z_FLAG | C_FLAG),
+                       (0x03, I_FLAG | C_FLAG),
+                       (0xf2, I_FLAG)];
 
     for lsr_result in lsr_results.iter() {
         // Reset from last round.
@@ -964,17 +966,17 @@ fn test_lsr() {
 
                            // Shift location 0x123a
                            LSR_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // Shift location 0x234a
                            LSR_Abs_X as u8,
-                           0x22,
-                           0x4b]);
+                           0x4b,
+                           0x22]);
 
         // Test that processor status is set correctly after each instruction.
         for addr in lsr_addresses.iter() {
-            cpu.registers.p.0 = 0x00;
+            cpu.registers.p = cpu::Status::new();
             cpu.execute();
             assert!(cpu.registers.p.0 == lsr_result.1,
                     "Bad flag: {:08b}",
@@ -996,10 +998,10 @@ fn test_ora() {
     // Second entry is value in accumulator before the or.
     // Third entry is expected result.
     // Fourth value is expected status register value.
-    let ora_results = [(0x00, 0x00, 0x00, 0b00000010),
-                       (0xff, 0x80, 0xff, 0b10000000),
-                       (0xc0, 0xfd, 0xfd, 0b10000000),
-                       (0xa5, 0x5a, 0xff, 0b10000000)];
+    let ora_results = [(0x00, 0x00, 0x00, I_FLAG | Z_FLAG),
+                       (0xff, 0x80, 0xff, I_FLAG | N_FLAG),
+                       (0xc0, 0xfd, 0xfd, I_FLAG | N_FLAG),
+                       (0xa5, 0x5a, 0xff, I_FLAG | N_FLAG)];
 
     for ora_result in ora_results.iter() {
         // Reset from the last round.
@@ -1035,19 +1037,18 @@ fn test_ora() {
 
                            // XOR with 0x123a
                            ORA_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // XOR with 0x234a
                            ORA_Abs_X as u8,
-                           0x22,
                            0x4b,
+                           0x22,
 
                            // XOR with 0x345a
                            ORA_Abs_Y as u8,
-                           0x33,
                            0x5c,
-
+                           0x33,
                            // XOR with 0xfada (thru 0x005a)
                            ORA_Ind_X as u8,
                            0x5b,
@@ -1058,7 +1059,7 @@ fn test_ora() {
 
         for _ in 0..ora_addresses.len() + 1 {
             cpu.registers.a = ora_result.1;
-            cpu.registers.p.0 = 0x00;
+            cpu.registers.p = cpu::Status::new();
             cpu.execute();
 
             assert!(cpu.registers.a == ora_result.2,
@@ -1145,9 +1146,9 @@ fn test_rol() {
     // Second entry is initial carry flag.
     // Third enty is expected value after rotating.
     // Fourth entry is expected processor status flags after rotating.
-    let rol_results = [(0x80, true, 0x01, 0b00000001),
-                       (0x00, false, 0x00, 0b00000010),
-                       (0xff, false, 0xfe, 0b10000001)];
+    let rol_results = [(0x80, true, 0x01, I_FLAG | C_FLAG),
+                       (0x00, false, 0x00, I_FLAG | Z_FLAG),
+                       (0xff, false, 0xfe, I_FLAG | N_FLAG | C_FLAG)];
 
     for rol_result in rol_results.iter() {
         // Reset from last round.
@@ -1189,18 +1190,18 @@ fn test_rol() {
 
                            // Rotate location 0x123a
                            ROL_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // Rotate location 0x234a
                            ROL_Abs_X as u8,
-                           0x22,
-                           0x4b]);
+                           0x4b,
+                           0x22]);
 
         // Test that processor status is set correctly after each instruction.
         for addr in rol_addresses.iter() {
             // Carry flag for rotating in to value.
-            cpu.registers.p.0 = 0x00;
+            cpu.registers.p = cpu::Status::new();
             cpu.registers.p.set_c(rol_result.1);
             cpu.execute();
             assert!(cpu.registers.p.0 == rol_result.3,
@@ -1224,9 +1225,9 @@ fn test_ror() {
     // Second entry is initial carry flag.
     // Third enty is expected value after rotating.
     // Fourth entry is expected processor status flags after rotating.
-    let ror_results = [(0x01, true, 0x80, 0b10000001),
-                       (0x00, false, 0x00, 0b00000010),
-                       (0xff, false, 0x7f, 0b00000001)];
+    let ror_results = [(0x01, true, 0x80, I_FLAG | N_FLAG | C_FLAG),
+                       (0x00, false, 0x00, I_FLAG | Z_FLAG),
+                       (0xff, false, 0x7f, I_FLAG | C_FLAG)];
 
     for ror_result in ror_results.iter() {
         // Reset from last round.
@@ -1268,18 +1269,18 @@ fn test_ror() {
 
                            // Rotate location 0x123a
                            ROR_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // Rotate location 0x234a
                            ROR_Abs_X as u8,
-                           0x22,
-                           0x4b]);
+                           0x4b,
+                           0x22]);
 
         // Test that processor status is set correctly after each instruction.
         for addr in ror_addresses.iter() {
             // Carry flag for rotating in to value.
-            cpu.registers.p.0 = 0x00;
+            cpu.registers.p = cpu::Status::new();
             cpu.registers.p.set_c(ror_result.1);
             cpu.execute();
             assert!(cpu.registers.p.0 == ror_result.3,
@@ -1304,9 +1305,9 @@ fn test_sbc() {
     // Third entry is carry bit.
     // Fourth entry is expected outcome.
     // Fifth value is expected status register value.
-    let sbc_results = [(0x01, 0x00, true, 0xff, 0b10000000),
-                       (0x01, 0x80, true, 0x7f, 0b01000001),
-                       (0xff, 0x7f, false, 0x7f, 0b00000000)];
+    let sbc_results = [(0x01, 0x00, true, 0xff, I_FLAG | N_FLAG),
+                       (0x01, 0x80, true, 0x7f, I_FLAG | V_FLAG | C_FLAG),
+                       (0xff, 0x7f, false, 0x7f, I_FLAG)];
 
     for sbc_result in sbc_results.iter() {
         // Reset from the last round.
@@ -1342,18 +1343,18 @@ fn test_sbc() {
 
                            // Subtract 0x123a
                            SBC_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // Subtract 0x234a
                            SBC_Abs_X as u8,
-                           0x22,
                            0x4b,
+                           0x22,
 
                            // Subtract 0x345a
                            SBC_Abs_Y as u8,
-                           0x33,
                            0x5c,
+                           0x33,
 
                            // Subtract 0xfada (thru 0x005a)
                            SBC_Ind_X as u8,
@@ -1365,7 +1366,7 @@ fn test_sbc() {
 
         for _ in 0..sbc_addresses.len() + 1 {
             cpu.registers.a = sbc_result.1;
-            cpu.registers.p.0 = 0x00;
+            cpu.registers.p = cpu::Status::new();
             cpu.registers.p.set_c(sbc_result.2);
             cpu.execute();
 
@@ -1408,18 +1409,18 @@ fn test_sta() {
 
                        // Store to 0xffab
                        STA_Abs as u8,
-                       0xff,
                        0xab,
+                       0xff,
 
                        // Store to 0x00aa
                        STA_Abs_X as u8,
-                       0xff,
                        0xab,
+                       0xff,
 
                        // Store to 0x00a9
                        STA_Abs_Y as u8,
-                       0xff,
                        0xab,
+                       0xff,
 
                        // Store to 0xffd0
                        STA_Ind_X as u8,
@@ -1465,8 +1466,8 @@ fn test_stx() {
 
                        // Store to 0xffab
                        STX_Abs as u8,
-                       0xff,
-                       0xab]);
+                       0xab,
+                       0xff]);
 
     // Check value in addresses.
     let addresses = [0x00ab, 0x00ac, 0xffab];
@@ -1504,8 +1505,8 @@ fn test_sty() {
 
                        // Store to 0xffab
                        STY_Abs as u8,
-                       0xff,
-                       0xab]);
+                       0xab,
+                       0xff]);
 
     // Check value in addresses.
     let addresses = [0x00ab, 0x00ac, 0xffab];
