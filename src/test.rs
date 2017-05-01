@@ -468,7 +468,9 @@ fn test_cpy() {
     let y_value = 15;
     // First entry in tuple is value that should be used for comparison.
     // Second entry is expected processor status flags after that comparison.
-    let cpy_results = [(5, 0b00000001), (15, 0b00000011), (100, 0b10000000)];
+    let cpy_results = [(5, I_FLAG | C_FLAG),
+                       (15, I_FLAG | Z_FLAG | C_FLAG),
+                       (100, I_FLAG | N_FLAG)];
 
     for cpy_result in cpy_results.iter() {
         // Reset from previous tests.
@@ -494,12 +496,12 @@ fn test_cpy() {
 
                            // Compare with 0x423a
                            CPY_Abs as u8,
-                           0x42,
-                           0x3a]);
+                           0x3a,
+                           0x42]);
 
         // Test that processor status is set correctly after each instruction.
         for _ in 0..3 {
-            cpu.registers.p.0 = 0x00;
+            cpu.registers.p = cpu::Status::new();
             cpu.execute();
             assert!(cpu.registers.p.0 == cpy_result.1,
                     "Bad flag: {:08b}",
