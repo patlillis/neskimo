@@ -2,64 +2,64 @@
 
 Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Strikethrough~~ indicates opcodes that have already been implemented.
 
-* ~~`ADC` (ADd with Carry)~~
+*   ~~`ADC` (ADd with Carry)~~
 
-* ~~`AND` (bitwise AND with accumulator)~~
+*   ~~`AND` (bitwise AND with accumulator)~~
 
-* ~~`ASL` (Arithmetic Shift Left)~~
+*   ~~`ASL` (Arithmetic Shift Left)~~
 
-* ~~`BIT` (test BITs)~~
+*   ~~`BIT` (test BITs)~~
 
-* Branch Instructions
+*   Branch Instructions
 
-* `BRK` (BReaK)
+*   `BRK` (BReaK)
 
-* ~~`CMP` (CoMPare accumulator)~~
+*   ~~`CMP` (CoMPare accumulator)~~
 
-* ~~`CPX` (ComPare X register)~~
+*   ~~`CPX` (ComPare X register)~~
 
-* ~~`CPY` (ComPare Y register)~~
+*   ~~`CPY` (ComPare Y register)~~
 
-* ~~`DEC` (DECrement memory)~~
+*   ~~`DEC` (DECrement memory)~~
 
-* ~~`EOR` (bitwise Exclusive OR)~~
+*   ~~`EOR` (bitwise Exclusive OR)~~
 
-* ~~Flag (Processor Status) Instructions~~
+*   ~~Flag (Processor Status) Instructions~~
 
-* ~~`INC` (INCrement memory)~~
+*   ~~`INC` (INCrement memory)~~
 
-* ~~`JMP` (JuMP)~~
+*   ~~`JMP` (JuMP)~~
 
-* `JSR` (Jump to SubRoutine)
+*   ~~`JSR` (Jump to SubRoutine)~~
 
-* ~~`LDA` (LoaD Accumulator)~~
+*   ~~`LDA` (LoaD Accumulator)~~
 
-* ~~`LDX` (LoaD X register)~~
+*   ~~`LDX` (LoaD X register)~~
 
-* ~~`LDY` (LoaD Y register)~~
+*   ~~`LDY` (LoaD Y register)~~
 
-* ~~`LSR` (Logical Shift Right)~~
+*   ~~`LSR` (Logical Shift Right)~~
 
-* ~~`NOP` (No OPeration)~~
+*   ~~`NOP` (No OPeration)~~
 
-* ~~`ORA` (bitwise OR with Accumulator)~~
+*   ~~`ORA` (bitwise OR with Accumulator)~~
 
-* ~~Register Instructions~~
+*   ~~Register Instructions~~
 
-* ~~`ROL` (ROtate Left)~~
+*   ~~`ROL` (ROtate Left)~~
 
-* ~~`ROR` (ROtate Right)~~
+*   ~~`ROR` (ROtate Right)~~
 
-* `RTI` (ReTurn from Interrupt)
+*   `RTI` (ReTurn from Interrupt)
 
-* `RTS` (ReTurn from Subroutine)
+*   ~~`RTS` (ReTurn from Subroutine)~~
 
-* ~~`SBC` (SuBtract with Carry)~~
+*   ~~`SBC` (SuBtract with Carry)~~
 
-* ~~`STA` (STore Accumulator)~~
+*   ~~`STA` (STore Accumulator)~~
 
-* ~~Stack Instructions~~
+*   ~~Stack Instructions~~
 
-* ~~`STX` (STore X register)~~
+*   ~~`STX` (STore X register)~~
 
-* ~~`STY` (STore Y register)~~
+*   ~~`STY` (STore Y register)~~

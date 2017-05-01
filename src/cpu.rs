@@ -815,11 +815,34 @@ impl Cpu {
         self.compare(register, value);
     }
 
+
     // Sets the program counter to the address specified.
     //
     // No processor status flags are affected.
     pub fn jmp(&mut self, address: u16) {
         self.registers.pc = address;
+    }
+
+
+    // Pushes the program counter (minus one) of the return from
+    // the subroutine onto the stack, then sets the program counter
+    // to the address.
+    //
+    // No processor status flags are affected.
+    pub fn jsr(&mut self, address: u16) {
+        let return_addr = self.registers.pc.wrapping_sub(1);
+        self.push_u16(return_addr);
+        self.registers.pc = address;
+    }
+
+
+    // Address is pulled off the stack, and program counter is set to
+    // that address + 1.
+    //
+    // No processor status flags are affected.
+    pub fn rts(&mut self) {
+        let address = self.pull_u16();
+        self.registers.pc = address + 1;
     }
 
 

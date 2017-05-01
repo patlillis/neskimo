@@ -119,6 +119,9 @@ enum_from_primitive! {
         JMP_Abs     = 0x4c,
         JMP_Ind     = 0x6c,
 
+        // Jump to SubRoutine
+        JSR         = 0x20,
+
         // LoaD Accumulator
         LDA_Imm     = 0xa9,
         LDA_Zero    = 0xa5,
@@ -194,6 +197,9 @@ enum_from_primitive! {
         ROR_Zero_X  = 0x76,
         ROR_Abs     = 0x6e,
         ROR_Abs_X   = 0x7e,
+
+        // ReTurn from Subroutine
+        RTS         = 0x60,
 
         // SuBtract with Carry
         SBC_Imm     = 0xe9,

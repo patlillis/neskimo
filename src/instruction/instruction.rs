@@ -26,7 +26,8 @@ impl std::fmt::Display for Instruction {
 impl Instruction {
     // Parse an instruction from a specifc point in memory.
     //
-    // If the instruction takes arguments, they will be read from subsequent locations.
+    // If the instruction takes arguments, they will be read from
+    // subsequent locations.
     pub fn parse(pc: u16, memory: &memory::Memory) -> (Instruction, InstructionDefinition) {
         let raw_opcode = memory.fetch(pc);
         let opcode = opcode::decode(raw_opcode);
@@ -377,6 +378,12 @@ impl Instruction {
                 cpu.jmp(address);
             }
 
+            // Jump to SubRoutine
+            JSR => {
+                let address = self.absolute_address();
+                cpu.jsr(address);
+            }
+
             // LoaD Accumulator
             LDA_Imm => {
                 let value = self.immediate_value();
@@ -556,6 +563,9 @@ impl Instruction {
                 let address = self.absolute_address_x(cpu);
                 cpu.ror(address);
             }
+
+            // ReTurn from Subroutine
+            RTS => cpu.rts(),
 
             // SuBtract with Carry
             SBC_Imm => {

@@ -103,6 +103,9 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         JMP_Abs => def(3, 3),
         JMP_Ind => def(3, 5),
 
+        // Jump to SubRoutine
+        JSR => def(3, 6),
+
         // LoaD Accumulator
         LDA_Imm => def(2, 2),
         LDA_Zero => def(2, 3),
@@ -178,6 +181,9 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         ROR_Zero_X => def(2, 6),
         ROR_Abs => def(3, 6),
         ROR_Abs_X => def(3, 7),
+
+        // ReTurn from Subroutine
+        RTS => def(1, 6),
 
         // SuBtract with Carry
         SBC_Imm => def(2, 2),

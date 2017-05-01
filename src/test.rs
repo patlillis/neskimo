@@ -1553,3 +1553,45 @@ fn test_sty() {
                 addr);
     }
 }
+
+#[test]
+fn test_subroutine() {
+    let mut cpu = cpu::Cpu::new();
+
+    // Store 3 subroutine calls.
+    cpu.memory
+        .store_bytes(0x0000,
+                     &[// Subroutine at 0x00ff
+                       JSR as u8,
+                       0xff,
+                       0x00,
+
+                       // Subroutine at 0x1234
+                       JSR as u8,
+                       0x34,
+                       0x12,
+
+                       // Subroutine at 0xff00
+                       JSR as u8,
+                       0x00,
+                       0xff]);
+
+    cpu.memory.store_bytes(0x00ff, &[SEC as u8, RTS as u8]);
+
+    cpu.memory
+        .store_bytes(0x1234, &[JSR as u8, 0xff, 0x00, RTS as u8]);
+
+    cpu.memory
+        .store_bytes(0xff00, &[JSR as u8, 0x34, 0x12, RTS as u8]);
+
+    let subroutine_lengths = [3, 5, 7];
+
+    for len in subroutine_lengths.iter() {
+        cpu.registers.p = cpu::Status::new();
+        for _ in 1..*len {
+            cpu.execute();
+        }
+        assert!(cpu.registers.p.0 == I_FLAG | C_FLAG,
+                "Carry flag not set after subroutine.");
+    }
+}
