@@ -340,7 +340,9 @@ fn test_cmp() {
     let accumulator_value = 15;
     // First entry in tuple is value that should be used for comparison.
     // Second entry is expected processor status flags after that comparison.
-    let cmp_results = [(5, 0b00000001), (15, 0b00000011), (100, 0b10000000)];
+    let cmp_results = [(5, I_FLAG | C_FLAG),
+                       (15, I_FLAG | C_FLAG | Z_FLAG),
+                       (100, I_FLAG | N_FLAG)];
 
     for cmp_result in cmp_results.iter() {
         // Reset from previous tests.
@@ -378,18 +380,18 @@ fn test_cmp() {
 
                            // Compare with 0x123a
                            CMP_Abs as u8,
-                           0x12,
                            0x3a,
+                           0x12,
 
                            // Compare with 0x223a
                            CMP_Abs_X as u8,
-                           0x21,
                            0x3b,
+                           0x21,
 
                            // Compare with 0x423a
                            CMP_Abs_Y as u8,
-                           0x41,
                            0x3c,
+                           0x41,
 
                            // Compare with 0x004a (thru 0x00ff)
                            CMP_Ind_X as u8,
@@ -401,7 +403,7 @@ fn test_cmp() {
 
         // Test that processor status is set correctly after each instruction.
         for _ in 0..8 {
-            cpu.registers.p.0 = 0x00;
+            cpu.registers.p = cpu::Status::new();
             cpu.execute();
             assert!(cpu.registers.p.0 == cmp_result.1,
                     "Bad flag: {:08b}",
