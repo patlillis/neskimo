@@ -87,11 +87,23 @@ impl Instruction {
         self.arg1().wrapping_add(cpu.registers.x) as u16
     }
 
-    // Get the zero page address from the instruciton args, and add an offset
+    // Get the zero page address from the instruction args, and add an offset
     // from the Y index register. Note that this add wraps around to always be
     // on the zero page.
     fn zero_page_address_y(&self, cpu: &cpu::Cpu) -> u16 {
         self.arg1().wrapping_add(cpu.registers.y) as u16
+    }
+
+    // Get the absolute address from the instruction args, and return the value
+    // that is stored in that address in memory.
+    //
+    // This method implements a bug found in the original MOS6502 hardware,
+    // where the two bytes read had to be on the same page. So if the low
+    // byte is stored at 0x33ff, then the high byte would be fetched from
+    // 0x3300 instead of 0x3400.
+    fn indirect_address(&self, cpu: &cpu::Cpu) -> u16 {
+        let address = self.absolute_address();
+        cpu.memory.fetch_u16_wrap_msb(address)
     }
 
     // Calculates a memory address using by adding X to the 8-bit value in the
@@ -353,6 +365,16 @@ impl Instruction {
             INC_Abs_X => {
                 let address = self.absolute_address_x(cpu);
                 cpu.inc(address);
+            }
+
+            // JuMP
+            JMP_Abs => {
+                let address = self.absolute_address();
+                cpu.jmp(address);
+            }
+            JMP_Ind => {
+                let address = self.indirect_address(cpu);
+                cpu.jmp(address);
             }
 
             // LoaD Accumulator

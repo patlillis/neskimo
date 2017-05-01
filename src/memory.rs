@@ -32,6 +32,22 @@ impl Memory {
         utils::arithmetic::concat_bytes(high, low)
     }
 
+    // Fetches two bytes from memory.
+    //
+    // This method implements a bug found in the original MOS6502 hardware,
+    // where the two bytes read had to be on the same page. So if the low
+    // byte is stored at 0x33ff, then the high byte would be fetched from
+    // 0x3300 instead of 0x3400.
+    pub fn fetch_u16_wrap_msb(&self, address: u16) -> u16 {
+        let low = self.fetch(address);
+        let high = if address & 0x00ff == 0x00ff {
+            self.fetch(address & 0xff00)
+        } else {
+            self.fetch(address + 1)
+        };
+        utils::arithmetic::concat_bytes(high, low)
+    }
+
     // Stores value into memory at the specified address.
     pub fn store(&mut self, address: u16, value: u8) {
         self.memory[address as usize] = value;

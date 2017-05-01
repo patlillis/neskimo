@@ -99,6 +99,10 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         INC_Abs => def(3, 6),
         INC_Abs_X => def(3, 7),
 
+        // JuMP
+        JMP_Abs => def(3, 3),
+        JMP_Ind => def(3, 5),
+
         // LoaD Accumulator
         LDA_Imm => def(2, 2),
         LDA_Zero => def(2, 3),

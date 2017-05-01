@@ -28,7 +28,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 * ~~`INC` (INCrement memory)~~
 
-* `JMP` (JuMP)
+* ~~`JMP` (JuMP)~~
 
 * `JSR` (Jump to SubRoutine)
 

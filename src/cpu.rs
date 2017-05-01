@@ -210,10 +210,12 @@ impl Cpu {
     // Executes the instruction at PC.
     pub fn execute(&mut self) {
         let (instr, definition) = Instruction::parse(self.registers.pc, &self.memory);
-        instr.execute(self);
 
         // Increment program counter.
         self.registers.pc = self.registers.pc + definition.len;
+
+        // Execute the instruction.
+        instr.execute(self);
     }
 
     fn set_z_flag(&mut self, value: u8) {
@@ -811,6 +813,13 @@ impl Cpu {
     pub fn cpy_value(&mut self, value: u8) {
         let register = self.registers.y;
         self.compare(register, value);
+    }
+
+    // Sets the program counter to the address specified.
+    //
+    // No processor status flags are affected.
+    pub fn jmp(&mut self, address: u16) {
+        self.registers.pc = address;
     }
 
 

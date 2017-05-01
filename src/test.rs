@@ -732,6 +732,40 @@ fn test_inc() {
 }
 
 #[test]
+fn test_jmp() {
+    let mut cpu = cpu::Cpu::new();
+
+    // Store indirect ones.
+    cpu.memory.store_u16(0x4545, 0x2fff);
+    cpu.memory.store(0x3fff, 0xdc);
+    cpu.memory.store(0x3f00, 0xfe);
+
+    // Jump to 0x1234.
+    cpu.memory
+        .store_bytes(0x0000, &[JMP_Abs as u8, 0x34, 0x12]);
+
+    // Jump to 0x2fff (thru 0x4545).
+    cpu.memory
+        .store_bytes(0x1234, &[JMP_Ind as u8, 0x45, 0x45]);
+
+    // Jump to 0x00fa.
+    cpu.memory
+        .store_bytes(0x2fff, &[JMP_Abs as u8, 0xfa, 0x00]);
+
+    // Jump to 0xfedc (thru 0x3fff).
+    cpu.memory
+        .store_bytes(0x00fa, &[JMP_Ind as u8, 0xff, 0x3f]);
+
+    for addr in [0x1234, 0x2fff, 0x00fa, 0xfedc].iter() {
+        cpu.execute();
+        assert!(cpu.registers.pc == *addr,
+                "Jumped to wrong address. At {:#06x}, should be at {:#06x}",
+                cpu.registers.pc,
+                *addr);
+    }
+}
+
+#[test]
 fn test_lda() {
     let mut cpu = cpu::Cpu::new();
 

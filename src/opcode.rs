@@ -115,6 +115,10 @@ enum_from_primitive! {
         INC_Abs     = 0xee,
         INC_Abs_X   = 0xfe,
 
+        // JuMP
+        JMP_Abs     = 0x4c,
+        JMP_Ind     = 0x6c,
+
         // LoaD Accumulator
         LDA_Imm     = 0xa9,
         LDA_Zero    = 0xa5,
