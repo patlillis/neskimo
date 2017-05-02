@@ -58,6 +58,12 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         BNE => def(2, 2),
         BEQ => def(2, 2),
 
+        // BReaK
+        // Note that the actual BRK instruction is only 1 bytes long,
+        // but the return address pushed onto the stack is the address
+        // of BRK + 2.
+        BRK => def(2, 7),
+
         // Flag (processor status)
         CLC => def(1, 2),
         SEC => def(1, 2),
@@ -191,6 +197,9 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         ROR_Zero_X => def(2, 6),
         ROR_Abs => def(3, 6),
         ROR_Abs_X => def(3, 7),
+
+        // ReTurn from Interrupt
+        RTI => def(1, 6),
 
         // ReTurn from Subroutine
         RTS => def(1, 6),

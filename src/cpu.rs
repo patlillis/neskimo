@@ -15,6 +15,10 @@ pub const U_FLAG: u8 = 1 << 5;
 pub const V_FLAG: u8 = 1 << 6;
 pub const N_FLAG: u8 = 1 << 7;
 
+pub const NMI_VECTOR: u16 = 0xfffa;
+pub const RESET_VECTOR: u16 = 0xfffc;
+pub const IRQ_VECTOR: u16 = 0xfffe;
+
 impl Status {
     // Constructs a new Status object, with only the I flag set.
     pub fn new() -> Status {
@@ -188,6 +192,9 @@ impl Registers {
 pub struct Cpu {
     pub registers: Registers,
     pub memory: memory::Memory,
+    pub irq: bool,
+    pub nmi: bool,
+    pub reset: bool,
 }
 
 impl Cpu {
@@ -195,6 +202,9 @@ impl Cpu {
         Cpu {
             registers: Registers::new(),
             memory: memory::Memory::new(),
+            irq: false,
+            nmi: false,
+            reset: false,
         }
     }
 
@@ -205,6 +215,9 @@ impl Cpu {
     pub fn reset_to_pc(&mut self, pc: u16) {
         self.memory.reset();
         self.registers.reset_to_pc(pc);
+        self.irq = false;
+        self.nmi = false;
+        self.reset = false;
     }
 
     // Executes the instruction at PC.
@@ -216,6 +229,66 @@ impl Cpu {
 
         // Execute the instruction.
         instr.execute(self);
+
+        // Check interrupts.
+        self.check_interrupts();
+    }
+
+    // Checks the interrupt lines, and sets the pc to the
+    // value in the correct interrupt vector if neccesary.
+    fn check_interrupts(&mut self) {
+        if self.irq && !self.registers.p.i() {
+            self.handle_irq();
+            self.irq = false;
+        } else if self.nmi {
+            self.handle_nmi();
+            self.nmi = false;
+        } else if self.reset {
+            self.handle_reset();
+            self.reset = false;
+        }
+    }
+
+    // Handle interrupt on the IRQ line.
+    fn handle_irq(&mut self) {
+        // Push return address and status onto stack. U_FLAG is 1, B_FLAG is 0.
+        let pc = self.registers.pc;
+        let status = (self.registers.p.0 | U_FLAG) & !B_FLAG;
+        self.push_u16(pc);
+        self.push(status);
+
+        // Turn on interrupt disable.
+        self.registers.p.set_i(true);
+
+        // Fetch memory from IRQ vector.
+        let vector = self.memory.fetch_u16(IRQ_VECTOR);
+        self.registers.pc = vector;
+    }
+
+    // Handle interrupt on the NMI line.
+    fn handle_nmi(&mut self) {
+        // Push return address and status onto stack. U_FLAG is 1, B_FLAG is 0.
+        let pc = self.registers.pc;
+        let status = (self.registers.p.0 | U_FLAG) & !B_FLAG;
+        self.push_u16(pc);
+        self.push(status);
+
+        // Turn on interrupt disable.
+        self.registers.p.set_i(true);
+
+        // Fetch memory from NMI vector.
+        let vector = self.memory.fetch_u16(NMI_VECTOR);
+        self.registers.pc = vector;
+    }
+
+    // Handle interrupt on the RESET line. Note that in the original 6502,
+    // a RESET actually triggered the same sequence as IRQ and NMI, but with
+    // the read/write bus set to "read", so no memory was modified. However,
+    // the stack pointer was decremented 3 times, which is why the stack pointer
+    // on startup is set to 0xfd (0x00 - 3).
+    fn handle_reset(&mut self) {
+        let vector = self.memory.fetch_u16(RESET_VECTOR);
+        self.registers.pc = vector;
     }
 
     fn set_z_flag(&mut self, value: u8) {
@@ -371,6 +444,7 @@ impl Cpu {
         self.registers.sp = self.registers.sp - 1;
     }
 
+    // Push value onto stack, high byte first then low byte.
     pub fn push_u16(&mut self, value: u16) {
         self.push((value >> 8) as u8);
         self.push(value as u8);
@@ -1122,6 +1196,33 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
+
+    // Forces an interrupt. The PC and status flags are pushed onto the stack,
+    // then the PC is set to the value in the IRQ vector ($fffe) and the
+    // break status flag is set to 1.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Set to 1
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn brk(&mut self) {
+        // Push return address and status onto stack. U_FLAG is 1, B_FLAG is 1.
+        let pc = self.registers.pc;
+        let status = self.registers.p.0 | U_FLAG | B_FLAG;
+        self.push_u16(pc);
+        self.push(status);
+
+        // Turn on interrupt disable.
+        self.registers.p.set_i(true);
+
+        // Fetch memory from IRQ vector.
+        let vector = self.memory.fetch_u16(IRQ_VECTOR);
+        self.registers.pc = vector;
+    }
+
     // Branches to the specified address only if the Negative flag is cleared.
     //
     // No processor status flags are affected.
@@ -1192,5 +1293,23 @@ impl Cpu {
         if condition {
             self.registers.pc = address;
         }
+    }
+
+
+    // Used to return from an interrupt handling routine. Pulls
+    // the processor flags and PC from the stack.
+    //
+    //         C    Carry Flag          Set from stack
+    //         Z    Zero Flag           Set from stack
+    //         I    Interrupt Disable   Set from stack
+    //         D    Decimal Mode Flag   Set from stack
+    //         B    Break Command       Set to 0
+    //         V    Overflow Flag       Set from stack
+    //         N    Negative Flag       Set from stack
+    pub fn rti(&mut self) {
+        let status = self.pull() & !(B_FLAG | U_FLAG);
+        let pc = self.pull_u16();
+        self.registers.p.0 = status;
+        self.registers.pc = pc;
     }
 }

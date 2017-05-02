@@ -268,6 +268,9 @@ impl Instruction {
                 cpu.beq(address);
             }
 
+            // BReaK
+            BRK => cpu.brk(),
+
             // Flag (processor status)
             CLC => cpu.clc(),
             SEC => cpu.sec(),
@@ -604,6 +607,9 @@ impl Instruction {
                 let address = self.absolute_address_x(cpu);
                 cpu.ror(address);
             }
+
+            // ReTurn from Interrupt
+            RTI => cpu.rti(),
 
             // ReTurn from Subroutine
             RTS => cpu.rts(),

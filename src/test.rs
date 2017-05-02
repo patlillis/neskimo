@@ -380,6 +380,45 @@ fn test_branch() {
 }
 
 #[test]
+fn test_brk_rti() {
+    let mut cpu = cpu::Cpu::new();
+
+    // Interrupt handling routine is at 0xabcd.
+    cpu.memory.store_u16(cpu::IRQ_VECTOR, 0xabcd);
+
+    // Initial program.
+    cpu.memory.store(0x0000, BRK as u8);
+
+    // Interrupt routine. Just immediately returns.
+    cpu.memory.store(0xabcd, RTI as u8);
+
+    // Set from flags for testing.
+    cpu.registers.p.set_v(true);
+    cpu.registers.p.set_c(true);
+
+    // Execute BRK.
+    cpu.execute();
+
+    // Should now be at 0xabcd.
+    assert!(cpu.registers.pc == 0xabcd, "BRK did not jump to 0xabcd.");
+
+    // Mess up some flags.
+    cpu.registers.p.set_v(false);
+    cpu.registers.p.set_z(true);
+
+    // Execute RTI.
+    cpu.execute();
+
+    // Should now be at 0x0002, and flags should be restored.
+    assert!(cpu.registers.pc == 0x0002,
+            "RTI did not jump back to 0x0002, instead jumped to {:#06x}.",
+            cpu.registers.pc);
+    assert!(cpu.registers.p.0 == (V_FLAG | C_FLAG | I_FLAG),
+            "RTI did not restore flags, instead found {:08b}",
+            cpu.registers.p.0);
+}
+
+#[test]
 fn test_cmp() {
     let mut cpu = cpu::Cpu::new();
 

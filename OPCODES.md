@@ -10,9 +10,9 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 *   ~~`BIT` (test BITs)~~
 
-*   Branch Instructions
+*   ~~Branch Instructions~~
 
-*   `BRK` (BReaK)
+*   ~~ `BRK` (BReaK)~~
 
 *   ~~`CMP` (CoMPare accumulator)~~
 
@@ -50,7 +50,7 @@ Taken from [6502.org](http://www.6502.org/tutorials/6502opcodes.html). ~~Striket
 
 *   ~~`ROR` (ROtate Right)~~
 
-*   `RTI` (ReTurn from Interrupt)
+*   ~~`RTI` (ReTurn from Interrupt)~~
 
 *   ~~`RTS` (ReTurn from Subroutine)~~
 

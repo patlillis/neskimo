@@ -74,6 +74,9 @@ enum_from_primitive! {
         BNE         = 0xd0, // Branch on Not Equal
         BEQ         = 0xf0, // Branch on EQual
 
+        // BReaK
+        BRK       = 0x00,
+
         // CoMPare accumulator
         CMP_Imm     = 0xc9,
         CMP_Zero    = 0xc5,
@@ -207,6 +210,9 @@ enum_from_primitive! {
         ROR_Zero_X  = 0x76,
         ROR_Abs     = 0x6e,
         ROR_Abs_X   = 0x7e,
+
+        // ReTurn from Interrupt
+        RTI         = 0x40,
 
         // ReTurn from Subroutine
         RTS         = 0x60,
