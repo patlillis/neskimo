@@ -2,7 +2,7 @@ use cpu;
 use memory;
 use opcode;
 use std;
-use utils;
+use utils::arithmetic::{concat_bytes, add_relative};
 
 use instruction::definition::*;
 
@@ -59,7 +59,7 @@ impl Instruction {
 
     // Get the absolute address from the instruction args.
     fn absolute_address(&self) -> u16 {
-        utils::arithmetic::concat_bytes(self.arg2(), self.arg1())
+        concat_bytes(self.arg2(), self.arg1())
     }
 
     // Get the absolute address from the instruction args, and add an offset
@@ -74,6 +74,13 @@ impl Instruction {
     fn absolute_address_y(&self, cpu: &cpu::Cpu) -> u16 {
         self.absolute_address()
             .wrapping_add(cpu.registers.y as u16)
+    }
+
+    // Get a signed variation of the instruction arg. This is used for branch
+    // operations, which uses a signed offset from the current program counter.
+    // In other words, branches can jump forward or back.
+    fn relative_address(&self) -> i8 {
+        self.arg1() as i8
     }
 
     // Get the zero page address from the instruction args.
@@ -225,6 +232,40 @@ impl Instruction {
             BIT_Abs => {
                 let address = self.absolute_address();
                 cpu.bit(address);
+            }
+
+            // Branch instructions
+            BPL => {
+                let address = add_relative(cpu.registers.pc, self.relative_address());
+                cpu.bpl(address);
+            }
+            BMI => {
+                let address = add_relative(cpu.registers.pc, self.relative_address());
+                cpu.bmi(address);
+            }
+            BVC => {
+                let address = add_relative(cpu.registers.pc, self.relative_address());
+                cpu.bvc(address);
+            }
+            BVS => {
+                let address = add_relative(cpu.registers.pc, self.relative_address());
+                cpu.bvs(address);
+            }
+            BCC => {
+                let address = add_relative(cpu.registers.pc, self.relative_address());
+                cpu.bcc(address);
+            }
+            BCS => {
+                let address = add_relative(cpu.registers.pc, self.relative_address());
+                cpu.bcs(address);
+            }
+            BNE => {
+                let address = add_relative(cpu.registers.pc, self.relative_address());
+                cpu.bne(address);
+            }
+            BEQ => {
+                let address = add_relative(cpu.registers.pc, self.relative_address());
+                cpu.beq(address);
             }
 
             // Flag (processor status)

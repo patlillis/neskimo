@@ -1121,4 +1121,76 @@ impl Cpu {
         self.set_z_flag(value);
         self.set_n_flag(value);
     }
+
+    // Branches to the specified address only if the Negative flag is cleared.
+    //
+    // No processor status flags are affected.
+    pub fn bpl(&mut self, address: u16) {
+        let condition = self.registers.p.n() == false;
+        self.branch(condition, address);
+    }
+
+    // Branches to the specified address only if the Negative flag is set.
+    //
+    // No processor status flags are affected.
+    pub fn bmi(&mut self, address: u16) {
+        let condition = self.registers.p.n() == true;
+        self.branch(condition, address);
+    }
+
+    // Branches to the specified address only if the Overflow flag is cleared.
+    //
+    // No processor status flags are affected.
+    pub fn bvc(&mut self, address: u16) {
+        let condition = self.registers.p.v() == false;
+        self.branch(condition, address);
+    }
+
+    // Branches to the specified address only if the Overflow flag is set.
+    //
+    // No processor status flags are affected.
+    pub fn bvs(&mut self, address: u16) {
+        let condition = self.registers.p.v() == true;
+        self.branch(condition, address);
+    }
+
+    // Branches to the specified address only if the Carry flag is cleared.
+    //
+    // No processor status flags are affected.
+    pub fn bcc(&mut self, address: u16) {
+        let condition = self.registers.p.c() == false;
+        self.branch(condition, address);
+    }
+
+    // Branches to the specified address only if the Carry flag is set.
+    //
+    // No processor status flags are affected.
+    pub fn bcs(&mut self, address: u16) {
+        let condition = self.registers.p.c() == true;
+        self.branch(condition, address);
+    }
+
+    // Branches to the specified address only if the Zero flag is cleared.
+    //
+    // No processor status flags are affected.
+    pub fn bne(&mut self, address: u16) {
+        let condition = self.registers.p.z() == false;
+        self.branch(condition, address);
+    }
+
+    // Branches to the specified address only if the Zero flag is set.
+    //
+    // No processor status flags are affected.
+    pub fn beq(&mut self, address: u16) {
+        let condition = self.registers.p.z() == true;
+        self.branch(condition, address);
+    }
+
+    // If condition is true, sets program counter to the
+    // specified address.
+    fn branch(&mut self, condition: bool, address: u16) {
+        if condition {
+            self.registers.pc = address;
+        }
+    }
 }

@@ -1,4 +1,5 @@
 use cpu;
+#[allow(unused_imports)]
 use cpu::{C_FLAG, Z_FLAG, I_FLAG, D_FLAG, B_FLAG, U_FLAG, V_FLAG, N_FLAG};
 use opcode::Opcode::*;
 
@@ -330,6 +331,51 @@ fn test_bit() {
         assert!(cpu.registers.p.0 == *flag,
                 "Bad flag: {:08b}",
                 cpu.registers.p.0);
+    }
+}
+
+#[test]
+fn test_branch() {
+    let mut cpu = cpu::Cpu::new();
+
+    // First entry in tuple is instruction.
+    // Second entry is processor flags for taking the branch.
+    // Third entry is processor flags for not taking the branch.
+    let branches = [(BPL, I_FLAG, I_FLAG | N_FLAG),
+                    (BMI, I_FLAG | N_FLAG, I_FLAG),
+                    (BVC, I_FLAG, I_FLAG | V_FLAG),
+                    (BVS, I_FLAG | V_FLAG, I_FLAG),
+                    (BCC, I_FLAG, I_FLAG | C_FLAG),
+                    (BCS, I_FLAG | C_FLAG, I_FLAG),
+                    (BNE, I_FLAG, I_FLAG | Z_FLAG),
+                    (BEQ, I_FLAG | Z_FLAG, I_FLAG)];
+
+    for branch in branches.iter() {
+        // Test taking the branch.
+        cpu.reset();
+        cpu.registers.p.0 = branch.1;
+
+        // Branching forward 8 bytes to 0x000a.
+        cpu.memory.store_bytes(0x0000, &[branch.0 as u8, 0x08]);
+
+        cpu.execute();
+        assert!(cpu.registers.pc == 0x000a,
+                "Branch not taken for opcode {} with p {:08b}",
+                branch.0,
+                branch.1);
+
+        // Test not branching.
+        cpu.reset();
+        cpu.registers.p.0 = branch.2;
+
+        // (Not) branching forward 8 bytes to 0x000a.
+        cpu.memory.store_bytes(0x0000, &[branch.0 as u8, 0x08]);
+
+        cpu.execute();
+        assert!(cpu.registers.pc == 0x0002,
+                "Branch taken for opcode {} with p {:08b}",
+                branch.0,
+                branch.2);
     }
 }
 

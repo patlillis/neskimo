@@ -64,6 +64,16 @@ enum_from_primitive! {
         BIT_Zero    = 0x24,
         BIT_Abs     = 0x2c,
 
+        // Branch instructions
+        BPL         = 0x10, // Branch on PLus
+        BMI         = 0x30, // Branch on MInus
+        BVC         = 0x50, // Branch on oVerflow Clear
+        BVS         = 0x70, // Branch on oVerflow Set
+        BCC         = 0x90, // Branch on Carry Clear
+        BCS         = 0xb0, // Branch on Carry Set
+        BNE         = 0xd0, // Branch on Not Equal
+        BEQ         = 0xf0, // Branch on EQual
+
         // CoMPare accumulator
         CMP_Imm     = 0xc9,
         CMP_Zero    = 0xc5,

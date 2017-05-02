@@ -48,6 +48,16 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         BIT_Zero => def(2, 3),
         BIT_Abs => def(3, 4),
 
+        // Branch instructions
+        BPL => def(2, 2),
+        BMI => def(2, 2),
+        BVC => def(2, 2),
+        BVS => def(2, 2),
+        BCC => def(2, 2),
+        BCS => def(2, 2),
+        BNE => def(2, 2),
+        BEQ => def(2, 2),
+
         // Flag (processor status)
         CLC => def(1, 2),
         SEC => def(1, 2),
