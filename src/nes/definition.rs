@@ -1,5 +1,5 @@
-use opcode;
-use opcode::Opcode::*;
+use nes::opcode;
+use nes::opcode::Opcode::*;
 
 // Details about an instruction.
 pub struct InstructionDefinition {

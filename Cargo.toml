@@ -7,5 +7,3 @@ authors = ["Pat Lillis <lillispm@gmail.com>"]
 clap = "2.23.3"
 enum_primitive = "0.1"
 num = "0.1"
-time = "0.1"
-timer = "0.1.6"

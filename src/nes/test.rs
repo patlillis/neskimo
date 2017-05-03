@@ -1,7 +1,7 @@
-use cpu;
+use nes::cpu;
 #[allow(unused_imports)]
-use cpu::{C_FLAG, Z_FLAG, I_FLAG, D_FLAG, B_FLAG, U_FLAG, V_FLAG, N_FLAG};
-use opcode::Opcode::*;
+use nes::cpu::{C_FLAG, Z_FLAG, I_FLAG, D_FLAG, B_FLAG, U_FLAG, V_FLAG, N_FLAG};
+use nes::opcode::Opcode::*;
 
 #[test]
 fn test_adc() {

@@ -1,8 +1,9 @@
 use std;
-use memory;
+use nes::memory;
 use utils;
 
-use instruction::Instruction;
+use nes::instruction::Instruction;
+
 // The status of the system processor.
 pub struct Status(pub u8);
 

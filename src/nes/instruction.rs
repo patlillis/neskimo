@@ -1,10 +1,10 @@
-use cpu;
-use memory;
-use opcode;
+use nes::cpu;
+use nes::memory;
+use nes::opcode;
 use std;
 use utils::arithmetic::{concat_bytes, add_relative};
 
-use instruction::definition::*;
+use nes::definition::*;
 
 // An instruction.
 //
@@ -131,7 +131,7 @@ impl Instruction {
 
     // Execute the instruction on the cpu.
     pub fn execute(&self, cpu: &mut cpu::Cpu) {
-        use opcode::Opcode::*;
+        use nes::opcode::Opcode::*;
         let opcode = opcode::decode(self.opcode());
 
         match opcode {

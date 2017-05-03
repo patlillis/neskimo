@@ -5,15 +5,8 @@ extern crate clap;
 extern crate enum_primitive;
 extern crate num;
 
-mod clock;
-mod cpu;
-mod instruction;
-mod memory;
-mod opcode;
+mod nes;
 mod utils;
-
-#[cfg(test)]
-mod test;
 
 use clap::{Arg, App};
 
