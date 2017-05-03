@@ -1,7 +1,37 @@
-# Notes
-
 Some general notes on the NES, including architecture and other tidbits. Heavily
 borrowed from [Niels Widger's blog post](http://nwidger.github.io/blog/post/writing-an-nes-emulator-in-go-part-1/).
+
+<!-- TOC -->
+
+- [CPU](#cpu)
+    - [Registers](#registers)
+    - [Memory Map](#memory-map)
+    - [Opcodes](#opcodes)
+    - [Addressing Modes](#addressing-modes)
+        - [Absolute: `$c000`](#absolute-c000)
+        - [Zero page: `$c0`](#zero-page-c0)
+        - [Zero page,X: `$c0,X`](#zero-pagex-c0x)
+        - [Zero page,Y: `$c0,Y`](#zero-pagey-c0y)
+        - [Absolute,X and absolute,Y: `$c000,X` and `$c000,Y`](#absolutex-and-absolutey-c000x-and-c000y)
+        - [Immediate: `#$c0`](#immediate-c0)
+        - [Relative: `$c0` (or label)](#relative-c0-or-label)
+        - [Implicit](#implicit)
+        - [Indirect: `($c000)`](#indirect-c000)
+        - [Indexed indirect: `($c0,X)`](#indexed-indirect-c0x)
+        - [Indirect indexed: `($c0),Y`](#indirect-indexed-c0y)
+        - [Implied](#implied)
+    - [Fetch/Execute Cycle](#fetchexecute-cycle)
+    - [Clock](#clock)
+    - [Interrupts](#interrupts)
+    - [Interrupt Handling](#interrupt-handling)
+        - [Resources](#resources)
+- [PPU](#ppu)
+    - [Memory Map](#memory-map-1)
+        - [Hardware mapping](#hardware-mapping)
+- [APU](#apu)
+    - [Channels](#channels)
+
+<!-- /TOC -->
 
 ## CPU
 
@@ -46,16 +76,21 @@ All registers are 8-bit, except for `PC` which is 16-bit.
 
 ### Memory Map
 
-*   `$0000` - `$00ff`: Used by zero page addressing instructions. Instructions
-    using zero page addressing only require an 8-bit address parameter. The
-    most-significant 8 bits of the address are assumed to be `$00`. This is done
-    to save memory since the address requires only half the space.
-*   `$0100` - `$01ff`: Reserved for the system stack.
-*   `$0200` - `$fff9`: UNSPECIFIED
-*   `$fffa` - `$fffb`: Contains the address of non-maskable interrupt (NMI)
-    handler.
-*   `$fffc` - `$fffd`: Contains the address of reset location.
-*   `$fffe` - `$ffff`: Contains the address of BRK/IRQ handler.
+| Address Range     | Size    | Description                                                        |
+| ----------------- | ------- | ------------------------------------------------------------------ |
+| `$0000` - `$00ff` | `$0100` | Game RAM Used for zero page addressing instructions                |
+| `$0100` - `$01ff` | `$0100` | Reserved for the system stack                                      |
+| `$0200` - `$07ff` | `$0600` | RAM                                                                |
+| `$0800` - `$0fff` | `$0800` | Mirror of `$0000` - `$07ff`                                        |
+| `$1000` - `$17ff` | `$0800` | Mirror of `$0000` - `$07ff`                                        |
+| `$1800` - `$1fff` | `$0800` | Mirror of `$0000` - `$07ff`                                        |
+| `$2000` - `$2007` | `$0008` | PPU Registers                                                      |
+| `$2008` - `$3fff` | `$1ff8` | Mirror of `$2000` - `$2007` (multple times)                        |
+| `$4000` - `$401f` | `$0020` | APU Registers and I/O Registers                                    |
+| `$4020` - `$5fff` | `$1fdf` | Expansion ROM - used by mappers to expand the capabilities of VRAM |
+| `$6000` - `$7fff` | `$2000` | SRAM - Save Ram used to save data between game plays               |
+| `$8000` - `$bfff` | `$4000` | PRG-ROM lower bank - executable code                               |
+| `$c000` - `$ffff` | `$4000` | PRG-ROM upper bank - executable code (includes interrupt vectors)  |
 
 ### Opcodes
 
@@ -171,15 +206,17 @@ These different signals are:
 These Vector pointers are located as follows:
 
 
-|SIGNAL  | VECTOR          |
-|--------|-----------------|
-|NMI	 | `$FFFA`/`$FFFB` |
-|RESET	 | `$FFFC`/`$FFFD` |
-|IRQ/BRK | `$FFFE`/`$FFFF` |
+| SIGNAL  | VECTOR          |
+| ------- | --------------- |
+| NMI     | `$FFFA`/`$FFFB` |
+| RESET   | `$FFFC`/`$FFFD` |
+| IRQ/BRK | `$FFFE`/`$FFFF` |
 
 ### Interrupt Handling
 
-When a peripheral device pulls the interrupt request line low
+When a peripheral device pulls the interrupt request line low, the program counter
+and status flags are pushed onto the stack, and control is transferred to the interrupt handling routine, located at the address stored in the appropriate
+interrupt vector.
 
 #### Resources
 
@@ -188,9 +225,60 @@ When a peripheral device pulls the interrupt request line low
 * Timing: [http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling](http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling)
 
 
+## PPU
+
+Picture processing unit. The NES used a 2C02 PPU, which is a [character generator](https://en.wikipedia.org/wiki/Character_generator) with sprites, designed by
+Nintendo specifically for the NES.
+
+### Memory Map
+
+The PPU addresses a 16kB space, `$0000` - `$3fff`, which is totally separate from the
+CPU's address bus.
+
+The NES has 2kB of RAM dedicated to the PPU, normally mapped to the nametable address
+space from `$2000` - `$2fff`, but this can be remapped through custom cartridge wiring.
+
+| Address Range     | Size    | Description                                                               |
+| ----------------- | ------- | ------------------------------------------------------------------------- |
+| `$0000` - `$0fff` | `$1000` | [Pattern table](https://wiki.nesdev.com/w/index.php/PPU_pattern_tables) 0 |
+| `$1000` - `$1fff` | `$1000` | [Pattern table](https://wiki.nesdev.com/w/index.php/PPU_pattern_tables) 1 |
+| `$2000` - `$23ff` | `$0400` | [Nametable](https://wiki.nesdev.com/w/index.php/PPU_nametables) 0         |
+| `$2400` - `$27ff` | `$0400` | [Nametable](https://wiki.nesdev.com/w/index.php/PPU_nametables) 1         |
+| `$2800` - `$2bff` | `$0400` | [Nametable](https://wiki.nesdev.com/w/index.php/PPU_nametables) 2         |
+| `$2c00` - `$2fff` | `$0400` | [Nametable](https://wiki.nesdev.com/w/index.php/PPU_nametables) 3         |
+| `$3000` - `$3eff` | `$0f00` | Mirror of `$2000` - `$2eff`                                               |
+| `$3f00` - `$3f1f` | `$0020` | [Palette RAM](https://wiki.nesdev.com/w/index.php/PPU_palettes) indexes   |
+| `$3f20` - `$3fff` | `$00e0` | Mirror of `$3f00` - `$3f1f`                                               |
+
+In addition, the PPU contains 256 bytes of memory known as [Object Attribute Memory](https://wiki.nesdev.com/w/index.php/PPU_OAM) which determines how sprites are rendered. The CPU can manipulate
+this memory the memory mapped registers at [OAMADDR](https://wiki.nesdev.com/w/index.php/PPU_registers#OAMADDR) (`$2003`), [OAMDATA](https://wiki.nesdev.com/w/index.php/PPU_registers#OAMDATA) (`$2004`), and [OAMDMA](https://wiki.nesdev.com/w/index.php/PPU_registers#OAMDMA) (`$4014`).
+
+| Address Range          | Size  | Description         |
+| ---------------------- | ----- | ------------------- |
+| `$00` - `$0c` (0 of 4) | `$40` | Sprite Y coordinate |
+| `$01` - `$0d` (1 of 4) | `$40` | Sprite tile #       |
+| `$02` - `$0e` (2 of 4) | `$40` | Sprite attribute    |
+| `$03` - `$0f` (3 of 4) | `$40` | Sprite X coordinate |
+
+#### Hardware mapping
+
+The mappings above are the fixed addresses that the PPU fetches data during rendering. However, the actual
+device from which the data is fetched may be configured by the cartridge.
+
+*   `$0000` - `$1fff` is normally mapped by the cartridge to [CHR-ROM]() or [CHR-RAM](), often with a bank
+    switching mechanism.
+*   `$2000` - `$2fff` is normally mapped to the 2kB NES internal VRAM, providing 2 nametables with a mirroring
+    configuration controlled by the cartridge, but it can be partly or fulled remapped to RAM on the cartridge,
+    allowing up to 4 simultaneous nametables.
+*   `$3000` - `$3eff` is usually a mirror of the 2kB region from `$2000` - `$2eff`. The PPU does not render from
+    this address range, so this space has negligble utility.
+*   `$3f00` - `$3fff` is not configurable, always mapped to the internal palette control.
+
+
 ## APU
 
 The NES has an audio processing unit for generating sound in games. It is implemented in the RP2A03 (NTSC) and RP2A07 (PAL) chips. A good overview can be found at [nesdev.com](http://wiki.nesdev.com/w/index.php/APU).
+
 
 ### Channels
 
