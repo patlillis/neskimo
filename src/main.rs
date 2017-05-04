@@ -9,6 +9,7 @@ mod nes;
 mod utils;
 
 use clap::{Arg, App};
+use utils::io;
 
 // The version of neskimo that we're building.
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -25,6 +26,10 @@ fn main() {
         .get_matches();
 
     // .unwrap() is safe here FILE is required, so clap will crash if it's not there.
-    let file = matches.value_of("FILE").unwrap();
-    println!("Running ROM {}...", file);
+    let file_name = matches.value_of("FILE").unwrap();
+    let rom = match io::read_bin(&file_name) {
+        Ok(rom) => rom,
+        Err(e) => panic!("Error opening {}: {}", file_name, e)
+    };
+    println!("Running ROM {}...", file_name);
 }
