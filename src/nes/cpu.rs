@@ -1,5 +1,5 @@
 use std;
-use nes::memory;
+use nes::memory::Memory;
 use utils;
 
 use nes::instruction::Instruction;
@@ -159,12 +159,7 @@ impl std::fmt::Debug for Registers {
 }
 
 impl Registers {
-    // Constructs a new Registers object, with SP set to 0xfd,
-    // PC set to 0xfffc (the RESET vector).
-    pub fn new() -> Registers {
-        Registers::new_at_pc(0x0000)
-    }
-
+    // Constructs a new Registers object, with SP set to 0xfd.
     pub fn new_at_pc(pc: u16) -> Registers {
         Registers {
             a: 0x00,
@@ -192,17 +187,20 @@ impl Registers {
 
 pub struct Cpu {
     pub registers: Registers,
-    pub memory: memory::Memory,
+    pub memory: Memory,
     pub irq: bool,
     pub nmi: bool,
     pub reset: bool,
 }
 
 impl Cpu {
-    pub fn new() -> Cpu {
+    pub fn new(memory: Memory) -> Cpu {
+        // Get the PC from the RESET vector pointer.
+        let pc = memory.fetch_u16(RESET_VECTOR);
+
         Cpu {
-            registers: Registers::new(),
-            memory: memory::Memory::new(),
+            registers: Registers::new_at_pc(pc),
+            memory: memory,
             irq: false,
             nmi: false,
             reset: false,

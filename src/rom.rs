@@ -26,57 +26,53 @@ pub enum Mapper {
     NROM,
 }
 
-pub struct ROMFile {
+pub struct RomFile {
     // From the name of the iNES file.
-    game_name: String,
+    pub game_name: String,
 
-    // Whether 512 bytes of trainer data is present.
-    trainer: bool,
-    trainer_data: Option<[u8; TRAINER_SIZE]>,
+    // Possible 512 bytes of trainer data.
+    pub trainer_data: Option<[u8; TRAINER_SIZE]>,
 
-    // Size of PRG ROM in 16 KB units.
-    prg_rom_size: u8,
-    prg_rom_data: Vec<[u8; PRG_ROM_SIZE]>,
+    // PRG ROM in 16 KB units.
+    pub prg_rom_data: Vec<[u8; PRG_ROM_SIZE]>,
 
-    // Size of CHR ROM in 8 KB units (Value 0 means the board uses CHR RAM).
-    chr_rom_size: u8,
-    chr_rom_data: Vec<[u8; CHR_ROM_SIZE]>,
+    // CHR ROM in 8 KB units (0 units means the board uses CHR RAM).
+    pub chr_rom_data: Vec<[u8; CHR_ROM_SIZE]>,
 
-    // Size of PRG RAM in 8 KB units (Value 0 infers 8 KB for compatibility).
-    prg_ram_size: u8,
-    prg_ram_data: Vec<[u8; PRG_RAM_SIZE]>,
+    // Size of PRG RAM in 8 KB units.
+    pub prg_ram_size: usize,
 
-    mirror_type: MirrorType,
+    pub mirror_type: MirrorType,
 
-    tv_system: TVSystem,
+    pub tv_system: TVSystem,
 
-    vs_cart: bool,
+    pub vs_cart: bool,
 
-    play_choice: bool,
+    pub play_choice: bool,
 
-    mapper: u8,
+    pub mapper: u8,
 }
 
 // TODO: finish this up.
-impl fmt::Debug for ROMFile {
+impl fmt::Debug for RomFile {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f,
                  "\
-game_name: {:?}
-trainer: {:?}
-prg_rom_size: {:?}
-chr_rom_size: {:?}
-prg_ram_size: {:?}
-mirror_type: {:?}
-tv_system: {:?}
-vs_cart: {:?}
-play_choice: {:?}
-mapper: {:?}",
+Game name        : {:?}
+Has trainer data : {:?}
+PRG ROM size     : {:?} bytes
+CHR ROM size     : {:?} bytes
+PRG RAM size     : {:?} bytes
+Mirror Type      : {:?}
+TV System        : {:?}
+VS Unisystem     : {:?}
+PlayChoice-10    : {:?}
+Mapper #         : {:?}",
                  self.game_name,
-                 self.trainer,
-                 self.prg_rom_size,
-                 self.chr_rom_size,
-                 self.prg_ram_size,
+                 self.trainer_data.is_some(),
+                 self.prg_rom_data.len() * PRG_ROM_SIZE,
+                 self.chr_rom_data.len() * CHR_ROM_SIZE,
+                 self.prg_ram_size * PRG_RAM_SIZE,
                  self.mirror_type,
                  self.tv_system,
                  self.vs_cart,
@@ -85,14 +81,14 @@ mapper: {:?}",
     }
 }
 
-impl fmt::Display for ROMFile {
+impl fmt::Display for RomFile {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
-impl ROMFile {
-    pub fn new(file_name: &String) -> Result<ROMFile> {
+impl RomFile {
+    pub fn new(file_name: &String) -> Result<RomFile> {
         let bytes = try!(read_binary(file_name));
         let game_name = Path::new(&file_name)
             .file_stem()
@@ -101,10 +97,10 @@ impl ROMFile {
             .unwrap()
             .to_string();
         // Oh my god someone please kill me.
-        ROMFile::new_from_buffer(game_name, &bytes)
+        RomFile::new_from_buffer(game_name, &bytes)
     }
 
-    pub fn new_from_buffer(game_name: String, rom: &[u8]) -> Result<ROMFile> {
+    pub fn new_from_buffer(game_name: String, rom: &[u8]) -> Result<RomFile> {
         // File must have enough space to be a valid header.
         if rom.len() < 16 {
             return Err(Error::new(ErrorKind::InvalidData,
@@ -120,7 +116,7 @@ impl ROMFile {
         // Byte 4: PRG ROM size.
         let prg_rom_size = rom[4];
 
-        // Byte 5: CHR ROM size.
+        // Byte 5: CHR ROM size. 0 implies that the cartridge uses CHR RAM.
         let chr_rom_size = rom[5];
 
         // Byte 6 flags:
@@ -135,6 +131,7 @@ impl ROMFile {
             0x01 => MirrorType::Vertical,
             _ => MirrorType::Horizontal,
         };
+        #[allow(unused_variables)]
         let has_prg_ram = flags_6 & 0x02 == 0x02;
         let has_trainer = flags_6 & 0x04 == 0x04;
         let mapper_lower: u8 = (flags_6 & 0xf0) >> 4;
@@ -147,6 +144,7 @@ impl ROMFile {
         let flags_7 = rom[7];
         let vs_cart = flags_7 & 0x01 == 0x01;
         let play_choice = flags_7 & 0x02 == 0x02;
+        #[allow(unused_variables)]
         let nes_20 = (flags_7 & 0x0c) >> 2 == 0x02;
         let mapper_upper: u8 = flags_7 & 0xf0;
 
@@ -165,20 +163,16 @@ impl ROMFile {
             _ => TVSystem::PAL,
         };
 
-        let mut rom_file = ROMFile {
+        let mut rom_file = RomFile {
             game_name: game_name,
 
-            trainer: has_trainer,
             trainer_data: None,
 
-            prg_rom_size: prg_rom_size,
             prg_rom_data: Vec::new(),
 
-            chr_rom_size: chr_rom_size,
             chr_rom_data: Vec::new(),
 
-            prg_ram_size: prg_ram_size,
-            prg_ram_data: Vec::new(),
+            prg_ram_size: prg_ram_size as usize,
 
             mirror_type: mirror_type,
 
@@ -199,7 +193,23 @@ impl ROMFile {
             let mut trainer_data = [0x00; TRAINER_SIZE];
             trainer_data.copy_from_slice(&rom[cursor..(cursor + TRAINER_SIZE)]);
             rom_file.trainer_data = Some(trainer_data);
-            cursor = cursor + TRAINER_SIZE;
+            cursor += TRAINER_SIZE;
+        }
+
+        // Load PRG ROM data.
+        for _ in 0..prg_rom_size {
+            let mut prg_rom = [0x00; PRG_ROM_SIZE];
+            prg_rom.copy_from_slice(&rom[cursor..(cursor + PRG_ROM_SIZE)]);
+            rom_file.prg_rom_data.push(prg_rom);
+            cursor += PRG_ROM_SIZE;
+        }
+
+        // Load CHR ROM data.
+        for _ in 0..chr_rom_size {
+            let mut chr_rom = [0x00; CHR_ROM_SIZE];
+            chr_rom.copy_from_slice(&rom[cursor..(cursor + CHR_ROM_SIZE)]);
+            rom_file.chr_rom_data.push(chr_rom);
+            cursor += CHR_ROM_SIZE;
         }
 
         Ok(rom_file)

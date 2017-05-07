@@ -1,11 +1,22 @@
-use nes::cpu;
 #[allow(unused_imports)]
-use nes::cpu::{C_FLAG, Z_FLAG, I_FLAG, D_FLAG, B_FLAG, U_FLAG, V_FLAG, N_FLAG};
+use nes::cpu::{//
+               Cpu,
+               Status,
+               IRQ_VECTOR,
+               C_FLAG,
+               Z_FLAG,
+               I_FLAG,
+               D_FLAG,
+               B_FLAG,
+               U_FLAG,
+               V_FLAG,
+               N_FLAG};
+use nes::memory::Memory;
 use nes::opcode::Opcode::*;
 
 #[test]
 fn test_adc() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry is value to be added.
     // Second entry is value in accumulator before the add.
@@ -90,7 +101,7 @@ fn test_adc() {
 
 #[test]
 fn test_and() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry is value to be anded.
     // Second entry is value in accumulator before the and.
@@ -173,7 +184,7 @@ fn test_and() {
 
 #[test]
 fn test_asl() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry in tuple is value that should be shifted.
     // Second entry is expected processor status flags after that shift.
@@ -231,7 +242,7 @@ fn test_asl() {
 
         // Test that processor status is set correctly after each instruction.
         for addr in asl_addresses.iter() {
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.execute();
             assert!(cpu.registers.p.0 == asl_result.1,
                     "Bad flag: {:08b}",
@@ -247,7 +258,7 @@ fn test_asl() {
 
 #[test]
 fn test_bit() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // Z flag test is ANDed with the accumulator.
     cpu.registers.a = 0xc8;
@@ -324,7 +335,7 @@ fn test_bit() {
 
     // Check that the status flags are set properly.
     for flag in expected_status_flags.iter() {
-        cpu.registers.p = cpu::Status::new();
+        cpu.registers.p = Status::new();
 
         // Execute and make sure flag was properly set.
         cpu.execute();
@@ -336,7 +347,7 @@ fn test_bit() {
 
 #[test]
 fn test_branch() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry in tuple is instruction.
     // Second entry is processor flags for taking the branch.
@@ -381,10 +392,10 @@ fn test_branch() {
 
 #[test]
 fn test_brk_rti() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // Interrupt handling routine is at 0xabcd.
-    cpu.memory.store_u16(cpu::IRQ_VECTOR, 0xabcd);
+    cpu.memory.store_u16(IRQ_VECTOR, 0xabcd);
 
     // Initial program.
     cpu.memory.store(0x0000, BRK as u8);
@@ -420,7 +431,7 @@ fn test_brk_rti() {
 
 #[test]
 fn test_cmp() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     let accumulator_value = 15;
     // First entry in tuple is value that should be used for comparison.
@@ -488,7 +499,7 @@ fn test_cmp() {
 
         // Test that processor status is set correctly after each instruction.
         for _ in 0..8 {
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.execute();
             assert!(cpu.registers.p.0 == cmp_result.1,
                     "Bad flag: {:08b}",
@@ -499,7 +510,7 @@ fn test_cmp() {
 
 #[test]
 fn test_cpx() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     let x_value = 15;
     // First entry in tuple is value that should be used for comparison.
@@ -537,7 +548,7 @@ fn test_cpx() {
 
         // Test that processor status is set correctly after each instruction.
         for _ in 0..3 {
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.execute();
             assert!(cpu.registers.p.0 == cpx_result.1,
                     "Bad flag: {:08b}",
@@ -548,7 +559,7 @@ fn test_cpx() {
 
 #[test]
 fn test_cpy() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     let y_value = 15;
     // First entry in tuple is value that should be used for comparison.
@@ -586,7 +597,7 @@ fn test_cpy() {
 
         // Test that processor status is set correctly after each instruction.
         for _ in 0..3 {
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.execute();
             assert!(cpu.registers.p.0 == cpy_result.1,
                     "Bad flag: {:08b}",
@@ -597,7 +608,7 @@ fn test_cpy() {
 
 #[test]
 fn test_dec() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // The value in memory before incrementing.
     let val = 18;
@@ -643,7 +654,7 @@ fn test_dec() {
 
 #[test]
 fn test_eor() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry is value to be xor.
     // Second entry is value in accumulator before the xor.
@@ -712,7 +723,7 @@ fn test_eor() {
 
         for _ in 0..eor_addresses.len() + 1 {
             cpu.registers.a = eor_result.1;
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.execute();
 
             assert!(cpu.registers.a == eor_result.2,
@@ -727,7 +738,7 @@ fn test_eor() {
 
 #[test]
 fn test_flags() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     cpu.memory
         .store_bytes(0x0000,
@@ -772,7 +783,7 @@ fn test_flags() {
 
 #[test]
 fn test_inc() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // The value in memory before incrementing.
     let val = 18;
@@ -818,7 +829,7 @@ fn test_inc() {
 
 #[test]
 fn test_jmp() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // Store indirect ones.
     cpu.memory.store_u16(0x4545, 0x2fff);
@@ -852,7 +863,7 @@ fn test_jmp() {
 
 #[test]
 fn test_lda() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // The value to load from various memory addresses.
     let val = 18;
@@ -926,7 +937,7 @@ fn test_lda() {
 
 #[test]
 fn test_ldx() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // The value to load from various memory addresses.
     let val = 18;
@@ -982,7 +993,7 @@ fn test_ldx() {
 
 #[test]
 fn test_ldy() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // The value to load from various memory addresses.
     let val = 18;
@@ -1038,7 +1049,7 @@ fn test_ldy() {
 
 #[test]
 fn test_lsr() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry in tuple is value that should be shifted.
     // Second entry is expected processor status flags after that shift.
@@ -1095,7 +1106,7 @@ fn test_lsr() {
 
         // Test that processor status is set correctly after each instruction.
         for addr in lsr_addresses.iter() {
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.execute();
             assert!(cpu.registers.p.0 == lsr_result.1,
                     "Bad flag: {:08b}",
@@ -1111,7 +1122,7 @@ fn test_lsr() {
 
 #[test]
 fn test_ora() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry is value to be or.
     // Second entry is value in accumulator before the or.
@@ -1178,7 +1189,7 @@ fn test_ora() {
 
         for _ in 0..ora_addresses.len() + 1 {
             cpu.registers.a = ora_result.1;
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.execute();
 
             assert!(cpu.registers.a == ora_result.2,
@@ -1193,7 +1204,7 @@ fn test_ora() {
 
 #[test]
 fn test_registers() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     let val = 18;
 
@@ -1259,7 +1270,7 @@ fn test_registers() {
 
 #[test]
 fn test_rol() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry in tuple is value that should be rotated.
     // Second entry is initial carry flag.
@@ -1320,7 +1331,7 @@ fn test_rol() {
         // Test that processor status is set correctly after each instruction.
         for addr in rol_addresses.iter() {
             // Carry flag for rotating in to value.
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.registers.p.set_c(rol_result.1);
             cpu.execute();
             assert!(cpu.registers.p.0 == rol_result.3,
@@ -1338,7 +1349,7 @@ fn test_rol() {
 
 #[test]
 fn test_ror() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry in tuple is value that should be rotated.
     // Second entry is initial carry flag.
@@ -1399,7 +1410,7 @@ fn test_ror() {
         // Test that processor status is set correctly after each instruction.
         for addr in ror_addresses.iter() {
             // Carry flag for rotating in to value.
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.registers.p.set_c(ror_result.1);
             cpu.execute();
             assert!(cpu.registers.p.0 == ror_result.3,
@@ -1417,7 +1428,7 @@ fn test_ror() {
 
 #[test]
 fn test_sbc() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // First entry is value to be subtracted.
     // Second entry is value in accumulator before the subtraction.
@@ -1485,7 +1496,7 @@ fn test_sbc() {
 
         for _ in 0..sbc_addresses.len() + 1 {
             cpu.registers.a = sbc_result.1;
-            cpu.registers.p = cpu::Status::new();
+            cpu.registers.p = Status::new();
             cpu.registers.p.set_c(sbc_result.2);
             cpu.execute();
 
@@ -1501,7 +1512,7 @@ fn test_sbc() {
 
 #[test]
 fn test_sta() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // The value to pass around and test.
     let val = 18;
@@ -1563,7 +1574,7 @@ fn test_sta() {
 
 #[test]
 fn test_stx() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // The value to pass around and test.
     let val = 18;
@@ -1602,7 +1613,7 @@ fn test_stx() {
 
 #[test]
 fn test_sty() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // The value to pass around and test.
     let val = 18;
@@ -1641,7 +1652,7 @@ fn test_sty() {
 
 #[test]
 fn test_subroutine() {
-    let mut cpu = cpu::Cpu::new();
+    let mut cpu = Cpu::new(Memory::new());
 
     // Store 3 subroutine calls.
     cpu.memory
@@ -1672,7 +1683,7 @@ fn test_subroutine() {
     let subroutine_lengths = [3, 5, 7];
 
     for len in subroutine_lengths.iter() {
-        cpu.registers.p = cpu::Status::new();
+        cpu.registers.p = Status::new();
         for _ in 1..*len {
             cpu.execute();
         }

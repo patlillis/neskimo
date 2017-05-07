@@ -10,7 +10,7 @@ mod rom;
 mod utils;
 
 use clap::{Arg, App};
-use rom::ROMFile;
+use rom::RomFile;
 
 // The version of neskimo that we're building.
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -29,7 +29,7 @@ fn main() {
 
     // .unwrap() is safe here FILE is required, so clap will crash if it's not there.
     let file_name = matches.value_of("FILE").unwrap();
-    let rom = ROMFile::new(&file_name.to_string());
+    let rom = RomFile::new(&file_name.to_string());
 
     println!("{:?}", rom);
 }
