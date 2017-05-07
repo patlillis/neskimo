@@ -33,4 +33,10 @@ impl Nes {
 
         Nes { cpu: Cpu::new(memory) }
     }
+
+    pub fn run(&mut self) {
+        loop {
+            self.cpu.execute();
+        }
+    }
 }

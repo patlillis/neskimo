@@ -10,6 +10,7 @@ mod rom;
 mod utils;
 
 use clap::{Arg, App};
+use nes::nes::Nes;
 use rom::RomFile;
 
 // The version of neskimo that we're building.
@@ -31,5 +32,10 @@ fn main() {
     let file_name = matches.value_of("FILE").unwrap();
     let rom = RomFile::new(&file_name.to_string());
 
-    println!("{:?}", rom);
+    let mut nes = match rom {
+        Ok(rom) => Nes::new(rom),
+        Err(e) => panic!(e),
+    };
+
+    nes.run();
 }
