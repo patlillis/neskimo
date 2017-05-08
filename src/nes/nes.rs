@@ -2,13 +2,19 @@ use nes::cpu::Cpu;
 use nes::memory::Memory;
 use rom::RomFile;
 
+#[derive(Debug)]
+pub struct Options {
+    // File to write CPU log to,
+    pub logfile: String,
+}
+
 pub struct Nes {
     pub cpu: Cpu,
     // pub ppu: Ppu,
 }
 
 impl Nes {
-    pub fn new(rom: RomFile) -> Nes {
+    pub fn new(rom: RomFile, options: Options) -> Nes {
         let mut memory = Memory::new();
 
         // Copy trainer data to 0x7000.
