@@ -14,9 +14,13 @@ use nes::cpu::{//
 use nes::memory::Memory;
 use nes::opcode::Opcode::*;
 
+fn new_cpu() -> Cpu {
+    Cpu::new(Memory::new(), None)
+}
+
 #[test]
 fn test_adc() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry is value to be added.
     // Second entry is value in accumulator before the add.
@@ -101,7 +105,7 @@ fn test_adc() {
 
 #[test]
 fn test_and() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry is value to be anded.
     // Second entry is value in accumulator before the and.
@@ -184,7 +188,7 @@ fn test_and() {
 
 #[test]
 fn test_asl() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry in tuple is value that should be shifted.
     // Second entry is expected processor status flags after that shift.
@@ -258,7 +262,7 @@ fn test_asl() {
 
 #[test]
 fn test_bit() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // Z flag test is ANDed with the accumulator.
     cpu.registers.a = 0xc8;
@@ -347,7 +351,7 @@ fn test_bit() {
 
 #[test]
 fn test_branch() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry in tuple is instruction.
     // Second entry is processor flags for taking the branch.
@@ -392,7 +396,7 @@ fn test_branch() {
 
 #[test]
 fn test_brk_rti() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // Interrupt handling routine is at 0xabcd.
     cpu.memory.store_u16(IRQ_VECTOR, 0xabcd);
@@ -431,7 +435,7 @@ fn test_brk_rti() {
 
 #[test]
 fn test_cmp() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     let accumulator_value = 15;
     // First entry in tuple is value that should be used for comparison.
@@ -510,7 +514,7 @@ fn test_cmp() {
 
 #[test]
 fn test_cpx() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     let x_value = 15;
     // First entry in tuple is value that should be used for comparison.
@@ -559,7 +563,7 @@ fn test_cpx() {
 
 #[test]
 fn test_cpy() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     let y_value = 15;
     // First entry in tuple is value that should be used for comparison.
@@ -608,7 +612,7 @@ fn test_cpy() {
 
 #[test]
 fn test_dec() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // The value in memory before incrementing.
     let val = 18;
@@ -654,7 +658,7 @@ fn test_dec() {
 
 #[test]
 fn test_eor() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry is value to be xor.
     // Second entry is value in accumulator before the xor.
@@ -738,7 +742,7 @@ fn test_eor() {
 
 #[test]
 fn test_flags() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     cpu.memory
         .store_bytes(0x0000,
@@ -783,7 +787,7 @@ fn test_flags() {
 
 #[test]
 fn test_inc() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // The value in memory before incrementing.
     let val = 18;
@@ -829,7 +833,7 @@ fn test_inc() {
 
 #[test]
 fn test_jmp() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // Store indirect ones.
     cpu.memory.store_u16(0x4545, 0x2fff);
@@ -863,7 +867,7 @@ fn test_jmp() {
 
 #[test]
 fn test_lda() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // The value to load from various memory addresses.
     let val = 18;
@@ -937,7 +941,7 @@ fn test_lda() {
 
 #[test]
 fn test_ldx() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // The value to load from various memory addresses.
     let val = 18;
@@ -993,7 +997,7 @@ fn test_ldx() {
 
 #[test]
 fn test_ldy() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // The value to load from various memory addresses.
     let val = 18;
@@ -1049,7 +1053,7 @@ fn test_ldy() {
 
 #[test]
 fn test_lsr() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry in tuple is value that should be shifted.
     // Second entry is expected processor status flags after that shift.
@@ -1122,7 +1126,7 @@ fn test_lsr() {
 
 #[test]
 fn test_ora() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry is value to be or.
     // Second entry is value in accumulator before the or.
@@ -1204,7 +1208,7 @@ fn test_ora() {
 
 #[test]
 fn test_registers() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     let val = 18;
 
@@ -1270,7 +1274,7 @@ fn test_registers() {
 
 #[test]
 fn test_rol() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry in tuple is value that should be rotated.
     // Second entry is initial carry flag.
@@ -1349,7 +1353,7 @@ fn test_rol() {
 
 #[test]
 fn test_ror() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry in tuple is value that should be rotated.
     // Second entry is initial carry flag.
@@ -1428,7 +1432,7 @@ fn test_ror() {
 
 #[test]
 fn test_sbc() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // First entry is value to be subtracted.
     // Second entry is value in accumulator before the subtraction.
@@ -1512,7 +1516,7 @@ fn test_sbc() {
 
 #[test]
 fn test_sta() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // The value to pass around and test.
     let val = 18;
@@ -1574,7 +1578,7 @@ fn test_sta() {
 
 #[test]
 fn test_stx() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // The value to pass around and test.
     let val = 18;
@@ -1613,7 +1617,7 @@ fn test_stx() {
 
 #[test]
 fn test_sty() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // The value to pass around and test.
     let val = 18;
@@ -1652,7 +1656,7 @@ fn test_sty() {
 
 #[test]
 fn test_subroutine() {
-    let mut cpu = Cpu::new(Memory::new());
+    let mut cpu = new_cpu();
 
     // Store 3 subroutine calls.
     cpu.memory

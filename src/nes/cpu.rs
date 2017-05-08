@@ -1,8 +1,33 @@
 use std;
+use std::io::Write;
+use std::fs::{File, OpenOptions};
 use nes::memory::Memory;
+use nes::opcode::{decode, Opcode};
 use utils;
 
 use nes::instruction::Instruction;
+
+// Log from a single frame of execution.
+#[derive(Debug)]
+struct Log {
+    pc: u16,
+    opcode: Opcode,
+    args: String,
+    decoded_args: String,
+    registers: String,
+    ticks: u64,
+}
+
+impl Log {
+    fn log(&self) -> String {
+        format!("{:04X}  {:02X} {:5}  {}  {}",
+                self.pc,
+                self.opcode as u8,
+                self.args,
+                self.opcode,
+                self.registers)
+    }
+}
 
 // The status of the system processor.
 pub struct Status(pub u8);
@@ -108,7 +133,7 @@ impl Status {
 
 impl std::fmt::Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Status({:08b})", self.0)
+        write!(f, "{:08b}", self.0)
     }
 }
 
@@ -118,6 +143,7 @@ impl std::fmt::Debug for Status {
     }
 }
 
+#[derive(Debug)]
 pub struct Registers {
     // Accumulator.
     pub a: u8,
@@ -152,12 +178,6 @@ impl std::fmt::Display for Registers {
     }
 }
 
-impl std::fmt::Debug for Registers {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
 impl Registers {
     // Constructs a new Registers object, with SP set to 0xfd.
     pub fn new_at_pc(pc: u16) -> Registers {
@@ -183,6 +203,15 @@ impl Registers {
         self.sp = 0xfd;
         self.pc = pc;
     }
+
+    pub fn log(&self) -> String {
+        format!("A:{:02X} X:{:02X} Y:{:02x} P:{:02x} SP:{:02x}",
+                self.a,
+                self.x,
+                self.y,
+                self.p.0,
+                self.sp)
+    }
 }
 
 pub struct Cpu {
@@ -191,12 +220,30 @@ pub struct Cpu {
     pub irq: bool,
     pub nmi: bool,
     pub reset: bool,
+    logging_enabled: bool,
+    logfile: Option<File>,
+    // The log for the current execution frame.
+    frame_log: Option<Log>,
 }
 
 impl Cpu {
-    pub fn new(memory: Memory) -> Cpu {
+    pub fn new(memory: Memory, logfile: Option<String>) -> Cpu {
         // Get the PC from the RESET vector pointer.
         let pc = memory.fetch_u16(RESET_VECTOR);
+        Cpu::new_at_pc(memory, pc, logfile)
+    }
+
+    pub fn new_at_pc(memory: Memory, pc: u16, logfile: Option<String>) -> Cpu {
+        println!("Initing cpu at PC {:#06x}", pc);
+
+        let buffer = logfile.and_then(|f| {
+                                          OpenOptions::new()
+                                              .write(true)
+                                              .create(true)
+                                              .truncate(true)
+                                              .open(f)
+                                              .ok()
+                                      });
 
         Cpu {
             registers: Registers::new_at_pc(pc),
@@ -204,6 +251,9 @@ impl Cpu {
             irq: false,
             nmi: false,
             reset: false,
+            logging_enabled: buffer.is_some(),
+            logfile: buffer,
+            frame_log: None,
         }
     }
 
@@ -219,9 +269,35 @@ impl Cpu {
         self.reset = false;
     }
 
+    pub fn log(&mut self) {
+        match self.frame_log {
+            Some(ref log) => {
+                match self.logfile {
+                    Some(ref mut file) => {
+                        writeln!(file, "{}", log.log()).ok();
+                    }
+                    None => {}
+                }
+            }
+            None => {}
+        }
+    }
+
     // Executes the instruction at PC.
     pub fn execute(&mut self) {
         let (instr, definition) = Instruction::parse(self.registers.pc, &self.memory);
+
+        if self.logging_enabled {
+            self.frame_log = Some(Log {
+                                      pc: self.registers.pc,
+                                      opcode: decode(instr.0),
+                                      args: "".to_string(),
+                                      decoded_args: "".to_string(),
+                                      registers: self.registers.log(),
+                                      ticks: 0,
+                                  });
+            self.log();
+        }
 
         // Increment program counter.
         self.registers.pc = self.registers.pc + definition.len;
