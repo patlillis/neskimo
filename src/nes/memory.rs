@@ -49,17 +49,22 @@ impl Memory {
     }
 
     // Stores value into memory at the specified address.
-    pub fn store(&mut self, address: u16, value: u8) {
+    // Returns the previous value.
+    pub fn store(&mut self, address: u16, value: u8) -> u8 {
+        let old_value = self.memory[address as usize];
         self.memory[address as usize] = value;
+        old_value
     }
 
     // Stores to bytes consecutively in memory, with the first byte at the
     // specified address.
-    pub fn store_u16(&mut self, address: u16, value: u16) {
+    // Returns the previous value.
+    pub fn store_u16(&mut self, address: u16, value: u16) -> u16 {
         let high = (value >> 8) as u8;
         let low = value as u8;
-        self.store(address, low);
-        self.store(address + 1, high);
+        let low_prev = self.store(address, low);
+        let high_prev = self.store(address + 1, high);
+        utils::arithmetic::concat_bytes(high_prev, low_prev)
     }
 
     // Store a slice of bytes consecutively in memory, starting at the

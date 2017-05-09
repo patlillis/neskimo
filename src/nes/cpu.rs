@@ -2,29 +2,40 @@ use std;
 use std::io::Write;
 use std::fs::{File, OpenOptions};
 use nes::memory::Memory;
-use nes::opcode::{decode, Opcode};
 use utils;
 
 use nes::instruction::Instruction;
 
 // Log from a single frame of execution.
-#[derive(Debug)]
-struct Log {
-    pc: u16,
-    opcode: Opcode,
-    args: String,
-    decoded_args: String,
-    registers: String,
-    ticks: u64,
+#[derive(Debug, Default)]
+pub struct Log {
+    // The Program Counter.
+    pub pc: u16,
+
+    // This includes the opcode and any args.
+    // E.g. "4C F5 C5"
+    pub instruction: String,
+
+    // The 3-letter mneumonic, e.g. "JMP".
+    pub mneumonic: String,
+
+    // Decoded args, e.g. "#$00".
+    pub decoded_args: String,
+
+    // Registers.
+    pub registers: String,
+
+    // Current cycle ticks.
+    pub ticks: u64,
 }
 
 impl Log {
     fn log(&self) -> String {
-        format!("{:04X}  {:02X} {:5}  {}  {}",
+        format!("{:04X}  {:8}  {:3} {:26}  {}",
                 self.pc,
-                self.opcode as u8,
-                self.args,
-                self.opcode,
+                self.instruction,
+                self.mneumonic,
+                self.decoded_args,
                 self.registers)
     }
 }
@@ -205,11 +216,11 @@ impl Registers {
     }
 
     pub fn log(&self) -> String {
-        format!("A:{:02X} X:{:02X} Y:{:02x} P:{:02x} SP:{:02x}",
+        format!("A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}",
                 self.a,
                 self.x,
                 self.y,
-                self.p.0,
+                self.p.0 | U_FLAG,
                 self.sp)
     }
 }
@@ -220,10 +231,9 @@ pub struct Cpu {
     pub irq: bool,
     pub nmi: bool,
     pub reset: bool,
-    logging_enabled: bool,
     logfile: Option<File>,
     // The log for the current execution frame.
-    frame_log: Option<Log>,
+    pub frame_log: Log,
 }
 
 impl Cpu {
@@ -253,7 +263,7 @@ impl Cpu {
             reset: false,
             logging_enabled: buffer.is_some(),
             logfile: buffer,
-            frame_log: None,
+            frame_log: Log { ..Default::default() },
         }
     }
 
@@ -270,40 +280,33 @@ impl Cpu {
     }
 
     pub fn log(&mut self) {
-        match self.frame_log {
-            Some(ref log) => {
-                match self.logfile {
-                    Some(ref mut file) => {
-                        writeln!(file, "{}", log.log()).ok();
-                    }
-                    None => {}
-                }
+        match self.logfile {
+            Some(ref mut file) => {
+                writeln!(file, "{}", self.frame_log.log()).ok();
             }
-            None => {}
+            _ => {}
         }
     }
 
     // Executes the instruction at PC.
     pub fn execute(&mut self) {
-        let (instr, definition) = Instruction::parse(self.registers.pc, &self.memory);
+        self.frame_log = Log {
+            pc: self.registers.pc,
+            registers: self.registers.log(),
+            ..Default::default()
+        };
 
-        if self.logging_enabled {
-            self.frame_log = Some(Log {
-                                      pc: self.registers.pc,
-                                      opcode: decode(instr.0),
-                                      args: "".to_string(),
-                                      decoded_args: "".to_string(),
-                                      registers: self.registers.log(),
-                                      ticks: 0,
-                                  });
-            self.log();
-        }
+        let (instr, definition) = Instruction::parse(self.registers.pc, self);
 
         // Increment program counter.
         self.registers.pc = self.registers.pc + definition.len;
 
         // Execute the instruction.
         instr.execute(self);
+
+        if self.logfile.is_some() {
+            self.log();
+        }
 
         // Check interrupts.
         self.check_interrupts();
@@ -833,6 +836,7 @@ impl Cpu {
     // location. The value in A is ANDed with the value in memory to
     // set or unset the zero flag, but the result is not kept. Bits 6 and 7
     // of the value in memory are copied into the V and N flags respectively.
+    // Adds " = XX" to frame_log's decoded args.
     //
     //         C    Carry Flag          Not affected
     //         Z    Zero Flag           Set if (value & accumulator) = 0
@@ -847,6 +851,9 @@ impl Cpu {
         self.set_z_flag(zero_test);
         self.registers.p.set_v(value & V_FLAG == V_FLAG);
         self.registers.p.set_n(value & N_FLAG == N_FLAG);
+        self.frame_log
+            .decoded_args
+            .push_str(format!(" = {:02X}", value).as_str());
     }
 
     // Adds one to the value held at a specified memory location setting
@@ -1097,6 +1104,7 @@ impl Cpu {
     pub fn nop(&mut self) {}
 
     // Stores the contents of the accumulator into memory.
+    // Also adds " = XX" to decoded output.
     //
     //         C    Carry Flag          Not affected
     //         Z    Zero Flag           Not affected
@@ -1106,10 +1114,14 @@ impl Cpu {
     //         V    Overflow Flag       Not affected
     //         N    Negative Flag       Not affected
     pub fn sta(&mut self, address: u16) {
-        self.memory.store(address, self.registers.a);
+        let old_value = self.memory.store(address, self.registers.a);
+        self.frame_log
+            .decoded_args
+            .push_str(format!(" = {:02X}", old_value).as_str());
     }
 
     // Stores the contents of the X register into memory.
+    // Also adds " = XX" to decoded output.
     //
     //         C    Carry Flag          Not affected
     //         Z    Zero Flag           Not affected
@@ -1119,10 +1131,14 @@ impl Cpu {
     //         V    Overflow Flag       Not affected
     //         N    Negative Flag       Not affected
     pub fn stx(&mut self, address: u16) {
-        self.memory.store(address, self.registers.x);
+        let old_value = self.memory.store(address, self.registers.x);
+        self.frame_log
+            .decoded_args
+            .push_str(format!(" = {:02X}", old_value).as_str());
     }
 
     // Stores the contents of the Y register into memory.
+    // Also adds " = XX" to decoded output.
     //
     //         C    Carry Flag          Not affected
     //         Z    Zero Flag           Not affected
@@ -1132,7 +1148,10 @@ impl Cpu {
     //         V    Overflow Flag       Not affected
     //         N    Negative Flag       Not affected
     pub fn sty(&mut self, address: u16) {
-        self.memory.store(address, self.registers.y);
+        let old_value = self.memory.store(address, self.registers.y);
+        self.frame_log
+            .decoded_args
+            .push_str(format!(" = {:02X}", old_value).as_str());
     }
 
     // Copies the contents of the accumulator into the X register,

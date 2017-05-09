@@ -1,5 +1,4 @@
 use nes::cpu;
-use nes::memory;
 use nes::opcode;
 use std;
 use utils::arithmetic::{concat_bytes, add_relative};
@@ -27,18 +26,32 @@ impl Instruction {
     // Parse an instruction from a specifc point in memory.
     //
     // If the instruction takes arguments, they will be read from
-    // subsequent locations.
-    pub fn parse(pc: u16, memory: &memory::Memory) -> (Instruction, InstructionDefinition) {
-        let raw_opcode = memory.fetch(pc);
+    // subsequent locations. Also sets CPU's decoded args.
+    pub fn parse(pc: u16, cpu: &mut cpu::Cpu) -> (Instruction, InstructionDefinition) {
+        let raw_opcode = cpu.memory.fetch(pc);
         let opcode = opcode::decode(raw_opcode);
         let def = lookup_instruction_definition(opcode);
-        (match def.len {
-             1 => Instruction(raw_opcode, 0, 0),
-             2 => Instruction(raw_opcode, memory.fetch(pc + 1), 0),
-             3 => Instruction(raw_opcode, memory.fetch(pc + 1), memory.fetch(pc + 2)),
-             _ => panic!("Invalid instruction length far opcode {}", opcode),
-         },
-         def)
+        let arg1 = if def.len > 1 {
+            cpu.memory.fetch(pc + 1)
+        } else {
+            0
+        };
+        let arg2 = if def.len > 2 {
+            cpu.memory.fetch(pc + 2)
+        } else {
+            0
+        };
+
+        let instr_str = match def.len {
+            1 => format!("{:02X}", raw_opcode),
+            2 => format!("{:02X} {:02X}", raw_opcode, arg1),
+            3 => format!("{:02X} {:02X} {:02X}", raw_opcode, arg1, arg2),
+            _ => "".to_string(),
+        };
+        cpu.frame_log.instruction = instr_str;
+        cpu.frame_log.mneumonic = format!("{}", opcode);
+
+        (Instruction(raw_opcode, arg1, arg2), def)
     }
 
     pub fn opcode(&self) -> u8 {
@@ -53,39 +66,49 @@ impl Instruction {
         self.2
     }
 
-    fn immediate_value(&self) -> u8 {
-        self.arg1()
+    fn immediate_value(&self, cpu: &mut cpu::Cpu) -> u8 {
+        let value = self.arg1();
+        cpu.frame_log.decoded_args = format!("#${:02X}", value);
+        value
     }
 
     // Get the absolute address from the instruction args.
-    fn absolute_address(&self) -> u16 {
-        concat_bytes(self.arg2(), self.arg1())
+    fn absolute_address(&self, cpu: &mut cpu::Cpu) -> u16 {
+        let address = concat_bytes(self.arg2(), self.arg1());
+        cpu.frame_log.decoded_args = format!("${:04X}", address);
+        address
     }
 
     // Get the absolute address from the instruction args, and add an offset
     // from the X index register.
-    fn absolute_address_x(&self, cpu: &cpu::Cpu) -> u16 {
-        self.absolute_address()
+    fn absolute_address_x(&self, cpu: &mut cpu::Cpu) -> u16 {
+        self.absolute_address(cpu)
             .wrapping_add(cpu.registers.x as u16)
     }
 
     // Get the absolute address from the instruction args, and add an offset
     // from the Y index register.
-    fn absolute_address_y(&self, cpu: &cpu::Cpu) -> u16 {
-        self.absolute_address()
+    fn absolute_address_y(&self, cpu: &mut cpu::Cpu) -> u16 {
+        self.absolute_address(cpu)
             .wrapping_add(cpu.registers.y as u16)
     }
 
-    // Get a signed variation of the instruction arg. This is used for branch
-    // operations, which uses a signed offset from the current program counter.
-    // In other words, branches can jump forward or back.
-    fn relative_address(&self) -> i8 {
-        self.arg1() as i8
+    // Uses a signed variation of the instruction args, plus the current PC.
+    //
+    // This is used for branch operations, which uses a signed offset from the
+    // current program counter. In other words, branches can jump forward or back.
+    fn relative_address(&self, cpu: &mut cpu::Cpu) -> u16 {
+        let arg = self.arg1() as i8;
+        let address = add_relative(cpu.registers.pc, arg);
+        cpu.frame_log.decoded_args = format!("${:04X}", address);
+        address
     }
 
     // Get the zero page address from the instruction args.
-    fn zero_page_address(&self) -> u16 {
-        self.arg1() as u16
+    fn zero_page_address(&self, cpu: &mut cpu::Cpu) -> u16 {
+        let address = self.arg1();
+        cpu.frame_log.decoded_args = format!("${:02X}", address);
+        address as u16
     }
 
     // Get the zero page address from the instruciton args, and add an offset
@@ -109,8 +132,8 @@ impl Instruction {
     // where the two bytes read had to be on the same page. So if the low
     // byte is stored at 0x33ff, then the high byte would be fetched from
     // 0x3300 instead of 0x3400.
-    fn indirect_address(&self, cpu: &cpu::Cpu) -> u16 {
-        let address = self.absolute_address();
+    fn indirect_address(&self, cpu: &mut cpu::Cpu) -> u16 {
+        let address = self.absolute_address(cpu);
         cpu.memory.fetch_u16_wrap_msb(address)
     }
 
@@ -122,8 +145,8 @@ impl Instruction {
         cpu.memory.fetch_u16(address)
     }
 
-    fn indirect_address_y(&self, cpu: &cpu::Cpu) -> u16 {
-        let address = self.zero_page_address();
+    fn indirect_address_y(&self, cpu: &mut cpu::Cpu) -> u16 {
+        let address = self.zero_page_address(cpu);
         cpu.memory
             .fetch_u16(address)
             .wrapping_add(cpu.registers.y as u16)
@@ -137,11 +160,11 @@ impl Instruction {
         match opcode {
             // ADd with Carry
             ADC_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.adc_value(value);
             }
             ADC_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.adc(address);
             }
             ADC_Zero_X => {
@@ -149,7 +172,7 @@ impl Instruction {
                 cpu.adc(address);
             }
             ADC_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.adc(address);
             }
             ADC_Abs_X => {
@@ -171,11 +194,11 @@ impl Instruction {
 
             // bitwise AND with accumulator
             AND_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.and_value(value);
             }
             AND_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.and(address);
             }
             AND_Zero_X => {
@@ -183,7 +206,7 @@ impl Instruction {
                 cpu.and(address);
             }
             AND_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.and(address);
             }
             AND_Abs_X => {
@@ -208,7 +231,7 @@ impl Instruction {
                 cpu.asl_a();
             }
             ASL_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.asl(address);
             }
             ASL_Zero_X => {
@@ -216,7 +239,7 @@ impl Instruction {
                 cpu.asl(address);
             }
             ASL_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.asl(address);
             }
             ASL_Abs_X => {
@@ -226,45 +249,45 @@ impl Instruction {
 
             // test BITs
             BIT_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.bit(address);
             }
             BIT_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.bit(address);
             }
 
             // Branch instructions
             BPL => {
-                let address = add_relative(cpu.registers.pc, self.relative_address());
+                let address = self.relative_address(cpu);
                 cpu.bpl(address);
             }
             BMI => {
-                let address = add_relative(cpu.registers.pc, self.relative_address());
+                let address = self.relative_address(cpu);
                 cpu.bmi(address);
             }
             BVC => {
-                let address = add_relative(cpu.registers.pc, self.relative_address());
+                let address = self.relative_address(cpu);
                 cpu.bvc(address);
             }
             BVS => {
-                let address = add_relative(cpu.registers.pc, self.relative_address());
+                let address = self.relative_address(cpu);
                 cpu.bvs(address);
             }
             BCC => {
-                let address = add_relative(cpu.registers.pc, self.relative_address());
+                let address = self.relative_address(cpu);
                 cpu.bcc(address);
             }
             BCS => {
-                let address = add_relative(cpu.registers.pc, self.relative_address());
+                let address = self.relative_address(cpu);
                 cpu.bcs(address);
             }
             BNE => {
-                let address = add_relative(cpu.registers.pc, self.relative_address());
+                let address = self.relative_address(cpu);
                 cpu.bne(address);
             }
             BEQ => {
-                let address = add_relative(cpu.registers.pc, self.relative_address());
+                let address = self.relative_address(cpu);
                 cpu.beq(address);
             }
 
@@ -282,11 +305,11 @@ impl Instruction {
 
             // CoMPare accumulator
             CMP_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.cmp_value(value);
             }
             CMP_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.cmp(address);
             }
             CMP_Zero_X => {
@@ -294,7 +317,7 @@ impl Instruction {
                 cpu.cmp(address);
             }
             CMP_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.cmp(address);
             }
             CMP_Abs_X => {
@@ -316,35 +339,35 @@ impl Instruction {
 
             // ComPare X register
             CPX_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.cpx_value(value);
             }
             CPX_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.cpx(address);
             }
             CPX_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.cpx(address);
             }
 
             // ComPare Y register
             CPY_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.cpy_value(value);
             }
             CPY_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.cpy(address);
             }
             CPY_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.cpy(address);
             }
 
             // DECrement memory
             DEC_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.dec(address);
             }
             DEC_Zero_X => {
@@ -352,7 +375,7 @@ impl Instruction {
                 cpu.dec(address);
             }
             DEC_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.dec(address);
             }
             DEC_Abs_X => {
@@ -362,11 +385,11 @@ impl Instruction {
 
             // bitwise Exclusive OR
             EOR_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.eor_value(value);
             }
             EOR_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.eor(address);
             }
             EOR_Zero_X => {
@@ -374,7 +397,7 @@ impl Instruction {
                 cpu.eor(address);
             }
             EOR_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.eor(address);
             }
             EOR_Abs_X => {
@@ -396,7 +419,7 @@ impl Instruction {
 
             // INCrement memory
             INC_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.inc(address);
             }
             INC_Zero_X => {
@@ -404,7 +427,7 @@ impl Instruction {
                 cpu.inc(address);
             }
             INC_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.inc(address);
             }
             INC_Abs_X => {
@@ -414,7 +437,7 @@ impl Instruction {
 
             // JuMP
             JMP_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.jmp(address);
             }
             JMP_Ind => {
@@ -424,17 +447,17 @@ impl Instruction {
 
             // Jump to SubRoutine
             JSR => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.jsr(address);
             }
 
             // LoaD Accumulator
             LDA_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.lda_value(value);
             }
             LDA_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.lda(address);
             }
             LDA_Zero_X => {
@@ -442,7 +465,7 @@ impl Instruction {
                 cpu.lda(address);
             }
             LDA_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.lda(address);
             }
             LDA_Abs_X => {
@@ -464,11 +487,11 @@ impl Instruction {
 
             // LoaD X register
             LDX_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.ldx_value(value);
             }
             LDX_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.ldx(address);
             }
             LDX_Zero_Y => {
@@ -476,7 +499,7 @@ impl Instruction {
                 cpu.ldx(address);
             }
             LDX_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.ldx(address);
             }
             LDX_Abs_Y => {
@@ -486,11 +509,11 @@ impl Instruction {
 
             // LoaD Y register
             LDY_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.ldy_value(value);
             }
             LDY_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.ldy(address);
             }
             LDY_Zero_X => {
@@ -498,7 +521,7 @@ impl Instruction {
                 cpu.ldy(address);
             }
             LDY_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.ldy(address);
             }
             LDY_Abs_X => {
@@ -511,7 +534,7 @@ impl Instruction {
                 cpu.lsr_a();
             }
             LSR_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.lsr(address);
             }
             LSR_Zero_X => {
@@ -519,7 +542,7 @@ impl Instruction {
                 cpu.lsr(address);
             }
             LSR_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.lsr(address);
             }
             LSR_Abs_X => {
@@ -529,11 +552,11 @@ impl Instruction {
 
             // bitwise OR with Accumulator
             ORA_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.ora_value(value);
             }
             ORA_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.ora(address);
             }
             ORA_Zero_X => {
@@ -541,7 +564,7 @@ impl Instruction {
                 cpu.ora(address);
             }
             ORA_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.ora(address);
             }
             ORA_Abs_X => {
@@ -571,7 +594,7 @@ impl Instruction {
                 cpu.rol_a();
             }
             ROL_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.rol(address);
             }
             ROL_Zero_X => {
@@ -579,7 +602,7 @@ impl Instruction {
                 cpu.rol(address);
             }
             ROL_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.rol(address);
             }
             ROL_Abs_X => {
@@ -592,7 +615,7 @@ impl Instruction {
                 cpu.ror_a();
             }
             ROR_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.ror(address);
             }
             ROR_Zero_X => {
@@ -600,7 +623,7 @@ impl Instruction {
                 cpu.ror(address);
             }
             ROR_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.ror(address);
             }
             ROR_Abs_X => {
@@ -616,11 +639,11 @@ impl Instruction {
 
             // SuBtract with Carry
             SBC_Imm => {
-                let value = self.immediate_value();
+                let value = self.immediate_value(cpu);
                 cpu.sbc_value(value);
             }
             SBC_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.sbc(address);
             }
             SBC_Zero_X => {
@@ -628,7 +651,7 @@ impl Instruction {
                 cpu.sbc(address);
             }
             SBC_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.sbc(address);
             }
             SBC_Abs_X => {
@@ -650,7 +673,7 @@ impl Instruction {
 
             // STore Accumulator
             STA_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.sta(address);
             }
             STA_Zero_X => {
@@ -658,7 +681,7 @@ impl Instruction {
                 cpu.sta(address);
             }
             STA_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.sta(address);
             }
             STA_Abs_X => {
@@ -680,7 +703,7 @@ impl Instruction {
 
             // STore X register
             STX_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.stx(address);
             }
             STX_Zero_Y => {
@@ -688,7 +711,7 @@ impl Instruction {
                 cpu.stx(address);
             }
             STX_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.stx(address);
             }
 
@@ -712,7 +735,7 @@ impl Instruction {
 
             // STore Y register
             STY_Zero => {
-                let address = self.zero_page_address();
+                let address = self.zero_page_address(cpu);
                 cpu.sty(address);
             }
             STY_Zero_X => {
@@ -720,7 +743,7 @@ impl Instruction {
                 cpu.sty(address);
             }
             STY_Abs => {
-                let address = self.absolute_address();
+                let address = self.absolute_address(cpu);
                 cpu.sty(address);
             }
         }
