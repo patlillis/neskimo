@@ -780,6 +780,149 @@ impl Instruction {
                 let address = self.absolute_address(cpu);
                 cpu.sty(address);
             }
+
+            // UNOFFICIAL OPCODES
+
+            // No-ops
+            _NOP_1 | _NOP_2 | _NOP_3 | _NOP_4 | _NOP_5 | _NOP_6 => {}
+
+            // No-op reads
+            _NOP_Imm_1 | _NOP_Imm_2 | _NOP_Imm_3 | _NOP_Imm_4 | _NOP_Imm_5 => {
+                #[allow(unused_variables)]
+                let address = self.immediate_value(cpu);
+            }
+            _NOP_Abs => {
+                let address = self.absolute_address(cpu);
+                let value = cpu.memory.fetch(address);
+                cpu.decode_operand_value(value);
+            }
+            _NOP_Abs_X_1 | _NOP_Abs_X_2 | _NOP_Abs_X_3 | _NOP_Abs_X_4 | _NOP_Abs_X_5 |
+            _NOP_Abs_X_6 => {
+                let address = self.absolute_address_x(cpu);
+                let value = cpu.memory.fetch(address);
+                cpu.decode_operand_value(value);
+            }
+            _NOP_Zero_1 | _NOP_Zero_2 | _NOP_Zero_3 => {
+                let address = self.zero_page_address(cpu);
+                let value = cpu.memory.fetch(address);
+                cpu.decode_operand_value(value);
+            }
+            _NOP_Zero_X_1 | _NOP_Zero_X_2 | _NOP_Zero_X_3 | _NOP_Zero_X_4 | _NOP_Zero_X_5 |
+            _NOP_Zero_X_6 => {
+                let address = self.zero_page_address_x(cpu);
+                let value = cpu.memory.fetch(address);
+                cpu.decode_operand_value(value);
+            }
+
+            // Load Accumulator into X register
+            _LAX_Abs => {
+                let address = self.absolute_address(cpu);
+                cpu._lax(address);
+            }
+            _LAX_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu._lax(address);
+            }
+            _LAX_Zero => {
+                let address = self.zero_page_address(cpu);
+                cpu._lax(address);
+            }
+            _LAX_Zero_Y => {
+                let address = self.zero_page_address_y(cpu);
+                cpu._lax(address);
+            }
+            _LAX_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu._lax(address);
+            }
+            _LAX_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu._lax(address);
+            }
+
+            // Store bitwise and of Accumulator and X register
+            _SAX_Abs => {
+                let address = self.absolute_address(cpu);
+                cpu._sax(address);
+            }
+            _SAX_Zero => {
+                let address = self.zero_page_address(cpu);
+                cpu._sax(address);
+            }
+            _SAX_Zero_Y => {
+                let address = self.zero_page_address_y(cpu);
+                cpu._sax(address);
+            }
+            _SAX_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu._sax(address);
+            }
+
+            // SuBtract with Carry
+            _SBC_Imm => {
+                let value = self.immediate_value(cpu);
+                cpu.sbc_value(value);
+            }
+
+            // Decrement value, ComPare accumulator
+            _DCP_Abs => {
+                let address = self.absolute_address(cpu);
+                cpu._dcp(address);
+            }
+            _DCP_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu._dcp(address);
+            }
+            _DCP_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu._dcp(address);
+            }
+            _DCP_Zero => {
+                let address = self.zero_page_address(cpu);
+                cpu._dcp(address);
+            }
+            _DCP_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu._dcp(address);
+            }
+            _DCP_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu._dcp(address);
+            }
+            _DCP_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu._dcp(address);
+            }
+
+            // Increment value, Subtract with Carry
+            _ISB_Abs => {
+                let address = self.absolute_address(cpu);
+                cpu._isb(address);
+            }
+            _ISB_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu._isb(address);
+            }
+            _ISB_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu._isb(address);
+            }
+            _ISB_Zero => {
+                let address = self.zero_page_address(cpu);
+                cpu._isb(address);
+            }
+            _ISB_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu._isb(address);
+            }
+            _ISB_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu._isb(address);
+            }
+            _ISB_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu._isb(address);
+            }
         }
     }
 }

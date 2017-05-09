@@ -13,9 +13,16 @@ pub fn decode(opcode: u8) -> Opcode {
 }
 
 impl std::fmt::Display for Opcode {
+    // A little weird. This makes sure that unofficial opcodes (which start
+    // with "_") show up as "*NOP", where as normal ops are " LSR", with a
+    // space in front.
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let name = format!("{:?}", self);
-        write!(f, "{}", &name[..3])
+        let mut name = format!("{:?}", self);
+        if name.chars().nth(0).unwrap() != '_' {
+            name.insert(0, ' ');
+        }
+        let replaced_name = name.replace("_", "*");
+        write!(f, "{}", &replaced_name[..4])
     }
 }
 
@@ -245,5 +252,73 @@ enum_from_primitive! {
         STY_Zero    = 0x84,
         STY_Zero_X  = 0x94,
         STY_Abs     = 0x8c,
+
+        // UNOFFICIAL OPCODES
+
+        // No-ops
+        _NOP_1          = 0x1a,
+        _NOP_2          = 0x3a,
+        _NOP_3          = 0x5a,
+        _NOP_4          = 0x7a,
+        _NOP_5          = 0xda,
+        _NOP_6          = 0xfa,
+
+        // No-op reads
+        _NOP_Imm_1      = 0x80,
+        _NOP_Imm_2      = 0x82,
+        _NOP_Imm_3      = 0x89,
+        _NOP_Imm_4      = 0xc2,
+        _NOP_Imm_5      = 0xe2,
+        _NOP_Abs        = 0x0c,
+        _NOP_Abs_X_1    = 0x1c,
+        _NOP_Abs_X_2    = 0x3c,
+        _NOP_Abs_X_3    = 0x5c,
+        _NOP_Abs_X_4    = 0x7c,
+        _NOP_Abs_X_5    = 0xdc,
+        _NOP_Abs_X_6    = 0xfc,
+        _NOP_Zero_1     = 0x04,
+        _NOP_Zero_2     = 0x44,
+        _NOP_Zero_3     = 0x64,
+        _NOP_Zero_X_1   = 0x14,
+        _NOP_Zero_X_2   = 0x34,
+        _NOP_Zero_X_3   = 0x54,
+        _NOP_Zero_X_4   = 0x74,
+        _NOP_Zero_X_5   = 0xd4,
+        _NOP_Zero_X_6   = 0xf4,
+
+        // Load Accumulator into X register
+        _LAX_Abs        = 0xaf,
+        _LAX_Abs_Y      = 0xbf,
+        _LAX_Zero       = 0xa7,
+        _LAX_Zero_Y     = 0xb7,
+        _LAX_Ind_X      = 0xa3,
+        _LAX_Ind_Y      = 0xb3,
+
+        // Store bitwise and of Accumulator and X register
+        _SAX_Abs        = 0x8f,
+        _SAX_Zero       = 0x87,
+        _SAX_Zero_Y     = 0x97,
+        _SAX_Ind_X      = 0x83,
+
+        // SuBtract with Carry
+        _SBC_Imm        = 0xeb,
+
+        // Decrement value, ComPare accumulator
+        _DCP_Abs        = 0xcf,
+        _DCP_Abs_X      = 0xdf,
+        _DCP_Abs_Y      = 0xdb,
+        _DCP_Zero       = 0xc7,
+        _DCP_Zero_X     = 0xd7,
+        _DCP_Ind_X      = 0xc3,
+        _DCP_Ind_Y      = 0xd3,
+
+        // Increment value, SuBtract with carry
+        _ISB_Abs        = 0xef,
+        _ISB_Abs_X      = 0xff,
+        _ISB_Abs_Y      = 0xfb,
+        _ISB_Zero       = 0xe7,
+        _ISB_Zero_X     = 0xf7,
+        _ISB_Ind_X      = 0xe3,
+        _ISB_Ind_Y      = 0xf3,
     }
 }

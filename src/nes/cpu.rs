@@ -32,7 +32,7 @@ pub struct Log {
 
 impl Log {
     fn log(&self) -> String {
-        format!("{:04X}  {:8}  {:3} {:26}  {}",
+        format!("{:04X}  {:8} {:3} {:26}  {}",
                 self.pc,
                 self.instruction,
                 self.mneumonic,
@@ -951,6 +951,29 @@ impl Cpu {
     }
 
 
+    // UNOFFICIAL INSTRUCTION
+    // Equivalent to DEC then CMP.
+    pub fn _dcp(&mut self, address: u16) {
+        self.dec(address);
+
+        // Don't want CMP to mess with decoded args.
+        let decoded_args = self.frame_log.decoded_args.clone();
+        self.cmp(address);
+        self.frame_log.decoded_args = decoded_args;
+    }
+
+    // UNOFFICIAL INSTRUCTION
+    // Equivalent to INC value then SBC value
+    pub fn _isb(&mut self, address: u16) {
+        self.inc(address);
+
+        // Don't want SBC to mess with decoded args.
+        let decoded_args = self.frame_log.decoded_args.clone();
+        self.sbc(address);
+        self.frame_log.decoded_args = decoded_args;
+    }
+
+
     // Compares the contents of A, X, or Y register with another value,
     // and sets the carry, zero, and negative flags as appropriate.
     //
@@ -1090,6 +1113,25 @@ impl Cpu {
     }
 
 
+    // UNOFFICIAL OPERATION
+    // Shortcut for LDA value then TAX.
+    // Also adds " = XX" to decoded output.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if X = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of X is set
+    pub fn _lax(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        self.lda_value(value);
+        self.tax();
+        self.decode_operand_value(value);
+    }
+
+
     // Loads a byte of memory into the Y register setting the zero and
     // negative flags as appropriate.
     //
@@ -1191,6 +1233,23 @@ impl Cpu {
     //         N    Negative Flag       Not affected
     pub fn sty(&mut self, address: u16) {
         let old_value = self.memory.store(address, self.registers.y);
+        self.decode_operand_value(old_value);
+    }
+
+    // UNOFFICIAL INSTRUCTION
+    // Stores the bitwise AND of A and X.
+    // Also adds " = XX" to decoded output.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn _sax(&mut self, address: u16) {
+        let value = self.registers.a & self.registers.x;
+        let old_value = self.memory.store(address, value);
         self.decode_operand_value(old_value);
     }
 

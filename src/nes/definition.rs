@@ -232,5 +232,60 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         STY_Zero => def(2, 3),
         STY_Zero_X => def(2, 4),
         STY_Abs => def(3, 4),
+
+        // UNOFFICIAL OPCODES
+
+        // No-ops
+        _NOP_1 => def(1, 2),
+        _NOP_2 => def(1, 2),
+        _NOP_3 => def(1, 2),
+        _NOP_4 => def(1, 2),
+        _NOP_5 => def(1, 2),
+        _NOP_6 => def(1, 2),
+
+        // No-op reads
+        _NOP_Imm_1 | _NOP_Imm_2 | _NOP_Imm_3 | _NOP_Imm_4 | _NOP_Imm_5 => def(2, 2),
+        _NOP_Abs => def(3, 4),
+        _NOP_Abs_X_1 | _NOP_Abs_X_2 | _NOP_Abs_X_3 | _NOP_Abs_X_4 | _NOP_Abs_X_5 | _NOP_Abs_X_6 => {
+            def(3, 4)
+        }
+        _NOP_Zero_1 | _NOP_Zero_2 | _NOP_Zero_3 => def(2, 3),
+        _NOP_Zero_X_1 | _NOP_Zero_X_2 | _NOP_Zero_X_3 | _NOP_Zero_X_4 | _NOP_Zero_X_5 |
+        _NOP_Zero_X_6 => def(2, 4),
+
+        // Load Accumulator into X register
+        _LAX_Abs => def(3, 4),
+        _LAX_Abs_Y => def(3, 4),
+        _LAX_Zero => def(2, 3),
+        _LAX_Zero_Y => def(2, 4),
+        _LAX_Ind_X => def(2, 6),
+        _LAX_Ind_Y => def(2, 5),
+
+        // Store bitwise and of Accumulator and X register
+        _SAX_Abs => def(3, 4),
+        _SAX_Zero => def(2, 3),
+        _SAX_Zero_Y => def(2, 4),
+        _SAX_Ind_X => def(2, 6),
+
+        // SuBtract with Carry
+        _SBC_Imm => def(2, 2),
+
+        // Decrement value, ComPare accumulator
+        _DCP_Abs => def(3, 6),
+        _DCP_Abs_X => def(3, 7),
+        _DCP_Abs_Y => def(3, 7),
+        _DCP_Zero => def(2, 5),
+        _DCP_Zero_X => def(2, 6),
+        _DCP_Ind_X => def(2, 8),
+        _DCP_Ind_Y => def(2, 8),
+
+        // Increment value, SuBtract with carry
+        _ISB_Abs => def(3, 6),
+        _ISB_Abs_X => def(3, 7),
+        _ISB_Abs_Y => def(3, 7),
+        _ISB_Zero => def(2, 5),
+        _ISB_Zero_X => def(2, 6),
+        _ISB_Ind_X => def(2, 8),
+        _ISB_Ind_Y => def(2, 8),
     }
 }
