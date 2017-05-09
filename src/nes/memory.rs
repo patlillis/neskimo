@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::{Result, Write};
 use utils;
 
 const MEMORY_SIZE: usize = 65536;
@@ -18,6 +20,12 @@ impl Memory {
     // Resets the memory to an initial state.
     pub fn reset(&mut self) {
         self.memory = [0; MEMORY_SIZE];
+    }
+
+    // Dumps the memory contents to a string (most likely
+    // for writing to a dump file).
+    pub fn dump(&self, file: &mut File) -> Result<()> {
+        file.write_all(&self.memory)
     }
 
     // Fetches a byte from the specified address in memory.

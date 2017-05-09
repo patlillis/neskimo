@@ -37,6 +37,12 @@ fn main() {
                  .value_name("PROGRAM COUNTER")
                  .takes_value(true)
                  .help("Sets the initial program counter to the provided hex value"))
+        .arg(Arg::with_name("MEM_DUMP")
+                .short("d")
+                .long("mem-dump")
+                .value_name("PROGRAM COUNTER")
+                .takes_value(true)
+                .help("When executaion reaches this point, contents of memory will be written to mem_dump.bin"))
         .after_help("EXAMPLES:
     neskimo mario.nes
     neskimo -l=testing.log donkey_kong.nes
@@ -57,9 +63,14 @@ fn main() {
         .value_of("PROGRAM_COUNTER")
         .and_then(|s| u16::from_str_radix(s, 16).ok());
 
+    let dump_pc = matches
+        .value_of("MEM_DUMP")
+        .and_then(|s| u16::from_str_radix(s, 16).ok());
+
     let options = Options {
         logfile: logfile,
         program_counter: pc,
+        mem_dump_counter: dump_pc,
     };
 
     let mut nes = match rom {

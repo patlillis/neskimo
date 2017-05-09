@@ -75,7 +75,9 @@ impl Instruction {
     // Get the absolute address from the instruction args.
     fn absolute_address(&self, cpu: &mut cpu::Cpu) -> u16 {
         let address = concat_bytes(self.arg2(), self.arg1());
-        cpu.frame_log.decoded_args = format!("${:04X}", address);
+        cpu.frame_log
+            .decoded_args
+            .push_str(format!("${:04X}", address).as_str());
         address
     }
 
@@ -133,23 +135,37 @@ impl Instruction {
     // byte is stored at 0x33ff, then the high byte would be fetched from
     // 0x3300 instead of 0x3400.
     fn indirect_address(&self, cpu: &mut cpu::Cpu) -> u16 {
+        cpu.frame_log.decoded_args.push_str("(");
         let address = self.absolute_address(cpu);
-        cpu.memory.fetch_u16_wrap_msb(address)
+        let result = cpu.memory.fetch_u16_wrap_msb(address);
+        cpu.frame_log
+            .decoded_args
+            .push_str(format!(") = {:04X}", result).as_str());
+        result
     }
 
     // Calculates a memory address using by adding X to the 8-bit value in the
     // instruction, THEN use that address to find ANOTHER address, then return
     // THAT address.
-    fn indirect_address_x(&self, cpu: &cpu::Cpu) -> u16 {
+    fn indirect_address_x(&self, cpu: &mut cpu::Cpu) -> u16 {
         let address = self.zero_page_address_x(cpu);
-        cpu.memory.fetch_u16(address)
+        let result = cpu.memory.fetch_u16_wrap_msb(address);
+        cpu.frame_log.decoded_args = format!("(${:02X},X) @ {:02X} = {:04X}",
+                                             self.arg1(),
+                                             address,
+                                             result);
+        result
     }
 
     fn indirect_address_y(&self, cpu: &mut cpu::Cpu) -> u16 {
         let address = self.zero_page_address(cpu);
-        cpu.memory
-            .fetch_u16(address)
-            .wrapping_add(cpu.registers.y as u16)
+        let intermediate = cpu.memory.fetch_u16_wrap_msb(address);
+        let result = intermediate.wrapping_add(cpu.registers.y as u16);
+        cpu.frame_log.decoded_args = format!("(${:02X}),Y = {:04X} @ {:04X}",
+                                             self.arg1(),
+                                             intermediate,
+                                             result);
+        result
     }
 
     // Execute the instruction on the cpu.

@@ -2,6 +2,7 @@ use std;
 use std::io::Write;
 use std::fs::{File, OpenOptions};
 use nes::memory::Memory;
+use nes::nes::Options;
 use utils::arithmetic::{is_negative, concat_bytes};
 
 use nes::instruction::Instruction;
@@ -234,24 +235,27 @@ pub struct Cpu {
     logfile: Option<File>,
     // The log for the current execution frame.
     pub frame_log: Log,
+    mem_dump_pc: Option<u16>,
 }
 
 impl Cpu {
-    pub fn new(memory: Memory, logfile: Option<String>) -> Cpu {
+    pub fn new(memory: Memory, options: Options) -> Cpu {
         // Get the PC from the RESET vector pointer.
-        let pc = memory.fetch_u16(RESET_VECTOR);
-        Cpu::new_at_pc(memory, pc, logfile)
-    }
+        let pc = match options.program_counter {
+            Some(pc) => pc,
+            None => memory.fetch_u16(RESET_VECTOR),
+        };
 
-    pub fn new_at_pc(memory: Memory, pc: u16, logfile: Option<String>) -> Cpu {
-        let buffer = logfile.and_then(|f| {
-                                          OpenOptions::new()
-                                              .write(true)
-                                              .create(true)
-                                              .truncate(true)
-                                              .open(f)
-                                              .ok()
-                                      });
+        let buffer = options
+            .logfile
+            .and_then(|f| {
+                          OpenOptions::new()
+                              .write(true)
+                              .create(true)
+                              .truncate(true)
+                              .open(f)
+                              .ok()
+                      });
 
         Cpu {
             registers: Registers::new_at_pc(pc),
@@ -261,6 +265,7 @@ impl Cpu {
             reset: false,
             logfile: buffer,
             frame_log: Log { ..Default::default() },
+            mem_dump_pc: options.mem_dump_counter,
         }
     }
 
@@ -285,6 +290,25 @@ impl Cpu {
         }
     }
 
+    pub fn decode_operand_value(&mut self, operand: u8) {
+        self.frame_log
+            .decoded_args
+            .push_str(format!(" = {:02X}", operand).as_str());
+    }
+
+    pub fn decode_operand_accumulator(&mut self) {
+        self.frame_log.decoded_args.push_str("A");
+    }
+
+    pub fn mem_dump(&self) {
+        match File::create("mem-dump.bin").ok() {
+            Some(mut file) => {
+                self.memory.dump(&mut file).ok();
+            }
+            _ => {}
+        }
+    }
+
     // Executes the instruction at PC.
     pub fn execute(&mut self) {
         self.frame_log = Log {
@@ -292,6 +316,12 @@ impl Cpu {
             registers: self.registers.log(),
             ..Default::default()
         };
+
+        // Dump memory, if option was passed in.
+        match self.mem_dump_pc {
+            Some(pc) if pc == self.registers.pc => self.mem_dump(),
+            _ => {}
+        }
 
         let (instr, definition) = Instruction::parse(self.registers.pc, self);
 
@@ -599,6 +629,7 @@ impl Cpu {
     pub fn adc(&mut self, address: u16) {
         let arg = self.memory.fetch(address);
         self.adc_value(arg);
+        self.decode_operand_value(arg);
     }
 
     pub fn adc_value(&mut self, value: u8) {
@@ -642,6 +673,7 @@ impl Cpu {
     pub fn and(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.and_value(value);
+        self.decode_operand_value(value);
     }
 
     pub fn and_value(&mut self, value: u8) {
@@ -668,6 +700,7 @@ impl Cpu {
     pub fn sbc(&mut self, address: u16) {
         let arg = self.memory.fetch(address);
         self.sbc_value(arg);
+        self.decode_operand_value(arg);
     }
 
     pub fn sbc_value(&mut self, arg: u8) {
@@ -689,13 +722,14 @@ impl Cpu {
         let value = self.memory.fetch(address);
         let rotated_value = self.rotate_l(value);
         self.memory.store(address, rotated_value);
+        self.decode_operand_value(value);
     }
 
     pub fn rol_a(&mut self) {
         let value = self.registers.a;
         let rotated_value = self.rotate_l(value);
         self.registers.a = rotated_value;
-        self.frame_log.decoded_args.push_str("A");
+        self.decode_operand_accumulator();
     }
 
     // Rotates the value left, through the carry flag, and returns
@@ -728,13 +762,14 @@ impl Cpu {
         let value = self.memory.fetch(address);
         let rotated_value = self.rotate_r(value);
         self.memory.store(address, rotated_value);
+        self.decode_operand_value(value);
     }
 
     pub fn ror_a(&mut self) {
         let value = self.registers.a;
         let rotated_value = self.rotate_r(value);
         self.registers.a = rotated_value;
-        self.frame_log.decoded_args.push_str("A");
+        self.decode_operand_accumulator();
     }
 
     // Rotates the value right, through the carry flag, and returns
@@ -768,13 +803,14 @@ impl Cpu {
         let value = self.memory.fetch(address);
         let shifted_value = self.shift_l(value);
         self.memory.store(address, shifted_value);
+        self.decode_operand_value(value);
     }
 
     pub fn asl_a(&mut self) {
         let value = self.registers.a;
         let shifted_value = self.shift_l(value);
         self.registers.a = shifted_value;
-        self.frame_log.decoded_args.push_str("A");
+        self.decode_operand_accumulator();
     }
 
     // Shifts the value, sets status flags, and returns the shifted value.
@@ -806,13 +842,14 @@ impl Cpu {
         let value = self.memory.fetch(address);
         let shifted_value = self.shift_r(value);
         self.memory.store(address, shifted_value);
+        self.decode_operand_value(value);
     }
 
     pub fn lsr_a(&mut self) {
         let value = self.registers.a;
         let shifted_value = self.shift_r(value);
         self.registers.a = shifted_value;
-        self.frame_log.decoded_args.push_str("A");
+        self.decode_operand_accumulator();
     }
 
     // Shifts the value, sets status flags, and returns the shifted value.
@@ -848,9 +885,7 @@ impl Cpu {
         self.set_z_flag(zero_test);
         self.registers.p.set_v(value & V_FLAG == V_FLAG);
         self.registers.p.set_n(value & N_FLAG == N_FLAG);
-        self.frame_log
-            .decoded_args
-            .push_str(format!(" = {:02X}", value).as_str());
+        self.decode_operand_value(value);
     }
 
     // Adds one to the value held at a specified memory location setting
@@ -864,10 +899,12 @@ impl Cpu {
     //         V    Overflow Flag       Not affected
     //         N    Negative Flag       Set if bit 7 of the result is set
     pub fn inc(&mut self, address: u16) {
-        let value = self.memory.fetch(address).wrapping_add(1);
+        let old_value = self.memory.fetch(address);
+        let value = old_value.wrapping_add(1);
         self.memory.store(address, value);
         self.set_z_flag(value);
         self.set_n_flag(value);
+        self.decode_operand_value(old_value);
     }
 
     // Subtracts one from the value held at a specified memory location setting
@@ -881,10 +918,12 @@ impl Cpu {
     //         V    Overflow Flag       Not affected
     //         N    Negative Flag       Set if bit 7 of the result is set
     pub fn dec(&mut self, address: u16) {
-        let value = self.memory.fetch(address).wrapping_sub(1);
+        let old_value = self.memory.fetch(address);
+        let value = old_value.wrapping_sub(1);
         self.memory.store(address, value);
         self.set_z_flag(value);
         self.set_n_flag(value);
+        self.decode_operand_value(old_value);
     }
 
 
@@ -901,6 +940,7 @@ impl Cpu {
     pub fn eor(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.eor_value(value);
+        self.decode_operand_value(value);
     }
 
     pub fn eor_value(&mut self, value: u8) {
@@ -937,6 +977,7 @@ impl Cpu {
         let value = self.memory.fetch(address);
         let register = self.registers.a;
         self.compare(register, value);
+        self.decode_operand_value(value);
     }
 
     pub fn cmp_value(&mut self, value: u8) {
@@ -949,6 +990,7 @@ impl Cpu {
         let value = self.memory.fetch(address);
         let register = self.registers.x;
         self.compare(register, value);
+        self.decode_operand_value(value);
     }
 
     pub fn cpx_value(&mut self, value: u8) {
@@ -961,6 +1003,7 @@ impl Cpu {
         let value = self.memory.fetch(address);
         let register = self.registers.y;
         self.compare(register, value);
+        self.decode_operand_value(value);
     }
 
     pub fn cpy_value(&mut self, value: u8) {
@@ -1013,9 +1056,7 @@ impl Cpu {
     pub fn lda(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.lda_value(value);
-        self.frame_log
-            .decoded_args
-            .push_str(format!(" = {:02X}", value).as_str());
+        self.decode_operand_value(value);
     }
 
     pub fn lda_value(&mut self, value: u8) {
@@ -1039,9 +1080,7 @@ impl Cpu {
     pub fn ldx(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.ldx_value(value);
-        self.frame_log
-            .decoded_args
-            .push_str(format!(" = {:02X}", value).as_str());
+        self.decode_operand_value(value);
     }
 
     pub fn ldx_value(&mut self, value: u8) {
@@ -1064,6 +1103,7 @@ impl Cpu {
     pub fn ldy(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.ldy_value(value);
+        self.decode_operand_value(value);
     }
 
     pub fn ldy_value(&mut self, value: u8) {
@@ -1086,6 +1126,7 @@ impl Cpu {
     pub fn ora(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.ora_value(value);
+        self.decode_operand_value(value);
     }
 
     pub fn ora_value(&mut self, value: u8) {
@@ -1120,9 +1161,7 @@ impl Cpu {
     //         N    Negative Flag       Not affected
     pub fn sta(&mut self, address: u16) {
         let old_value = self.memory.store(address, self.registers.a);
-        self.frame_log
-            .decoded_args
-            .push_str(format!(" = {:02X}", old_value).as_str());
+        self.decode_operand_value(old_value);
     }
 
     // Stores the contents of the X register into memory.
@@ -1137,9 +1176,7 @@ impl Cpu {
     //         N    Negative Flag       Not affected
     pub fn stx(&mut self, address: u16) {
         let old_value = self.memory.store(address, self.registers.x);
-        self.frame_log
-            .decoded_args
-            .push_str(format!(" = {:02X}", old_value).as_str());
+        self.decode_operand_value(old_value);
     }
 
     // Stores the contents of the Y register into memory.
@@ -1154,9 +1191,7 @@ impl Cpu {
     //         N    Negative Flag       Not affected
     pub fn sty(&mut self, address: u16) {
         let old_value = self.memory.store(address, self.registers.y);
-        self.frame_log
-            .decoded_args
-            .push_str(format!(" = {:02X}", old_value).as_str());
+        self.decode_operand_value(old_value);
     }
 
     // Copies the contents of the accumulator into the X register,

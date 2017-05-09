@@ -12,10 +12,11 @@ use nes::cpu::{//
                V_FLAG,
                N_FLAG};
 use nes::memory::Memory;
+use nes::nes::Options;
 use nes::opcode::Opcode::*;
 
 fn new_cpu() -> Cpu {
-    Cpu::new(Memory::new(), None)
+    Cpu::new(Memory::new(), Options { ..Default::default() })
 }
 
 #[test]
@@ -461,8 +462,8 @@ fn test_cmp() {
         }
 
         // For indirect instructions.
-        cpu.memory.store_u16(0x00ff, 0x004a);
-        cpu.memory.store_u16(0x00af, 0xff5c);
+        cpu.memory.store_u16(0x00f0, 0x004a);
+        cpu.memory.store_u16(0x00a0, 0xff5c);
 
         cpu.memory
             .store_bytes(0x0000,
@@ -493,13 +494,13 @@ fn test_cmp() {
                            0x3c,
                            0x41,
 
-                           // Compare with 0x004a (thru 0x00ff)
+                           // Compare with 0x004a (thru 0x00f0)
                            CMP_Ind_X as u8,
-                           0x00,
+                           0xf1,
 
-                           // Compare with 0x005a (thru 0x00af)
+                           // Compare with 0x005a (thru 0x00a0)
                            CMP_Ind_Y as u8,
-                           0xaf]);
+                           0xa0]);
 
         // Test that processor status is set correctly after each instruction.
         for _ in 0..8 {

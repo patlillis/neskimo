@@ -2,13 +2,16 @@ use nes::cpu::Cpu;
 use nes::memory::Memory;
 use rom::RomFile;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Options {
     // File to write CPU log to,
     pub logfile: Option<String>,
 
     // Program counter to start execution at.
     pub program_counter: Option<u16>,
+
+    // Program counter to dump memory at.
+    pub mem_dump_counter: Option<u16>,
 }
 
 pub struct Nes {
@@ -40,12 +43,7 @@ impl Nes {
             _ => {}
         }
 
-
-        let cpu = match options.program_counter {
-            Some(pc) => Cpu::new_at_pc(memory, pc, options.logfile),
-            None => Cpu::new(memory, options.logfile),
-        };
-        Nes { cpu: cpu }
+        Nes { cpu: Cpu::new(memory, options) }
     }
 
     pub fn run(&mut self) {
