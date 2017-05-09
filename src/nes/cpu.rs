@@ -2,7 +2,7 @@ use std;
 use std::io::Write;
 use std::fs::{File, OpenOptions};
 use nes::memory::Memory;
-use utils;
+use utils::arithmetic::{is_negative, concat_bytes};
 
 use nes::instruction::Instruction;
 
@@ -244,8 +244,6 @@ impl Cpu {
     }
 
     pub fn new_at_pc(memory: Memory, pc: u16, logfile: Option<String>) -> Cpu {
-        println!("Initing cpu at PC {:#06x}", pc);
-
         let buffer = logfile.and_then(|f| {
                                           OpenOptions::new()
                                               .write(true)
@@ -261,7 +259,6 @@ impl Cpu {
             irq: false,
             nmi: false,
             reset: false,
-            logging_enabled: buffer.is_some(),
             logfile: buffer,
             frame_log: Log { ..Default::default() },
         }
@@ -377,7 +374,7 @@ impl Cpu {
     }
 
     fn set_n_flag(&mut self, value: u8) {
-        if utils::arithmetic::is_negative(value) {
+        if is_negative(value) {
             self.registers.p.0 |= N_FLAG;
         } else {
             self.registers.p.0 &= !N_FLAG;
@@ -479,20 +476,18 @@ impl Cpu {
 
 
     // Copies the current contents of the X register into the stack
-    // register and sets the zero and negative flags as appropriate.
+    // register.
     //
     //         C    Carry Flag          Not affected
-    //         Z    Zero Flag           Set if SP = 0
+    //         Z    Zero Flag           Not affected
     //         I    Interrupt Disable   Not affected
     //         D    Decimal Mode Flag   Not affected
     //         B    Break Command       Not affected
     //         V    Overflow Flag       Not affected
-    //         N    Negative Flag       Set if bit 7 of SP is set
+    //         N    Negative Flag       Not affected
     pub fn txs(&mut self) {
         let value = self.registers.x;
         self.registers.sp = value;
-        self.set_z_flag(value);
-        self.set_n_flag(value);
     }
 
 
@@ -517,8 +512,7 @@ impl Cpu {
     // Push value onto stack, and decrement stack pointer.
     pub fn push(&mut self, value: u8) {
         self.memory
-            .store(utils::arithmetic::concat_bytes(0x01, self.registers.sp),
-                   value);
+            .store(concat_bytes(0x01, self.registers.sp), value);
         self.registers.sp = self.registers.sp - 1;
     }
 
@@ -531,15 +525,14 @@ impl Cpu {
     // Pull a value off of the stack, and increment stack pointer.
     pub fn pull(&mut self) -> u8 {
         self.registers.sp = self.registers.sp + 1;
-        self.memory
-            .fetch(utils::arithmetic::concat_bytes(0x01, self.registers.sp))
+        self.memory.fetch(concat_bytes(0x01, self.registers.sp))
     }
 
     pub fn pull_u16(&mut self) -> u16 {
         let low = self.pull();
         let high = self.pull();
 
-        utils::arithmetic::concat_bytes(high, low)
+        concat_bytes(high, low)
     }
 
     // Pushes a copy of the accumulator on to the stack.
@@ -702,6 +695,7 @@ impl Cpu {
         let value = self.registers.a;
         let rotated_value = self.rotate_l(value);
         self.registers.a = rotated_value;
+        self.frame_log.decoded_args.push_str("A");
     }
 
     // Rotates the value left, through the carry flag, and returns
@@ -740,6 +734,7 @@ impl Cpu {
         let value = self.registers.a;
         let rotated_value = self.rotate_r(value);
         self.registers.a = rotated_value;
+        self.frame_log.decoded_args.push_str("A");
     }
 
     // Rotates the value right, through the carry flag, and returns
@@ -779,6 +774,7 @@ impl Cpu {
         let value = self.registers.a;
         let shifted_value = self.shift_l(value);
         self.registers.a = shifted_value;
+        self.frame_log.decoded_args.push_str("A");
     }
 
     // Shifts the value, sets status flags, and returns the shifted value.
@@ -816,6 +812,7 @@ impl Cpu {
         let value = self.registers.a;
         let shifted_value = self.shift_r(value);
         self.registers.a = shifted_value;
+        self.frame_log.decoded_args.push_str("A");
     }
 
     // Shifts the value, sets status flags, and returns the shifted value.
@@ -1004,6 +1001,7 @@ impl Cpu {
 
     // Loads a byte into the accumulator setting the zero and
     // negative flags as appropriate.
+    // Also adds " = XX" to decoded output.
     //
     //         C    Carry Flag          Not affected
     //         Z    Zero Flag           Set if A = 0
@@ -1015,6 +1013,9 @@ impl Cpu {
     pub fn lda(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.lda_value(value);
+        self.frame_log
+            .decoded_args
+            .push_str(format!(" = {:02X}", value).as_str());
     }
 
     pub fn lda_value(&mut self, value: u8) {
@@ -1026,6 +1027,7 @@ impl Cpu {
 
     // Loads a byte of memory into the X register setting the zero and
     // negative flags as appropriate.
+    // Also adds " = XX" to decoded output.
     //
     //         C    Carry Flag          Not affected
     //         Z    Zero Flag           Set if X = 0
@@ -1037,6 +1039,9 @@ impl Cpu {
     pub fn ldx(&mut self, address: u16) {
         let value = self.memory.fetch(address);
         self.ldx_value(value);
+        self.frame_log
+            .decoded_args
+            .push_str(format!(" = {:02X}", value).as_str());
     }
 
     pub fn ldx_value(&mut self, value: u8) {
