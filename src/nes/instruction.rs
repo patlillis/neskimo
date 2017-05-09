@@ -84,15 +84,23 @@ impl Instruction {
     // Get the absolute address from the instruction args, and add an offset
     // from the X index register.
     fn absolute_address_x(&self, cpu: &mut cpu::Cpu) -> u16 {
-        self.absolute_address(cpu)
-            .wrapping_add(cpu.registers.x as u16)
+        let value = self.absolute_address(cpu)
+            .wrapping_add(cpu.registers.x as u16);
+        cpu.frame_log
+            .decoded_args
+            .push_str(format!(",X @ {:04X}", value).as_str());
+        value
     }
 
     // Get the absolute address from the instruction args, and add an offset
     // from the Y index register.
     fn absolute_address_y(&self, cpu: &mut cpu::Cpu) -> u16 {
-        self.absolute_address(cpu)
-            .wrapping_add(cpu.registers.y as u16)
+        let value = self.absolute_address(cpu)
+            .wrapping_add(cpu.registers.y as u16);
+        cpu.frame_log
+            .decoded_args
+            .push_str(format!(",Y @ {:04X}", value).as_str());
+        value
     }
 
     // Uses a signed variation of the instruction args, plus the current PC.
@@ -116,15 +124,25 @@ impl Instruction {
     // Get the zero page address from the instruciton args, and add an offset
     // from the X index register. Note that this add wraps around to always be
     // on the zero page.
-    fn zero_page_address_x(&self, cpu: &cpu::Cpu) -> u16 {
-        self.arg1().wrapping_add(cpu.registers.x) as u16
+    fn zero_page_address_x(&self, cpu: &mut cpu::Cpu) -> u16 {
+        let arg1 = self.arg1();
+        let result = arg1.wrapping_add(cpu.registers.x);
+        cpu.frame_log
+            .decoded_args
+            .push_str(format!("${:02X},X @ {:02X}", arg1, result).as_str());
+        result as u16
     }
 
     // Get the zero page address from the instruction args, and add an offset
     // from the Y index register. Note that this add wraps around to always be
     // on the zero page.
-    fn zero_page_address_y(&self, cpu: &cpu::Cpu) -> u16 {
-        self.arg1().wrapping_add(cpu.registers.y) as u16
+    fn zero_page_address_y(&self, cpu: &mut cpu::Cpu) -> u16 {
+        let arg1 = self.arg1();
+        let result = arg1.wrapping_add(cpu.registers.y);
+        cpu.frame_log
+            .decoded_args
+            .push_str(format!("${:02X},Y @ {:02X}", arg1, result).as_str());
+        result as u16
     }
 
     // Get the absolute address from the instruction args, and return the value
