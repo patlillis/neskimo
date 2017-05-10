@@ -320,5 +320,41 @@ enum_from_primitive! {
         _ISB_Zero_X     = 0xf7,
         _ISB_Ind_X      = 0xe3,
         _ISB_Ind_Y      = 0xf3,
+
+        // arithmetic Shift Left, bitwise Or with accumulator
+        _SLO_Abs        = 0x0f,
+        _SLO_Abs_X      = 0x1f,
+        _SLO_Abs_Y      = 0x1b,
+        _SLO_Zero       = 0x07,
+        _SLO_Zero_X     = 0x17,
+        _SLO_Ind_X      = 0x03,
+        _SLO_Ind_Y      = 0x13,
+
+        // Rotate Left, And with accumulator
+        _RLA_Abs        = 0x2f,
+        _RLA_Abs_X      = 0x3f,
+        _RLA_Abs_Y      = 0x3b,
+        _RLA_Zero       = 0x27,
+        _RLA_Zero_X     = 0x37,
+        _RLA_Ind_X      = 0x23,
+        _RLA_Ind_Y      = 0x33,
+
+        // logical Shift Right, Exclusive or with accumulator
+        _SRE_Abs        = 0x4f,
+        _SRE_Abs_X      = 0x5f,
+        _SRE_Abs_Y      = 0x5b,
+        _SRE_Zero       = 0x47,
+        _SRE_Zero_X     = 0x57,
+        _SRE_Ind_X      = 0x43,
+        _SRE_Ind_Y      = 0x53,
+
+        // Rotate Right, Add with carry
+        _RRA_Abs        = 0x6f,
+        _RRA_Abs_X      = 0x7f,
+        _RRA_Abs_Y      = 0x7b,
+        _RRA_Zero       = 0x67,
+        _RRA_Zero_X     = 0x77,
+        _RRA_Ind_X      = 0x63,
+        _RRA_Ind_Y      = 0x73,
     }
 }

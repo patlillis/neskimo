@@ -923,6 +923,126 @@ impl Instruction {
                 let address = self.indirect_address_y(cpu);
                 cpu._isb(address);
             }
+
+            // arithmetic Shift Left, bitwise Or with accumulator
+            _SLO_Abs => {
+                let address = self.absolute_address(cpu);
+                cpu._slo(address);
+            }
+            _SLO_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu._slo(address);
+            }
+            _SLO_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu._slo(address);
+            }
+            _SLO_Zero => {
+                let address = self.zero_page_address(cpu);
+                cpu._slo(address);
+            }
+            _SLO_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu._slo(address);
+            }
+            _SLO_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu._slo(address);
+            }
+            _SLO_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu._slo(address);
+            }
+
+            // Rotate Left, And with accumulator
+            _RLA_Abs => {
+                let address = self.absolute_address(cpu);
+                cpu._rla(address);
+            }
+            _RLA_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu._rla(address);
+            }
+            _RLA_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu._rla(address);
+            }
+            _RLA_Zero => {
+                let address = self.zero_page_address(cpu);
+                cpu._rla(address);
+            }
+            _RLA_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu._rla(address);
+            }
+            _RLA_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu._rla(address);
+            }
+            _RLA_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu._rla(address);
+            }
+
+            // logical Shift Right, Exclusive or with accumulator
+            _SRE_Abs => {
+                let address = self.absolute_address(cpu);
+                cpu._sre(address);
+            }
+            _SRE_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu._sre(address);
+            }
+            _SRE_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu._sre(address);
+            }
+            _SRE_Zero => {
+                let address = self.zero_page_address(cpu);
+                cpu._sre(address);
+            }
+            _SRE_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu._sre(address);
+            }
+            _SRE_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu._sre(address);
+            }
+            _SRE_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu._sre(address);
+            }
+
+            // Rotate Right, Add with carry
+            _RRA_Abs => {
+                let address = self.absolute_address(cpu);
+                cpu._rra(address);
+            }
+            _RRA_Abs_X => {
+                let address = self.absolute_address_x(cpu);
+                cpu._rra(address);
+            }
+            _RRA_Abs_Y => {
+                let address = self.absolute_address_y(cpu);
+                cpu._rra(address);
+            }
+            _RRA_Zero => {
+                let address = self.zero_page_address(cpu);
+                cpu._rra(address);
+            }
+            _RRA_Zero_X => {
+                let address = self.zero_page_address_x(cpu);
+                cpu._rra(address);
+            }
+            _RRA_Ind_X => {
+                let address = self.indirect_address_x(cpu);
+                cpu._rra(address);
+            }
+            _RRA_Ind_Y => {
+                let address = self.indirect_address_y(cpu);
+                cpu._rra(address);
+            }
         }
     }
 }

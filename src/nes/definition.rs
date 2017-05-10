@@ -287,5 +287,41 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         _ISB_Zero_X => def(2, 6),
         _ISB_Ind_X => def(2, 8),
         _ISB_Ind_Y => def(2, 8),
+
+        // arithmetic Shift Left, bitwise Or with accumulator
+        _SLO_Abs => def(3, 6),
+        _SLO_Abs_X => def(3, 7),
+        _SLO_Abs_Y => def(3, 7),
+        _SLO_Zero => def(2, 5),
+        _SLO_Zero_X => def(2, 6),
+        _SLO_Ind_X => def(2, 8),
+        _SLO_Ind_Y => def(2, 8),
+
+        // Rotate Left, And with accumulator
+        _RLA_Abs => def(3, 6),
+        _RLA_Abs_X => def(3, 7),
+        _RLA_Abs_Y => def(3, 7),
+        _RLA_Zero => def(2, 5),
+        _RLA_Zero_X => def(2, 6),
+        _RLA_Ind_X => def(2, 8),
+        _RLA_Ind_Y => def(2, 8),
+
+        // logical Shift Right, Exclusive or with accumulator
+        _SRE_Abs => def(3, 6),
+        _SRE_Abs_X => def(3, 7),
+        _SRE_Abs_Y => def(3, 7),
+        _SRE_Zero => def(2, 5),
+        _SRE_Zero_X => def(2, 6),
+        _SRE_Ind_X => def(2, 8),
+        _SRE_Ind_Y => def(2, 8),
+
+        // Rotate Right, Add with carry
+        _RRA_Abs => def(3, 6),
+        _RRA_Abs_X => def(3, 7),
+        _RRA_Abs_Y => def(3, 7),
+        _RRA_Zero => def(2, 5),
+        _RRA_Zero_X => def(2, 6),
+        _RRA_Ind_X => def(2, 8),
+        _RRA_Ind_Y => def(2, 8),
     }
 }

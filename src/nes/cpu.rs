@@ -634,9 +634,9 @@ impl Cpu {
 
     pub fn adc_value(&mut self, value: u8) {
         let initial_carry = if self.registers.p.c() { 1 } else { 0 };
-        let (sum, carry) = self.registers
-            .a
-            .overflowing_add(value.wrapping_add(initial_carry));
+        let (sum_temp, carry_temp1) = value.overflowing_add(initial_carry);
+        let (sum, carry_temp2) = self.registers.a.overflowing_add(sum_temp);
+        let carry = carry_temp1 || carry_temp2;
 
         // The overflow flag is set when the sign of the addends is the same and
         // differs from the sign of the sum
@@ -951,29 +951,6 @@ impl Cpu {
     }
 
 
-    // UNOFFICIAL INSTRUCTION
-    // Equivalent to DEC then CMP.
-    pub fn _dcp(&mut self, address: u16) {
-        self.dec(address);
-
-        // Don't want CMP to mess with decoded args.
-        let decoded_args = self.frame_log.decoded_args.clone();
-        self.cmp(address);
-        self.frame_log.decoded_args = decoded_args;
-    }
-
-    // UNOFFICIAL INSTRUCTION
-    // Equivalent to INC value then SBC value
-    pub fn _isb(&mut self, address: u16) {
-        self.inc(address);
-
-        // Don't want SBC to mess with decoded args.
-        let decoded_args = self.frame_log.decoded_args.clone();
-        self.sbc(address);
-        self.frame_log.decoded_args = decoded_args;
-    }
-
-
     // Compares the contents of A, X, or Y register with another value,
     // and sets the carry, zero, and negative flags as appropriate.
     //
@@ -1112,26 +1089,6 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
-
-    // UNOFFICIAL OPERATION
-    // Shortcut for LDA value then TAX.
-    // Also adds " = XX" to decoded output.
-    //
-    //         C    Carry Flag          Not affected
-    //         Z    Zero Flag           Set if X = 0
-    //         I    Interrupt Disable   Not affected
-    //         D    Decimal Mode Flag   Not affected
-    //         B    Break Command       Not affected
-    //         V    Overflow Flag       Not affected
-    //         N    Negative Flag       Set if bit 7 of X is set
-    pub fn _lax(&mut self, address: u16) {
-        let value = self.memory.fetch(address);
-        self.lda_value(value);
-        self.tax();
-        self.decode_operand_value(value);
-    }
-
-
     // Loads a byte of memory into the Y register setting the zero and
     // negative flags as appropriate.
     //
@@ -1233,23 +1190,6 @@ impl Cpu {
     //         N    Negative Flag       Not affected
     pub fn sty(&mut self, address: u16) {
         let old_value = self.memory.store(address, self.registers.y);
-        self.decode_operand_value(old_value);
-    }
-
-    // UNOFFICIAL INSTRUCTION
-    // Stores the bitwise AND of A and X.
-    // Also adds " = XX" to decoded output.
-    //
-    //         C    Carry Flag          Not affected
-    //         Z    Zero Flag           Not affected
-    //         I    Interrupt Disable   Not affected
-    //         D    Decimal Mode Flag   Not affected
-    //         B    Break Command       Not affected
-    //         V    Overflow Flag       Not affected
-    //         N    Negative Flag       Not affected
-    pub fn _sax(&mut self, address: u16) {
-        let value = self.registers.a & self.registers.x;
-        let old_value = self.memory.store(address, value);
         self.decode_operand_value(old_value);
     }
 
@@ -1504,5 +1444,107 @@ impl Cpu {
         let pc = self.pull_u16();
         self.registers.p.0 = status;
         self.registers.pc = pc;
+    }
+
+
+    // UNOFFICIAL OPERATION
+    // Shortcut for LDA value then TAX.
+    // Also adds " = XX" to decoded output.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Set if X = 0
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Set if bit 7 of X is set
+    pub fn _lax(&mut self, address: u16) {
+        let value = self.memory.fetch(address);
+        self.lda_value(value);
+        self.tax();
+        self.decode_operand_value(value);
+    }
+
+    // UNOFFICIAL INSTRUCTION
+    // Stores the bitwise AND of A and X.
+    // Also adds " = XX" to decoded output.
+    //
+    //         C    Carry Flag          Not affected
+    //         Z    Zero Flag           Not affected
+    //         I    Interrupt Disable   Not affected
+    //         D    Decimal Mode Flag   Not affected
+    //         B    Break Command       Not affected
+    //         V    Overflow Flag       Not affected
+    //         N    Negative Flag       Not affected
+    pub fn _sax(&mut self, address: u16) {
+        let value = self.registers.a & self.registers.x;
+        let old_value = self.memory.store(address, value);
+        self.decode_operand_value(old_value);
+    }
+
+    // UNOFFICIAL INSTRUCTION
+    // Equivalent to DEC then CMP.
+    pub fn _dcp(&mut self, address: u16) {
+        self.dec(address);
+
+        // Don't want CMP to mess with decoded args.
+        let decoded_args = self.frame_log.decoded_args.clone();
+        self.cmp(address);
+        self.frame_log.decoded_args = decoded_args;
+    }
+
+    // UNOFFICIAL INSTRUCTION
+    // Equivalent to INC value then SBC value
+    pub fn _isb(&mut self, address: u16) {
+        self.inc(address);
+
+        // Don't want SBC to mess with decoded args.
+        let decoded_args = self.frame_log.decoded_args.clone();
+        self.sbc(address);
+        self.frame_log.decoded_args = decoded_args;
+    }
+
+    // UNOFFICIAL INSTRUCTION
+    // Equivalent to ASL then ORA.
+    pub fn _slo(&mut self, address: u16) {
+        self.asl(address);
+
+        // Don't want ORA to mess with decoded args.
+        let decoded_args = self.frame_log.decoded_args.clone();
+        self.ora(address);
+        self.frame_log.decoded_args = decoded_args;
+    }
+
+    // UNOFFICIAL INSTRUCTION
+    // Equivalent to ROL then AND.
+    pub fn _rla(&mut self, address: u16) {
+        self.rol(address);
+
+        // Don't want AND to mess with decoded args.
+        let decoded_args = self.frame_log.decoded_args.clone();
+        self.and(address);
+        self.frame_log.decoded_args = decoded_args;
+    }
+
+    // UNOFFICIAL INSTRUCTION
+    // Equivalent to LSR then EOR.
+    pub fn _sre(&mut self, address: u16) {
+        self.lsr(address);
+
+        // Don't want EOR to mess with decoded args.
+        let decoded_args = self.frame_log.decoded_args.clone();
+        self.eor(address);
+        self.frame_log.decoded_args = decoded_args;
+    }
+
+    // UNOFFICIAL INSTRUCTION
+    // Equivalent to ROR then ADC.
+    pub fn _rra(&mut self, address: u16) {
+        self.ror(address);
+
+        // Don't want ADC to mess with decoded args.
+        let decoded_args = self.frame_log.decoded_args.clone();
+        self.adc(address);
+        self.frame_log.decoded_args = decoded_args;
     }
 }
