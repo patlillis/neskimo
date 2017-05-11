@@ -4,12 +4,15 @@ extern crate clap;
 #[macro_use]
 extern crate enum_primitive;
 extern crate num;
+extern crate sdl2;
 
+mod gfx;
 mod nes;
 mod rom;
 mod utils;
 
 use clap::{Arg, App};
+use gfx::{Gfx, SCREEN_SIZE};
 use nes::nes::{Nes, Options};
 use rom::RomFile;
 
@@ -77,6 +80,19 @@ fn main() {
         Ok(rom) => Nes::new(rom, options),
         Err(e) => panic!(e),
     };
+
+
+    // TEST SCREEN!
+    // let (mut gfx, _) = Gfx::new();
+
+    // let mut screen = [0_u8; SCREEN_SIZE];
+
+    // for i in 0..(SCREEN_SIZE / 3) - 1 {
+    //     screen[i * 3] = 255;
+    // }
+
+    // gfx.composite(&screen);
+
 
     nes.run();
 }
