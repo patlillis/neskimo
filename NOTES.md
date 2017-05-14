@@ -26,8 +26,20 @@ borrowed from [Niels Widger's blog post](http://nwidger.github.io/blog/post/writ
     - [Interrupt Handling](#interrupt-handling)
         - [Resources](#resources)
 - [PPU](#ppu)
+    - [Registers](#registers-1)
+        - [PPPUCTRL (`$2000`)](#pppuctrl-2000)
+        - [PPUMASK (`$2001`)](#ppumask-2001)
+        - [PPUSTATUS (`$2002`)](#ppustatus-2002)
+        - [OAMADDR (`$2003`)](#oamaddr-2003)
+            - [OAMDATA (`$2004`)](#oamdata-2004)
+        - [PPUSCROLL (`$2005`)](#ppuscroll-2005)
+        - [PPUADDR (`$2006`)](#ppuaddr-2006)
+        - [PPUDATA (`$2007`)](#ppudata-2007)
+        - [OAMDMA (`$4014`)](#oamdma-4014)
     - [Memory Map](#memory-map-1)
         - [Hardware mapping](#hardware-mapping)
+    - [Rendering](#rendering)
+    - [Scrolling](#scrolling)
 - [APU](#apu)
     - [Channels](#channels)
 
@@ -230,6 +242,96 @@ interrupt vector.
 Picture processing unit. The NES used a 2C02 PPU, which is a [character generator](https://en.wikipedia.org/wiki/Character_generator) with sprites, designed by
 Nintendo specifically for the NES.
 
+### Registers
+
+The PPU has 8 memory-mapped registers accessible by the CPU.
+
+#### PPPUCTRL (`$2000`)
+
+**Write-only**. Various flags controlling PPU operation.
+
+| Bit position | Description                                                                                                     |
+| ------------ | --------------------------------------------------------------------------------------------------------------- |
+| `.... ..XX`  | Base nametable address.<br />(`0`: `$200`; `1`: `$2400`; `2`: `$2800`; `3`: `$2c00`)                            |
+| `.... .X..`  | VRAM address increment per CPU read/write of PPUDATA.<br />(`0`: add 1, going across; `1`: add 32, going down.) |
+| `.... X...`  | Sprite pattern table address for 8x8 spries.<br />(`0`: `$0000`; `1`: `$1000`; ignored in 8x16 mode)            |
+| `...X ....`  | Background pattern table address (`0`: `$0000`; `1`: `$1000`)                                                   |
+| `..X. ....`  | Sprite size (`0`: 8x8; `1`: 8x16)                                                                               |
+| `.X.. ....`  | PPU master/slave select<br />(`0`: read background from EXT pins; `1`: output color on EXT pins)                |
+| `X... ....`  | Generate an NMI at the start of the vertical blanking interval. (`0`: off; `1`: on)                             |
+
+Equivalently, bits `0` and `1` are the most significant bit of the scrolling coordinates. If bit `0` is `1`, add 256 to the X scroll position.
+If bit `1` is `1`, add 240 to the Y scroll position.
+
+When turning on the NMI flag in bit 7, if the PPU is currently in vertical blank and the PPUSTATUS (`$2002`) vblank flag is set, an NMI will be generated immediately.
+
+#### PPUMASK (`$2001`)
+
+**Write-only**. Controls the rendering of sprites and backgrounds, as well as colour effects.
+
+| Bit position | Description                                                     |
+| ------------ | --------------------------------------------------------------- |
+| `.... ...X`  | Greyscale (`0`: normal color; `1`: produce a greyscale display) |
+| `.... ..X.`  | `1`: Show background in leftmost 8 pixels of screen; `0`: Hide  |
+| `.... .X..`  | `1`: Show sprites in leftmost 8 pixels of screen; `0`: Hide     |
+| `.... X...`  | `1`: Show background                                            |
+| `...X ....`  | `1`: Show sprites                                               |
+| `..X. ....`  | `1`: Emphasize red*                                             |
+| `.X.. ....`  | `1`: Emphasize green*                                           |
+| `X... ....`  | `1`: Emphasize blue*                                            |
+
+* NTSC colors. PAL and Dendy swaps green and red.
+
+Bit 0 controls a greyscale mode, which causes the palette to use only the colors from the grey column: `$00`, `$10`, `$20`, `$30`. This is implemented as a bitwise AND with `$30` on any value read from PPU `$3F00`-`$3FFF`, both on the display and through PPUDATA. Writes to the palette through PPUDATA are not affected. Also note that black colours like `$0F` will be replaced by a non-black grey `$00`.
+
+Note that Sprite 0 hit does not trigger in any area where the background or sprites are hidden.
+
+#### PPUSTATUS (`$2002`)
+
+**Read-only**. Reflects the state of various functions inside the PPU. It is often used for determining timing.
+
+*Bits 0-4* - The least significant bits previously written into a PPU register, due to the register not being updated for this address.
+
+*Bit 5* - Sprite overflow. The intent was for this flag to be set whenever more than eight sprites appear on a scanline, but a hardware bug causes the actual behavior to be more complicated and generate false positives as well as false negatives; see [PPU sprite evaluation](https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation). This flag is set during sprite evaluation and cleared at dot 1 (the second dot) of the pre-render line.
+
+*Bit 6* - Sprite 0 hit. Set when a nonzero pixel of sprite 0 overlaps a nonzero background pixel; cleared at dot 1 of the pre-render line. Used for raster timing.
+
+*Bit 7* - Vertical blank has started (0: not in vblank; 1: in vblank). Set at dot 1 of line 241 (the line *after* the post-render line); cleared after reading `$2002` and at dot 1 of the pre-render line.
+
+Note that Sprite 0 hit is not detected at x=255, nor is it detected at x=0 through 7 if the background or sprites are hidden in this area.
+
+#### OAMADDR (`$2003`)
+
+**Write-only**. Controls the address of OAM returned from the OAMDATA register.
+
+Set to 0 during each of ticks 256-320 (the sprite loading interval) of the pre-render and visible scanlines.
+
+##### OAMDATA (`$2004`)
+
+**Read-write**. Read/write OAM data. Writes will increment OAMADDRR after the write; reads during vertical or forced blanking return the value from OAM at that address but do not increment.
+
+#### PPUSCROLL (`$2005`)
+
+**Write-only (double writes)**. Used to change the scroll position, that is, to tell the PPU which pixel of the nametable selected through PPUCTRL should be at the top left corner of the rendered screen.
+
+Horizontal offsets range from 0 to 255. "Normal" vertical offsets range from 0 to 239, while values of 240 to 255 are treated as -16 through -1 in a way, but tile data is incorrectly fetched from the attribute table.
+
+Registers PPUSCROLL and PPUADDR share a common write toggle, so that the first write has one behaviour, and the second write has another. After the second write, the toggle is reset to the first write behaviour. This toggle may be manually reset by reading PPUSTATUS.
+
+#### PPUADDR (`$2006`)
+
+**Write-only (double writes)**. Because the CPU and the PPU are on separate busses, neither has direct access to the other's memory. The CPU writes to VRAM through a pair of registers on the PPU. First it loads an address into PPUADDR, and then it writes repeatedly to PPUDATA to fill VRAM.
+
+Value addresses are `$0000` - `$3fff`; higher addresses will be mirrored down.
+
+#### PPUDATA (`$2007`)
+
+**Read-write**. VRAM read/write data register. After access, the video memory address will increment by an amount determined by PPPUCTRL.
+
+#### OAMDMA (`$4014`)
+
+**Write-only**. This port is located on the CPU. Writing `$XX` will upload 256 bytes of data from CPU page `$XX00` - `XXff` to the internal PPU OAM. This page is typically located in internal RAM, commonly `$0200` - `$02ff`, but cartridge RAM or ROM can be used as well.
+
 ### Memory Map
 
 The PPU addresses a 16kB space, `$0000` - `$3fff`, which is totally separate from the
@@ -273,6 +375,12 @@ device from which the data is fetched may be configured by the cartridge.
 *   `$3000` - `$3eff` is usually a mirror of the 2kB region from `$2000` - `$2eff`. The PPU does not render from
     this address range, so this space has negligble utility.
 *   `$3f00` - `$3fff` is not configurable, always mapped to the internal palette control.
+
+### Rendering
+
+The PPU renders 262 scanlines per frame (although only 240 scanlines are visible on the screen). Each scanline lasts for 341 PPU clock cycles (113.667 CPU clock cycles; 1 CPU cycle = 3 PPU cycles), with each clock cycle producing one pixel.
+
+### Scrolling
 
 
 ## APU
