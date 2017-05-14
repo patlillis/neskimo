@@ -308,7 +308,7 @@ Note that Sprite 0 hit is not detected at x=255, nor is it detected at x=0 throu
 
 Set to 0 during each of ticks 256-320 (the sprite loading interval) of the pre-render and visible scanlines.
 
-##### OAMDATA (`$2004`)
+#### OAMDATA (`$2004`)
 
 **Read-write**. Read/write OAM data. Writes will increment OAMADDRR after the write; reads during vertical or forced blanking return the value from OAM at that address but do not increment.
 
