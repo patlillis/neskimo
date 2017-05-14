@@ -32,6 +32,8 @@ borrowed from [Niels Widger's blog post](http://nwidger.github.io/blog/post/writ
         - [Nametable](#nametable)
         - [Palette](#palette)
         - [Attributes](#attributes)
+        - [Scrolling](#scrolling)
+        - [Sprites (OAM)](#sprites-oam)
     - [Registers](#registers-1)
         - [PPPUCTRL (`$2000`)](#pppuctrl-2000)
         - [PPUMASK (`$2001`)](#ppumask-2001)
@@ -45,7 +47,7 @@ borrowed from [Niels Widger's blog post](http://nwidger.github.io/blog/post/writ
     - [Memory Map](#memory-map-1)
         - [Hardware mapping](#hardware-mapping)
     - [Rendering](#rendering)
-    - [Scrolling](#scrolling)
+    - [Scrolling](#scrolling-1)
 - [APU](#apu)
     - [Channels](#channels)
 
@@ -238,9 +240,9 @@ interrupt vector.
 
 #### Resources
 
-* High-level overview: [http://6502.org/tutorials/interrupts.html](http://6502.org/tutorials/interrupts.html)
-* Detailed behavior: [https://wiki.nesdev.com/w/index.php/CPU_interrupts](https://wiki.nesdev.com/w/index.php/CPU_interrupts)
-* Timing: [http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling](http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling)
+*   High-level overview: [http://6502.org/tutorials/interrupts.html](http://6502.org/tutorials/interrupts.html)
+*   Detailed behavior: [https://wiki.nesdev.com/w/index.php/CPU_interrupts](https://wiki.nesdev.com/w/index.php/CPU_interrupts)
+*   Timing: [http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling](http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling)
 
 
 ## PPU
@@ -281,6 +283,32 @@ Not that attributes are NOT stored left-to-right (which is how the Nametable is 
 ```
 value = (topLeft << 0) | (topRight << 2) | (bottomLeft << 4) | (bottomRight << 6)
 ```
+
+#### Scrolling
+
+There are actually 2 nametables, each with their own attribute table as well (although they share the same CHR data). Cartridge hardware determines their position, either side-by-side or stacked on top. This allows for a level that is much larger than a single screen. In order to control which section is on screen at any time, the PPU supports pixel-accurate scrolling in both the X and Y dimensions.
+
+Scroll position is controlled using a memory-mapped register at CPU address `$2005`. For games that are only two screens wide, they only need to fill the 2 nametables and set the scroll register. However, many games implement arbitrary-width levels by updating the off-screen portion of the nametables before it scrolls into view.
+
+#### Sprites (OAM)
+
+Unlike the CHR/Nametable system, sprites are not aligned to grids, and can be positioned arbitrarily. Sprites have their own CHR page, and their own set of 4 palettes. Additionally, they occupy a 256-byte bage of memory that lists each sprite's position and appearance (for 64 sprites, where each sprite's information occupies 4 bytes). This is often referred to as Object Attribute Memory (OAM).
+
+The 4 bytes of information for each sprite are formatted as follows: 
+
+*   **Byte 0**: Y position of top of the sprite.
+    Note that sprite data is delayed by one scanline; sprites are never displayed on the first line of the picture, and it 
+    impossible to place a sprite partially off the top of the screen.
+*   **Byte 1**: Tile index number
+    For 8x8 sprites, this is the tile number of this sprite within the pattern table selected by the PPUCTRL register.
+    For 8x16 sprites, the PPU ignores the pattern table selection in PPUCTRL, and selects a pattern table from bit 0 of this number.
+*   **Byte 2**: Attribute data
+    * Bit 0-1: Palette to use
+    * Bit 2-4: Unused
+    * Bit 5: Priority (`0`: in front of background; `1`: behind background)
+    * Bit 6: Flip sprite horizontally
+    * Bit 7: Flip sprite vertically
+*   **Byte 3**: X position of left side of sprite.
 
 ### Registers
 
