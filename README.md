@@ -12,3 +12,9 @@ Inspiration drawn from these fantastic projects:
 * [sprocketnes](https://github.com/pcwalton/sprocketnes) by Patrick Walton (written in Rust)
 * [pinky](https://github.com/koute/pinky) by Koute (written in Rust)
 * [oxidenes](https://github.com/iamsix/oxidenes) by iamsix (written in Rust)
+
+## License
+
+[Code licensed MIT](LICENSE). © 2017 Pat Lillis.
+
+[![Built With Love](http://forthebadge.com/images/badges/built-with-love.svg)](http://forthebadge.com)
