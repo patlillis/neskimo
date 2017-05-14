@@ -31,7 +31,7 @@ borrowed from [Niels Widger's blog post](http://nwidger.github.io/blog/post/writ
         - [PPUMASK (`$2001`)](#ppumask-2001)
         - [PPUSTATUS (`$2002`)](#ppustatus-2002)
         - [OAMADDR (`$2003`)](#oamaddr-2003)
-            - [OAMDATA (`$2004`)](#oamdata-2004)
+        - [OAMDATA (`$2004`)](#oamdata-2004)
         - [PPUSCROLL (`$2005`)](#ppuscroll-2005)
         - [PPUADDR (`$2006`)](#ppuaddr-2006)
         - [PPUDATA (`$2007`)](#ppudata-2007)
