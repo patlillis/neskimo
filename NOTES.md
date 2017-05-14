@@ -242,6 +242,8 @@ interrupt vector.
 Picture processing unit. The NES used a 2C02 PPU, which is a [character generator](https://en.wikipedia.org/wiki/Character_generator) with sprites, designed by
 Nintendo specifically for the NES.
 
+A overview of NES graphics can be found at dustmop.io's "NES Graphics" parts [1](http://www.dustmop.io/blog/2015/04/28/nes-graphics-part-1/), [2](http://www.dustmop.io/blog/2015/06/08/nes-graphics-part-2/), and [3](http://www.dustmop.io/blog/2015/12/18/nes-graphics-part-3/).
+
 ### Registers
 
 The PPU has 8 memory-mapped registers accessible by the CPU.
