@@ -28,6 +28,7 @@ borrowed from [Niels Widger's blog post](http://nwidger.github.io/blog/post/writ
 - [PPU](#ppu)
     - [Overview](#overview)
         - [Screen Size](#screen-size)
+        - [Scanlines](#scanlines)
         - [CHR](#chr)
         - [Nametable](#nametable)
         - [Palette](#palette)
@@ -257,6 +258,12 @@ A overview of NES graphics can be found at dustmop.io's "NES Graphics" parts [1]
 #### Screen Size
 
 The NES PPU produces images that are 256x250 pixels. This image is divided into 8x8 regions called **"tiles"**, and 16x16 regions called **"blocks"** (or sometimes, "meta-tiles").
+
+#### Scanlines
+
+The NES was designed to work with CRT TVs, which draw scanlines to the screen, one at a time, left to right, top to bottom. Once the bottom-right corner is reached, a period called "vertical blank" or "vblank" happens. On the NES, the PPU does this scanline based rendering automatically, every frame, while code running in the CPU does whatever work the game needs to do. Typically the software will wait until vblank to change data in the PPU's memory.
+
+However, certain changes to the PPU's state can be performed while the screen is being rendered. These are called "raster effects". Most commonly, the scroll position can be assigned midscreen, creating one portion that stays static (like a HUD), while the rest scrolls ahead.
 
 #### CHR
 
