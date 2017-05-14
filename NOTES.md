@@ -26,6 +26,12 @@ borrowed from [Niels Widger's blog post](http://nwidger.github.io/blog/post/writ
     - [Interrupt Handling](#interrupt-handling)
         - [Resources](#resources)
 - [PPU](#ppu)
+    - [Overview](#overview)
+        - [Screen Size](#screen-size)
+        - [CHR](#chr)
+        - [Nametable](#nametable)
+        - [Palette](#palette)
+        - [Attributes](#attributes)
     - [Registers](#registers-1)
         - [PPPUCTRL (`$2000`)](#pppuctrl-2000)
         - [PPUMASK (`$2001`)](#ppumask-2001)
@@ -242,7 +248,39 @@ interrupt vector.
 Picture processing unit. The NES used a 2C02 PPU, which is a [character generator](https://en.wikipedia.org/wiki/Character_generator) with sprites, designed by
 Nintendo specifically for the NES.
 
-A overview of NES graphics can be found at dustmop.io's "NES Graphics" parts [1](http://www.dustmop.io/blog/2015/04/28/nes-graphics-part-1/), [2](http://www.dustmop.io/blog/2015/06/08/nes-graphics-part-2/), and [3](http://www.dustmop.io/blog/2015/12/18/nes-graphics-part-3/).
+### Overview
+
+A overview of NES graphics can be found at dustmop.io's "NES Graphics" parts [1](http://www.dustmop.io/blog/2015/04/28/nes-graphics-part-1/), [2](http://www.dustmop.io/blog/2015/06/08/nes-graphics-part-2/), and [3](http://www.dustmop.io/blog/2015/12/18/nes-graphics-part-3/). Select notes are reproduced here to give a (hopefully) simple explanation of the different aspects of rendering a screen on the NES.
+
+#### Screen Size
+
+The NES PPU produces images that are 256x250 pixels. This image is divided into 8x8 regions called **"tiles"**, and 16x16 regions called **"blocks"** (or sometimes, "meta-tiles").
+
+#### CHR
+
+CHR represents raw pixel art, without color or position. Each CHR tile has a bit depth of 2. In other words, it specifies a value from 0-3 for each pixel in the 8x8 tile. (This is combined with the Attribute table to determine actual colors, and the Nametable to determine position).
+
+#### Nametable
+
+A nametable assigns a CHR tile to each position of the screen. There are 960 tiles in a single image, and each CHR position takes a single byte, so the size of a nametable is 960 bytes.
+
+The upper-left position is at `$0`, and tile positions continue sequentially to the right, wrapping around so that `$20` is directly below `$0`.
+
+#### Palette
+
+The NES has a system palette of 64 colors, from which palettes are chosen. Each palette is 3 unique colors, plus a shared background color. A single screen image has a maximum of 4 palettes, which takes up 16 bytes.
+
+Each screen block can only use a single palette. Choosing which palette is used for each block is done using attributes.
+
+#### Attributes
+
+The attribute table determines which color palette is used for each block on screen. Uses 2 bits per block, to define which of the 4 palettes to use.
+
+Not that attributes are NOT stored left-to-right (which is how the Nametable is stored). Instead, each 2x2 section of blocks is encoded in a single byte in a Z shaped ordering:
+
+```
+value = (topLeft << 0) | (topRight << 2) | (bottomLeft << 4) | (bottomRight << 6)
+```
 
 ### Registers
 
