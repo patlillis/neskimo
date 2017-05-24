@@ -48,7 +48,8 @@ impl Nes {
 
     pub fn run(&mut self) {
         loop {
-            self.cpu.execute();
+            let cycles = self.cpu.execute();
+            self.cpu.sleep(cycles);
         }
     }
 }

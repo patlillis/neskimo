@@ -1,11 +1,16 @@
-use std;
-use std::io::Write;
-use std::fs::{File, OpenOptions};
+use nes::instruction::Instruction;
 use nes::memory::Memory;
+use nes::opcode;
 use nes::nes::Options;
+use std;
+use std::fs::{File, OpenOptions};
+use std::io::{self, Write};
+use std::thread;
+use std::time::Duration;
 use utils::arithmetic::{is_negative, concat_bytes};
 
-use nes::instruction::Instruction;
+// How long in nanoseconds it takes for a cpu cycle to complete.
+const CPU_CLOCK_SPEED: f32 = 558.65921787709;
 
 // Log from a single frame of execution.
 #[derive(Debug, Default)]
@@ -281,6 +286,12 @@ impl Cpu {
         self.reset = false;
     }
 
+    /// Sleeps the CPU for an amount of time corresponding to the passed cycles.
+    /// Time is determined by multiplying the cycles by the clock speed.
+    pub fn sleep(&mut self, cycles: u32) {
+        thread::sleep(Duration::new(0, (CPU_CLOCK_SPEED * cycles as f32) as u32));
+    }
+
     pub fn log(&mut self) {
         match self.logfile {
             Some(ref mut file) => {
@@ -309,8 +320,8 @@ impl Cpu {
         }
     }
 
-    // Executes the instruction at PC.
-    pub fn execute(&mut self) {
+    // Executes the instruction at PC and returns the number of cycles taken.
+    pub fn execute(&mut self) -> u32 {
         self.frame_log = Log {
             pc: self.registers.pc,
             registers: self.registers.log(),
@@ -325,6 +336,9 @@ impl Cpu {
 
         let (instr, definition) = Instruction::parse(self.registers.pc, self);
 
+        // For visual indication of how long each cycle is taking.
+        // print!("\rExecuting instruction{}.", opcode::decode(instr.0));
+
         // Increment program counter.
         self.registers.pc = self.registers.pc + definition.len;
 
@@ -337,6 +351,8 @@ impl Cpu {
 
         // Check interrupts.
         self.check_interrupts();
+
+        definition.cycles as u32
     }
 
     // Checks the interrupt lines, and sets the pc to the
