@@ -1,10 +1,9 @@
 use nes::instruction::Instruction;
 use nes::memory::Memory;
-use nes::opcode;
 use nes::nes::Options;
 use std;
 use std::fs::{File, OpenOptions};
-use std::io::{self, Write};
+use std::io::Write;
 use std::thread;
 use std::time::Duration;
 use utils::arithmetic::{is_negative, concat_bytes};

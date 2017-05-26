@@ -12,9 +12,10 @@ mod rom;
 mod utils;
 
 use clap::{Arg, App};
-use gfx::{Gfx, SCREEN_SIZE};
+use gfx::{Gfx, SCREEN_WIDTH, SCREEN_SIZE};
 use nes::nes::{Nes, Options};
 use rom::RomFile;
+use sdl2::event::Event;
 
 // The version of neskimo that we're building.
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -81,18 +82,34 @@ fn main() {
         Err(e) => panic!(e),
     };
 
+    // Test screen that fades from black to blue and has a single pixel moving
+    // across it.
+    let (mut gfx, _) = Gfx::new();
+    let mut screen = [0_u8; SCREEN_SIZE];
 
-    // TEST SCREEN!
-    // let (mut gfx, _) = Gfx::new();
+    let mut counter: usize = 0;
 
-    // let mut screen = [0_u8; SCREEN_SIZE];
+    'run: loop {
+        nes.step();
 
-    // for i in 0..(SCREEN_SIZE / 3) - 1 {
-    //     screen[i * 3] = 255;
-    // }
+        for i in 0..(SCREEN_SIZE / 3) - 1 {
+            screen[i * 3] = counter as u8;
+            screen[i * 3 + 1] = 0;
+            screen[i * 3 + 2] = 0;
+        }
 
-    // gfx.composite(&screen);
+        screen[115 * SCREEN_WIDTH + (counter * 3)] = 255;
+        screen[115 * SCREEN_WIDTH + (counter * 3) + 1] = 255;
+        screen[115 * SCREEN_WIDTH + (counter * 3) + 2] = 255;
 
+        gfx.composite(&screen);
+        for event in gfx.events.poll_iter() {
+            match event {
+                Event::Quit { .. } => break 'run,
+                _ => continue,
+            }
+        }
 
-    nes.run();
+        counter = (counter + 1) % 255;
+    }
 }

@@ -1,6 +1,6 @@
 use sdl2::pixels::PixelFormatEnum::BGR24;
 use sdl2::render::{Renderer, Texture, TextureAccess};
-use sdl2::{init, Sdl};
+use sdl2::{init, Sdl, EventPump};
 
 /// Emulated screen width in pixels
 pub const SCREEN_WIDTH: usize = 256;
@@ -10,8 +10,9 @@ pub const SCREEN_HEIGHT: usize = 240;
 pub const SCREEN_SIZE: usize = SCREEN_WIDTH * SCREEN_HEIGHT * 3;
 
 pub struct Gfx<'a> {
-    pub renderer: Box<Renderer<'a>>,
-    pub texture: Box<Texture>,
+    pub renderer: Renderer<'a>,
+    pub texture: Texture,
+    pub events: EventPump,
 }
 
 impl<'a> Gfx<'a> {
@@ -19,7 +20,6 @@ impl<'a> Gfx<'a> {
         // FIXME: Handle SDL better
 
         let sdl = init().unwrap();
-
         let mut window_builder = sdl.video()
             .unwrap()
             .window("neskimo", SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
@@ -38,9 +38,12 @@ impl<'a> Gfx<'a> {
                             SCREEN_HEIGHT as u32)
             .unwrap();
 
+        let events = sdl.event_pump().unwrap();
+
         (Gfx {
-             renderer: Box::new(renderer),
-             texture: Box::new(texture),
+             renderer: renderer,
+             texture: texture,
+             events: events,
          },
          sdl)
     }
@@ -49,7 +52,7 @@ impl<'a> Gfx<'a> {
     pub fn composite(&mut self, ppu_screen: &[u8; SCREEN_SIZE]) {
         self.blit(ppu_screen);
         self.renderer.clear();
-        self.renderer.copy(&self.texture, None, None);
+        self.renderer.copy(&self.texture, None, None).ok();
         self.renderer.present();
     }
 

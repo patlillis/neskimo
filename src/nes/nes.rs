@@ -15,7 +15,7 @@ pub struct Options {
 }
 
 pub struct Nes {
-    pub cpu: Cpu,
+    pub cpu: Cpu, 
     // pub ppu: Ppu,
 }
 
@@ -46,10 +46,7 @@ impl Nes {
         Nes { cpu: Cpu::new(memory, options) }
     }
 
-    pub fn run(&mut self) {
-        loop {
-            let cycles = self.cpu.execute();
-            self.cpu.sleep(cycles);
-        }
+    pub fn step(&mut self) {
+        self.cpu.execute();
     }
 }
