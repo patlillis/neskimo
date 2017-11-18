@@ -6,5 +6,7 @@ authors = ["Pat Lillis <lillispm@gmail.com>"]
 [dependencies]
 clap = "2.23.3"
 enum_primitive = "0.1"
+log = "0.3"
+maplit = "1.0.0"
 num = "0.1"
 sdl2 = "0.29.1"

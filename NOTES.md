@@ -4,55 +4,54 @@ post](http://nwidger.github.io/blog/post/writing-an-nes-emulator-in-go-part-1/).
 
 <!-- TOC -->
 
--   [CPU](#cpu)
-    -   [Registers](#registers)
-    -   [Memory Map](#memory-map)
-    -   [Opcodes](#opcodes)
-    -   [Addressing Modes](#addressing-modes)
-        -   [Absolute: `$c000`](#absolute-c000)
-        -   [Zero page: `$c0`](#zero-page-c0)
-        -   [Zero page,X: `$c0,X`](#zero-pagex-c0x)
-        -   [Zero page,Y: `$c0,Y`](#zero-pagey-c0y)
-        -   [Absolute,X and absolute,Y: `$c000,X` and
-            `$c000,Y`](#absolutex-and-absolutey-c000x-and-c000y)
-        -   [Immediate: `#$c0`](#immediate-c0)
-        -   [Relative: `$c0` (or label)](#relative-c0-or-label)
-        -   [Implicit](#implicit)
-        -   [Indirect: `($c000)`](#indirect-c000)
-        -   [Indexed indirect: `($c0,X)`](#indexed-indirect-c0x)
-        -   [Indirect indexed: `($c0),Y`](#indirect-indexed-c0y)
-        -   [Implied](#implied)
-    -   [Fetch/Execute Cycle](#fetchexecute-cycle)
-    -   [Clock](#clock)
-    -   [Interrupts](#interrupts)
-    -   [Interrupt Handling](#interrupt-handling)
-        -   [Resources](#resources)
--   [PPU](#ppu)
-    -   [Overview](#overview)
-        -   [Screen Size](#screen-size)
-        -   [Scanlines](#scanlines)
-        -   [CHR](#chr)
-        -   [Nametable](#nametable)
-        -   [Palette](#palette)
-        -   [Attributes](#attributes)
-        -   [Scrolling](#scrolling)
-        -   [Sprites (OAM)](#sprites-oam)
-    -   [Registers](#registers-1)
-        -   [PPPUCTRL (`$2000`)](#pppuctrl-2000)
-        -   [PPUMASK (`$2001`)](#ppumask-2001)
-        -   [PPUSTATUS (`$2002`)](#ppustatus-2002)
-        -   [OAMADDR (`$2003`)](#oamaddr-2003)
-        -   [OAMDATA (`$2004`)](#oamdata-2004)
-        -   [PPUSCROLL (`$2005`)](#ppuscroll-2005)
-        -   [PPUADDR (`$2006`)](#ppuaddr-2006)
-        -   [PPUDATA (`$2007`)](#ppudata-2007)
-        -   [OAMDMA (`$4014`)](#oamdma-4014)
-    -   [Memory Map](#memory-map-1)
-        -   [Hardware mapping](#hardware-mapping)
-    -   [Rendering](#rendering)
-    -   [Scrolling](#scrolling-1)
--   [APU](#apu)
-    -   [Channels](#channels)
+- [CPU](#cpu)
+    - [Registers](#registers)
+    - [Memory Map](#memory-map)
+    - [Opcodes](#opcodes)
+    - [Addressing Modes](#addressing-modes)
+        - [Absolute: `$c000`](#absolute-c000)
+        - [Zero page: `$c0`](#zero-page-c0)
+        - [Zero page,X: `$c0,X`](#zero-pagex-c0x)
+        - [Zero page,Y: `$c0,Y`](#zero-pagey-c0y)
+        - [Absolute,X and absolute,Y: `$c000,X` and `$c000,Y`](#absolutex-and-absolutey-c000x-and-c000y)
+        - [Immediate: `#$c0`](#immediate-c0)
+        - [Relative: `$c0` (or label)](#relative-c0-or-label)
+        - [Implicit](#implicit)
+        - [Indirect: `($c000)`](#indirect-c000)
+        - [Indexed indirect: `($c0,X)`](#indexed-indirect-c0x)
+        - [Indirect indexed: `($c0),Y`](#indirect-indexed-c0y)
+        - [Implied](#implied)
+    - [Fetch/Execute Cycle](#fetchexecute-cycle)
+    - [Clock](#clock)
+    - [Interrupts](#interrupts)
+    - [Interrupt Handling](#interrupt-handling)
+        - [Resources](#resources)
+- [PPU](#ppu)
+    - [Overview](#overview)
+        - [Screen Size](#screen-size)
+        - [Scanlines](#scanlines)
+        - [CHR](#chr)
+        - [Nametable](#nametable)
+        - [Palette](#palette)
+        - [Attributes](#attributes)
+        - [Scrolling](#scrolling)
+        - [Sprites (OAM)](#sprites-oam)
+    - [Registers](#registers-1)
+        - [PPPUCTRL (`$2000`)](#pppuctrl-2000)
+        - [PPUMASK (`$2001`)](#ppumask-2001)
+        - [PPUSTATUS (`$2002`)](#ppustatus-2002)
+        - [OAMADDR (`$2003`)](#oamaddr-2003)
+        - [OAMDATA (`$2004`)](#oamdata-2004)
+        - [PPUSCROLL (`$2005`)](#ppuscroll-2005)
+        - [PPUADDR (`$2006`)](#ppuaddr-2006)
+        - [PPUDATA (`$2007`)](#ppudata-2007)
+        - [OAMDMA (`$4014`)](#oamdma-4014)
+    - [Memory Map](#memory-map-1)
+        - [Hardware mapping](#hardware-mapping)
+    - [Rendering](#rendering)
+    - [Scrolling](#scrolling-1)
+- [APU](#apu)
+    - [Channels](#channels)
 
 <!-- /TOC -->
 
@@ -101,25 +100,21 @@ All registers are 8-bit, except for `PC` which is 16-bit.
 
 ### Memory Map
 
-| Address Range     | Size    | Description                                    |
-| ----------------- | ------- | ---------------------------------------------- |
-| `$0000` - `$00ff` | `$0100` | Game RAM Used for zero page addressing         |
-:                   :         : instructions                                   :
-| `$0100` - `$01ff` | `$0100` | Reserved for the system stack                  |
-| `$0200` - `$07ff` | `$0600` | RAM                                            |
-| `$0800` - `$0fff` | `$0800` | Mirror of `$0000` - `$07ff`                    |
-| `$1000` - `$17ff` | `$0800` | Mirror of `$0000` - `$07ff`                    |
-| `$1800` - `$1fff` | `$0800` | Mirror of `$0000` - `$07ff`                    |
-| `$2000` - `$2007` | `$0008` | PPU Registers                                  |
-| `$2008` - `$3fff` | `$1ff8` | Mirror of `$2000` - `$2007` (multple times)    |
-| `$4000` - `$401f` | `$0020` | APU Registers and I/O Registers                |
-| `$4020` - `$5fff` | `$1fdf` | Expansion ROM - used by mappers to expand the  |
-:                   :         : capabilities of VRAM                           :
-| `$6000` - `$7fff` | `$2000` | SRAM - Save Ram used to save data between game |
-:                   :         : plays                                          :
-| `$8000` - `$bfff` | `$4000` | PRG-ROM lower bank - executable code           |
-| `$c000` - `$ffff` | `$4000` | PRG-ROM upper bank - executable code (includes |
-:                   :         : interrupt vectors)                             :
+|   Address Range   |  Size   |                            Description                             |
+| ----------------- | ------- | ------------------------------------------------------------------ |
+| `$0000` - `$00ff` | `$0100` | Game RAM Used for zero page addressing instructions                |
+| `$0100` - `$01ff` | `$0100` | Reserved for the system stack                                      |
+| `$0200` - `$07ff` | `$0600` | RAM                                                                |
+| `$0800` - `$0fff` | `$0800` | Mirror of `$0000` - `$07ff`                                        |
+| `$1000` - `$17ff` | `$0800` | Mirror of `$0000` - `$07ff`                                        |
+| `$1800` - `$1fff` | `$0800` | Mirror of `$0000` - `$07ff`                                        |
+| `$2000` - `$2007` | `$0008` | PPU Registers                                                      |
+| `$2008` - `$3fff` | `$1ff8` | Mirror of `$2000` - `$2007` (multple times)                        |
+| `$4000` - `$401f` | `$0020` | APU Registers and I/O Registers                                    |
+| `$4020` - `$5fff` | `$1fdf` | Expansion ROM - used by mappers to expand the capabilities of VRAM |
+| `$6000` - `$7fff` | `$2000` | SRAM - Save Ram used to save data between game plays               |
+| `$8000` - `$bfff` | `$4000` | PRG-ROM lower bank - executable code                               |
+| `$c000` - `$ffff` | `$4000` | PRG-ROM upper bank - executable code (includes interrupt vectors)  |
 
 ### Opcodes
 
@@ -272,7 +267,7 @@ These different signals are:
 
 These Vector pointers are located as follows:
 
-SIGNAL  | VECTOR
+SIGNAL  |     VECTOR
 ------- | ---------------
 NMI     | `$FFFA`/`$FFFB`
 RESET   | `$FFFC`/`$FFFD`
@@ -417,20 +412,15 @@ The PPU has 8 memory-mapped registers accessible by the CPU.
 
 **Write-only**. Various flags controlling PPU operation.
 
-| Bit position | Description                                                   |
-| ------------ | ------------------------------------------------------------- |
-| `.... ..XX`  | Base nametable address. (`0`: `$200`; `1`: `$2400`; `2`:      |
-:              : `$2800`; `3`\: `$2c00`)                                       :
-| `.... .X..`  | VRAM address increment per CPU read/write of PPUDATA. (`0`:   |
-:              : add 1, going across; `1`\: add 32, going down.)               :
-| `.... X...`  | Sprite pattern table address for 8x8 spries. (`0`: `$0000`;   |
-:              : `1`\: `$1000`; ignored in 8x16 mode)                          :
-| `...X ....`  | Background pattern table address (`0`: `$0000`; `1`: `$1000`) |
-| `..X. ....`  | Sprite size (`0`: 8x8; `1`: 8x16)                             |
-| `.X.. ....`  | PPU master/slave select (`0`: read background from EXT pins;  |
-:              : `1`\: output color on EXT pins)                               :
-| `X... ....`  | Generate an NMI at the start of the vertical blanking         |
-:              : interval. (`0`\: off; `1`\: on)                               :
+| Bit position |                                                 Description                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
+| `.... ..XX`  | Base nametable address. (`0`: `$200`; `1`: `$2400`; `2`: `$2800`; `3`\: `$2c00`)                            |
+| `.... .X..`  | VRAM address increment per CPU read/write of PPUDATA. (`0`: add 1, going across; `1`\: add 32, going down.) |
+| `.... X...`  | Sprite pattern table address for 8x8 spries. (`0`: `$0000`; `1`\: `$1000`; ignored in 8x16 mode)            |
+| `...X ....`  | Background pattern table address (`0`: `$0000`; `1`: `$1000`)                                               |
+| `..X. ....`  | Sprite size (`0`: 8x8; `1`: 8x16)                                                                           |
+| `.X.. ....`  | PPU master/slave select (`0`: read background from EXT pins; `1`\: output color on EXT pins)                |
+| `X... ....`  | Generate an NMI at the start of the vertical blanking interval. (`0`\: off; `1`\: on)                       |
 
 Equivalently, bits `0` and `1` are the most significant bit of the scrolling
 coordinates. If bit `0` is `1`, add 256 to the X scroll position. If bit `1` is
@@ -445,7 +435,7 @@ immediately.
 **Write-only**. Controls the rendering of sprites and backgrounds, as well as
 colour effects.
 
-Bit position | Description
+Bit position |                           Description
 ------------ | ---------------------------------------------------------------
 `.... ...X`  | Greyscale (`0`: normal color; `1`: produce a greyscale display)
 `.... ..X.`  | `1`: Show background in leftmost 8 pixels of screen; `0`: Hide
@@ -553,8 +543,8 @@ The NES has 2kB of RAM dedicated to the PPU, normally mapped to the nametable
 address space from `$2000` - `$2fff`, but this can be remapped through custom
 cartridge wiring.
 
-Address Range     | Size    | Description
------------------ | ------- | -----------
+  Address Range   |  Size   |                                Description
+----------------- | ------- | -------------------------------------------------------------------------
 `$0000` - `$0fff` | `$1000` | [Pattern table 0](https://wiki.nesdev.com/w/index.php/PPU_pattern_tables)
 `$1000` - `$1fff` | `$1000` | [Pattern table 1](https://wiki.nesdev.com/w/index.php/PPU_pattern_tables)
 `$2000` - `$23ff` | `$0400` | [Nametable 0](https://wiki.nesdev.com/w/index.php/PPU_nametables)
@@ -574,7 +564,7 @@ registers at
 and [OAMDMA](https://wiki.nesdev.com/w/index.php/PPU_registers#OAMDMA)
 (`$4014`).
 
-Address Range          | Size  | Description
+    Address Range      | Size  |     Description
 ---------------------- | ----- | -------------------
 `$00` - `$0c` (0 of 4) | `$40` | Sprite Y coordinate
 `$01` - `$0d` (1 of 4) | `$40` | Sprite tile #

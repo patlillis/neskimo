@@ -1,4 +1,5 @@
 use nes::cpu;
+use nes::memory::Memory;
 use nes::opcode;
 use std;
 use utils::arithmetic::{concat_bytes, add_relative};

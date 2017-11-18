@@ -1,5 +1,5 @@
 use nes::instruction::Instruction;
-use nes::memory::Memory;
+use nes::memory::{BasicMemory, Memory};
 use nes::nes::Options;
 use std;
 use std::fs::{File, OpenOptions};
@@ -232,7 +232,7 @@ impl Registers {
 
 pub struct Cpu {
     pub registers: Registers,
-    pub memory: Memory,
+    pub memory: BasicMemory,
     pub irq: bool,
     pub nmi: bool,
     pub reset: bool,
@@ -243,7 +243,7 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(memory: Memory, options: Options) -> Cpu {
+    pub fn new(memory: BasicMemory, options: Options) -> Cpu {
         // Get the PC from the RESET vector pointer.
         let pc = match options.program_counter {
             Some(pc) => pc,

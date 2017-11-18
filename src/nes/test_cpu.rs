@@ -11,12 +11,12 @@ use nes::cpu::{//
                U_FLAG,
                V_FLAG,
                N_FLAG};
-use nes::memory::Memory;
+use nes::memory::{BasicMemory, Memory};
 use nes::nes::Options;
 use nes::opcode::Opcode::*;
 
 fn new_cpu() -> Cpu {
-    Cpu::new(Memory::new(), Options { ..Default::default() })
+    Cpu::new(BasicMemory::new(), Options { ..Default::default() })
 }
 
 #[test]

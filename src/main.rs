@@ -3,6 +3,12 @@
 extern crate clap;
 #[macro_use]
 extern crate enum_primitive;
+#[macro_use]
+extern crate log;
+// TODO: remove this "unused_imports" once maplit is used in non-test code.
+#[allow(unused_imports)]
+#[macro_use]
+extern crate maplit;
 extern crate num;
 extern crate sdl2;
 
