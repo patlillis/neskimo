@@ -1,12 +1,10 @@
-pub mod nes;
+// Public modules that map to files.
+pub mod cpu;
+pub mod definition;
+pub mod instruction;
+pub mod memory;
+pub mod opcode;
 
-mod cpu;
-mod definition;
-mod instruction;
-mod memory;
-mod opcode;
-
-#[cfg(test)]
-mod test_cpu;
-#[cfg(test)]
-mod test_memory;
+// Re-exported modules that are directly in the "nes"" namespace.
+mod nes;
+pub use self::nes::{Nes, Options};

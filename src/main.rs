@@ -1,26 +1,11 @@
-#![allow(dead_code)]
-
 extern crate clap;
-#[macro_use]
-extern crate enum_primitive;
-#[macro_use]
-extern crate log;
-// TODO: remove this "unused_imports" once maplit is used in non-test code.
-#[allow(unused_imports)]
-#[macro_use]
-extern crate maplit;
-extern crate num;
+extern crate neskimolib;
 extern crate sdl2;
 
-mod gfx;
-mod nes;
-mod rom;
-mod utils;
-
 use clap::{Arg, App};
-use gfx::{Gfx, SCREEN_WIDTH, SCREEN_SIZE};
-use nes::nes::{Nes, Options};
-use rom::RomFile;
+use neskimolib::gfx::{Gfx, SCREEN_WIDTH, SCREEN_SIZE};
+use neskimolib::nes::{Nes, Options};
+use neskimolib::rom::RomFile;
 use sdl2::event::Event;
 
 // The version of neskimo that we're building.

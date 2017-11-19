@@ -1,19 +1,21 @@
+extern crate neskimolib;
+
 #[allow(unused_imports)]
-use nes::cpu::{//
-               Cpu,
-               Status,
-               IRQ_VECTOR,
-               C_FLAG,
-               Z_FLAG,
-               I_FLAG,
-               D_FLAG,
-               B_FLAG,
-               U_FLAG,
-               V_FLAG,
-               N_FLAG};
-use nes::memory::{BasicMemory, Memory};
-use nes::nes::Options;
-use nes::opcode::Opcode::*;
+use neskimolib::nes::cpu::{//
+                           Cpu,
+                           Status,
+                           IRQ_VECTOR,
+                           C_FLAG,
+                           Z_FLAG,
+                           I_FLAG,
+                           D_FLAG,
+                           B_FLAG,
+                           U_FLAG,
+                           V_FLAG,
+                           N_FLAG};
+use neskimolib::nes::memory::{BasicMemory, Memory};
+use neskimolib::nes::Options;
+use neskimolib::nes::opcode::Opcode::*;
 
 fn new_cpu() -> Cpu {
     Cpu::new(BasicMemory::new(), Options { ..Default::default() })

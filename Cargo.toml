@@ -3,6 +3,14 @@ name = "neskimo"
 version = "0.3.0"
 authors = ["Pat Lillis <lillispm@gmail.com>"]
 
+[lib]
+name = "neskimolib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "neskimo"
+path = "src/main.rs"
+
 [dependencies]
 clap = "2.23.3"
 enum_primitive = "0.1"

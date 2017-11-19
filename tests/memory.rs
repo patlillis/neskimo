@@ -1,5 +1,8 @@
-#[allow(unused_imports)]
-use nes::memory::*;
+#[macro_use]
+extern crate maplit;
+extern crate neskimolib;
+
+use neskimolib::nes::memory::{BasicMemory, MappedMemory, Memory};
 
 #[test]
 fn test_mirror() {
