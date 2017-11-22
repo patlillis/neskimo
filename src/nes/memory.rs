@@ -106,10 +106,9 @@ pub enum MappingType {
 }
 
 // A definition of how to set up a memory mapping scheme.
-pub trait MemoryMapping<'a> {
-    fn memory() -> &'a Memory;
-    fn fetch_mappings() -> [u16];
-    fn store_mappings() -> [u16];
+pub trait MemoryMapping<'a>: Memory {
+    fn fetch_mappings(&self) -> Vec<u16>;
+    fn store_mappings(&self) -> Vec<u16>;
 }
 
 // A memory storage type that can defer memory operations to of memory
@@ -119,8 +118,11 @@ pub trait MemoryMapping<'a> {
 pub struct MappedMemory<'a> {
     fallback_memory: Box<Memory>,
     mirrors: HashMap<u16, u16>,
-    fetch: HashMap<u16, &'a (Memory + 'a)>,
-    store: HashMap<u16, &'a mut (Memory + 'a)>,
+    delegates: Vec<&'a mut Memory>,
+    // Maps from memory address to index in "delegates" where the address is
+    // mapped to.
+    fetch: HashMap<u16, usize>,
+    store: HashMap<u16, usize>,
 }
 
 impl<'a> MappedMemory<'a> {
@@ -128,6 +130,7 @@ impl<'a> MappedMemory<'a> {
         let mapped_memory = MappedMemory {
             fallback_memory: memory,
             mirrors: HashMap::new(),
+            delegates: Vec::new(),
             fetch: HashMap::new(),
             store: HashMap::new(),
         };
@@ -136,20 +139,55 @@ impl<'a> MappedMemory<'a> {
 
     pub fn add_mirrors(&mut self, mirrors: HashMap<u16, u16>) {
         for (from, to) in &mirrors {
-            if *from == *to {
-                warn!("Address cannot be mirrored to itself");
-            }
-            self.mirrors.insert(*from, *to);
+            self.add_mirror(*from, *to);
         }
     }
 
-    // Gets the mirrored address value for the passed in address. If there is
-    // no mirror defined for the address, will return back the passed in
-    // address instead.
+    fn add_mirror(&mut self, from: u16, to: u16) {
+        if from == to {
+            warn!("Address {} cannot be mirrored to itself", from);
+        }
+        self.mirrors.insert(from, to);
+    }
+
+    // Helper function to get the mirrored address value for the passed in
+    // address. If there is no mirror defined for the address, will return back
+    // the passed in address instead.
     fn get_mirror(&self, address: u16) -> u16 {
         match self.mirrors.get(&address) {
             Some(mapped_address) => *mapped_address,
             None => address,
+        }
+    }
+
+    pub fn add_mappings<T: Memory + MemoryMapping<'a>>(&mut self, mapping: &'a mut T) {
+        let fetch_addresses = mapping.fetch_mappings();
+        let store_addresses = mapping.store_mappings();
+
+        // If there's no mappings, just return without doing anything.
+        if fetch_addresses.is_empty() && store_addresses.is_empty() {
+            return;
+        }
+
+        self.delegates.push(mapping);
+        let delegate_index = self.delegates.len() - 1;
+
+        // Add fetch mappings.
+        for fetch_address in &fetch_addresses {
+            if self.fetch.contains_key(fetch_address) {
+                warn!("Address {} is already mapped for fetch", *fetch_address);
+                continue;
+            }
+            self.fetch.insert(*fetch_address, delegate_index);
+        }
+
+        // Add store mappings.
+        for store_address in &store_addresses {
+            if self.store.contains_key(store_address) {
+                warn!("Address {} is already mapped for store", *store_address);
+                continue;
+            }
+            self.store.insert(*store_address, delegate_index);
         }
     }
 }
@@ -165,7 +203,7 @@ impl<'a> Memory for MappedMemory<'a> {
 
         // Use the mirrored fetch, or the backing memory.
         match self.fetch.get(&mapped_address) {
-            Some(mapped_fetch) => mapped_fetch.fetch(mapped_address),
+            Some(delegate_index) => self.delegates[*delegate_index].fetch(mapped_address),
             None => self.fallback_memory.fetch(mapped_address),
         }
     }
@@ -175,7 +213,7 @@ impl<'a> Memory for MappedMemory<'a> {
 
         // Use the mirrored store, or the backing memory.
         match self.store.get_mut(&mapped_address) {
-            Some(mapped_store) => mapped_store.store(mapped_address, value),
+            Some(delegate_index) => self.delegates[*delegate_index].store(mapped_address, value),
             None => self.fallback_memory.store(mapped_address, value),
         }
     }

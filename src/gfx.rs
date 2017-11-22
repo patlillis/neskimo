@@ -1,13 +1,7 @@
+use nes::ppu::{SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SIZE};
 use sdl2::pixels::PixelFormatEnum::BGR24;
 use sdl2::render::{Renderer, Texture, TextureAccess};
 use sdl2::{init, Sdl, EventPump};
-
-/// Emulated screen width in pixels
-pub const SCREEN_WIDTH: usize = 256;
-/// Emulated screen height in pixels
-pub const SCREEN_HEIGHT: usize = 240;
-/// Screen texture size in bytes
-pub const SCREEN_SIZE: usize = SCREEN_WIDTH * SCREEN_HEIGHT * 3;
 
 pub struct Gfx<'a> {
     pub renderer: Renderer<'a>,

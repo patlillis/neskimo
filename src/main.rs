@@ -3,7 +3,7 @@ extern crate neskimolib;
 extern crate sdl2;
 
 use clap::{Arg, App};
-use neskimolib::gfx::{Gfx, SCREEN_WIDTH, SCREEN_SIZE};
+use neskimolib::gfx::Gfx;
 use neskimolib::nes::{Nes, Options};
 use neskimolib::rom::RomFile;
 use sdl2::event::Event;
@@ -76,31 +76,16 @@ fn main() {
     // Test screen that fades from black to blue and has a single pixel moving
     // across it.
     let (mut gfx, _) = Gfx::new();
-    let mut screen = [0_u8; SCREEN_SIZE];
-
-    let mut counter: usize = 0;
 
     'run: loop {
         nes.step();
 
-        for i in 0..(SCREEN_SIZE / 3) - 1 {
-            screen[i * 3] = counter as u8;
-            screen[i * 3 + 1] = 0;
-            screen[i * 3 + 2] = 0;
-        }
-
-        screen[115 * SCREEN_WIDTH + (counter * 3)] = 255;
-        screen[115 * SCREEN_WIDTH + (counter * 3) + 1] = 255;
-        screen[115 * SCREEN_WIDTH + (counter * 3) + 2] = 255;
-
-        gfx.composite(&screen);
+        gfx.composite(&nes.ppu.screen);
         for event in gfx.events.poll_iter() {
             match event {
                 Event::Quit { .. } => break 'run,
                 _ => continue,
             }
         }
-
-        counter = (counter + 1) % 255;
     }
 }

@@ -4,6 +4,7 @@ pub mod definition;
 pub mod instruction;
 pub mod memory;
 pub mod opcode;
+pub mod ppu;
 
 // Re-exported modules that are directly in the "nes"" namespace.
 mod nes;

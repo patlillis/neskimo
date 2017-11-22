@@ -1,5 +1,6 @@
 use nes::cpu::Cpu;
 use nes::memory::{BasicMemory, Memory};
+use nes::ppu::Ppu;
 use rom::RomFile;
 
 #[derive(Debug, Default)]
@@ -16,12 +17,13 @@ pub struct Options {
 
 pub struct Nes {
     pub cpu: Cpu,
-    // pub ppu: Ppu,
+    pub ppu: Ppu,
 }
 
 impl Nes {
     pub fn new(rom: RomFile, options: Options) -> Nes {
         let mut memory = BasicMemory::new();
+        let ppu = Ppu::new();
 
         // Copy trainer data to 0x7000.
         match rom.trainer_data {
@@ -43,10 +45,14 @@ impl Nes {
             _ => {}
         }
 
-        Nes { cpu: Cpu::new(memory, options) }
+        Nes {
+            cpu: Cpu::new(memory, options),
+            ppu: ppu,
+        }
     }
 
     pub fn step(&mut self) {
         self.cpu.execute();
+        self.ppu.step();
     }
 }
