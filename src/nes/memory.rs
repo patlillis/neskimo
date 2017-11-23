@@ -1,7 +1,8 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{Result, Write};
+use std::io;
+use std::io::Write;
 use std::rc::Rc;
 use utils;
 
@@ -21,6 +22,12 @@ pub trait Memory {
     // Stores value into memory at the specified address.
     // Returns the previous value.
     fn store(&mut self, address: u16, value: u8) -> u8;
+
+    // Dumps the memory contents to a string (most likely
+    // for writing to a dump file). Default implementation is no-op.
+    fn dump(&self, _file: &mut File) -> io::Result<()> {
+        Result::Ok(())
+    }
 
     // Fetches two bytes stored consecutively in memory.
     fn fetch_u16(&self, address: u16) -> u16 {
@@ -73,12 +80,6 @@ impl BasicMemory {
     pub fn new() -> BasicMemory {
         BasicMemory { backing_store: [0; MEMORY_SIZE] }
     }
-
-    // Dumps the memory contents to a string (most likely
-    // for writing to a dump file).
-    pub fn dump(&self, file: &mut File) -> Result<()> {
-        file.write_all(&self.backing_store)
-    }
 }
 
 // TODO: Little-endian?
@@ -99,6 +100,12 @@ impl Memory for BasicMemory {
         let old_value = self.backing_store[address as usize];
         self.backing_store[address as usize] = value;
         old_value
+    }
+
+    // Dumps the memory contents to a string (most likely
+    // for writing to a dump file).
+    fn dump(&self, file: &mut File) -> io::Result<()> {
+        file.write_all(&self.backing_store)
     }
 }
 
@@ -179,7 +186,8 @@ impl MappedMemory {
         // Add fetch mappings.
         for fetch_address in &fetch_addresses {
             if self.fetch.contains_key(fetch_address) {
-                warn!("Address {} is already mapped for fetch", *fetch_address);
+                warn!("Address {:#04x} is already mapped for fetch",
+                      *fetch_address);
                 continue;
             }
             self.fetch.insert(*fetch_address, delegate_index);
@@ -188,7 +196,8 @@ impl MappedMemory {
         // Add store mappings.
         for store_address in &store_addresses {
             if self.store.contains_key(store_address) {
-                warn!("Address {} is already mapped for store", *store_address);
+                warn!("Address {:#04x} is already mapped for store",
+                      *store_address);
                 continue;
             }
             self.store.insert(*store_address, delegate_index);

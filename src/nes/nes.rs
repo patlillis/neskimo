@@ -1,6 +1,8 @@
+use std::cell::RefCell;
 use nes::cpu::Cpu;
-use nes::memory::{BasicMemory, Memory};
+use nes::memory::{BasicMemory, MappedMemory, Memory};
 use nes::ppu::Ppu;
+use std::rc::Rc;
 use rom::RomFile;
 
 #[derive(Debug, Default)]
@@ -17,13 +19,14 @@ pub struct Options {
 
 pub struct Nes {
     pub cpu: Cpu,
-    pub ppu: Ppu,
+    pub ppu: Rc<RefCell<Ppu>>,
 }
 
 impl Nes {
     pub fn new(rom: RomFile, options: Options) -> Nes {
-        let mut memory = BasicMemory::new();
-        let ppu = Ppu::new();
+        let mut memory = MappedMemory::new(Box::new(BasicMemory::new()));
+        let ppu = Rc::new(RefCell::new(Ppu::new()));
+        memory.add_mapping(ppu.clone(), ppu.clone());
 
         // Copy trainer data to 0x7000.
         match rom.trainer_data {
@@ -46,13 +49,13 @@ impl Nes {
         }
 
         Nes {
-            cpu: Cpu::new(memory, options),
+            cpu: Cpu::new(Box::new(memory), options),
             ppu: ppu,
         }
     }
 
     pub fn step(&mut self) {
         self.cpu.execute();
-        self.ppu.step();
+        self.ppu.borrow_mut().step();
     }
 }

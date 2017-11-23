@@ -80,7 +80,7 @@ fn main() {
     'run: loop {
         nes.step();
 
-        gfx.composite(&nes.ppu.screen);
+        gfx.composite(&nes.ppu.borrow().screen);
         for event in gfx.events.poll_iter() {
             match event {
                 Event::Quit { .. } => break 'run,
