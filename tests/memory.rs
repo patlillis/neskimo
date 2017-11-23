@@ -2,6 +2,8 @@
 extern crate maplit;
 extern crate neskimolib;
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use neskimolib::nes::memory::{BasicMemory, MappedMemory, Memory, MemoryMapping};
 
 #[test]
@@ -71,7 +73,7 @@ impl Memory for TestMemoryMapping {
 }
 
 // Test mapping maps all addresses between 0x0000 and 0x1000 to test memory.
-impl<'a> MemoryMapping<'a> for TestMemoryMapping {
+impl MemoryMapping for TestMemoryMapping {
     fn fetch_mappings(&self) -> Vec<u16> {
         let mut vec = Vec::new();
         for n in 0x0000..0x1000 {
@@ -92,13 +94,11 @@ impl<'a> MemoryMapping<'a> for TestMemoryMapping {
 #[test]
 fn test_mappings() {
     // Set up values in destination addresses of fallback memory.
-    let mut mappings = TestMemoryMapping::new();
-    {
-        let mut mapped_memory = MappedMemory::new(Box::new(BasicMemory::new()));
-        mapped_memory.add_mappings(&mut mappings);
+    let mappings = Rc::new(RefCell::new(TestMemoryMapping::new()));
+    let mut mapped_memory = MappedMemory::new(Box::new(BasicMemory::new()));
+    mapped_memory.add_mapping(mappings.clone(), mappings.clone());
 
-        assert_eq!(mapped_memory.fetch(0x0000), 0x0001);
-        assert_eq!(mapped_memory.store(0x0100, 0xff), 0x00);
-    }
-    assert_eq!(mappings.last_stored_value, 0xff);
+    assert_eq!(mapped_memory.fetch(0x0000), 0x0001);
+    assert_eq!(mapped_memory.store(0x0100, 0xff), 0x00);
+    assert_eq!(mappings.borrow().last_stored_value, 0xff);
 }

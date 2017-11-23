@@ -1,6 +1,8 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Result, Write};
+use std::rc::Rc;
 use utils;
 
 // 2^16 unsigned bytes.
@@ -106,7 +108,7 @@ pub enum MappingType {
 }
 
 // A definition of how to set up a memory mapping scheme.
-pub trait MemoryMapping<'a>: Memory {
+pub trait MemoryMapping: Memory {
     fn fetch_mappings(&self) -> Vec<u16>;
     fn store_mappings(&self) -> Vec<u16>;
 }
@@ -115,20 +117,20 @@ pub trait MemoryMapping<'a>: Memory {
 // implementations, with each fetch/store operation potentially mapped to a
 // specific memory implementation. In addition, memory addresses can be
 // mirrored to always point at another memory address.
-pub struct MappedMemory<'a> {
+pub struct MappedMemory {
     fallback_memory: Box<Memory>,
     mirrors: HashMap<u16, u16>,
-    delegates: Vec<&'a mut Memory>,
+    delegates: Vec<Rc<RefCell<Memory>>>,
     // Maps from memory address to index in "delegates" where the address is
     // mapped to.
     fetch: HashMap<u16, usize>,
     store: HashMap<u16, usize>,
 }
 
-impl<'a> MappedMemory<'a> {
-    pub fn new<'b>(memory: Box<Memory>) -> MappedMemory<'b> {
+impl MappedMemory {
+    pub fn new(fallback_memory: Box<Memory>) -> MappedMemory {
         let mapped_memory = MappedMemory {
-            fallback_memory: memory,
+            fallback_memory: fallback_memory,
             mirrors: HashMap::new(),
             delegates: Vec::new(),
             fetch: HashMap::new(),
@@ -160,16 +162,18 @@ impl<'a> MappedMemory<'a> {
         }
     }
 
-    pub fn add_mappings<T: Memory + MemoryMapping<'a>>(&mut self, mapping: &'a mut T) {
-        let fetch_addresses = mapping.fetch_mappings();
-        let store_addresses = mapping.store_mappings();
+    pub fn add_mapping(&mut self,
+                       memory: Rc<RefCell<Memory>>,
+                       mapping: Rc<RefCell<MemoryMapping>>) {
+        let fetch_addresses = mapping.borrow().fetch_mappings();
+        let store_addresses = mapping.borrow().store_mappings();
 
         // If there's no mappings, just return without doing anything.
         if fetch_addresses.is_empty() && store_addresses.is_empty() {
             return;
         }
 
-        self.delegates.push(mapping);
+        self.delegates.push(memory.clone());
         let delegate_index = self.delegates.len() - 1;
 
         // Add fetch mappings.
@@ -192,7 +196,7 @@ impl<'a> MappedMemory<'a> {
     }
 }
 
-impl<'a> Memory for MappedMemory<'a> {
+impl Memory for MappedMemory {
     // Resets the fallback memory, but does not reset the mappings.
     fn reset(&mut self) {
         self.fallback_memory.reset();
@@ -203,7 +207,11 @@ impl<'a> Memory for MappedMemory<'a> {
 
         // Use the mirrored fetch, or the backing memory.
         match self.fetch.get(&mapped_address) {
-            Some(delegate_index) => self.delegates[*delegate_index].fetch(mapped_address),
+            Some(delegate_index) => {
+                self.delegates[*delegate_index]
+                    .borrow()
+                    .fetch(mapped_address)
+            }
             None => self.fallback_memory.fetch(mapped_address),
         }
     }
@@ -213,7 +221,11 @@ impl<'a> Memory for MappedMemory<'a> {
 
         // Use the mirrored store, or the backing memory.
         match self.store.get_mut(&mapped_address) {
-            Some(delegate_index) => self.delegates[*delegate_index].store(mapped_address, value),
+            Some(delegate_index) => {
+                self.delegates[*delegate_index]
+                    .borrow_mut()
+                    .store(mapped_address, value)
+            }
             None => self.fallback_memory.store(mapped_address, value),
         }
     }

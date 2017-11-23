@@ -1,106 +1,106 @@
 Some general notes on the NES, including architecture and other tidbits. Heavily
-borrowed from [Niels Widger's blog
-post](http://nwidger.github.io/blog/post/writing-an-nes-emulator-in-go-part-1/).
+borrowed from
+[Niels Widger's blog post](http://nwidger.github.io/blog/post/writing-an-nes-emulator-in-go-part-1/).
 
 <!-- TOC -->
 
-- [CPU](#cpu)
-    - [Registers](#registers)
-    - [Memory Map](#memory-map)
-    - [Opcodes](#opcodes)
-    - [Addressing Modes](#addressing-modes)
-        - [Absolute: `$c000`](#absolute-c000)
-        - [Zero page: `$c0`](#zero-page-c0)
-        - [Zero page,X: `$c0,X`](#zero-pagex-c0x)
-        - [Zero page,Y: `$c0,Y`](#zero-pagey-c0y)
-        - [Absolute,X and absolute,Y: `$c000,X` and `$c000,Y`](#absolutex-and-absolutey-c000x-and-c000y)
-        - [Immediate: `#$c0`](#immediate-c0)
-        - [Relative: `$c0` (or label)](#relative-c0-or-label)
-        - [Implicit](#implicit)
-        - [Indirect: `($c000)`](#indirect-c000)
-        - [Indexed indirect: `($c0,X)`](#indexed-indirect-c0x)
-        - [Indirect indexed: `($c0),Y`](#indirect-indexed-c0y)
-        - [Implied](#implied)
-    - [Fetch/Execute Cycle](#fetchexecute-cycle)
-    - [Clock](#clock)
-    - [Interrupts](#interrupts)
-    - [Interrupt Handling](#interrupt-handling)
-        - [Resources](#resources)
-- [PPU](#ppu)
-    - [Overview](#overview)
-        - [Screen Size](#screen-size)
-        - [Scanlines](#scanlines)
-        - [CHR](#chr)
-        - [Nametable](#nametable)
-        - [Palette](#palette)
-        - [Attributes](#attributes)
-        - [Scrolling](#scrolling)
-        - [Sprites (OAM)](#sprites-oam)
-    - [Registers](#registers-1)
-        - [PPPUCTRL (`$2000`)](#pppuctrl-2000)
-        - [PPUMASK (`$2001`)](#ppumask-2001)
-        - [PPUSTATUS (`$2002`)](#ppustatus-2002)
-        - [OAMADDR (`$2003`)](#oamaddr-2003)
-        - [OAMDATA (`$2004`)](#oamdata-2004)
-        - [PPUSCROLL (`$2005`)](#ppuscroll-2005)
-        - [PPUADDR (`$2006`)](#ppuaddr-2006)
-        - [PPUDATA (`$2007`)](#ppudata-2007)
-        - [OAMDMA (`$4014`)](#oamdma-4014)
-    - [Memory Map](#memory-map-1)
-        - [Hardware mapping](#hardware-mapping)
-    - [Rendering](#rendering)
-    - [Scrolling](#scrolling-1)
-- [APU](#apu)
-    - [Channels](#channels)
+* [CPU](#cpu)
+  * [Registers](#registers)
+  * [Memory Map](#memory-map)
+  * [Opcodes](#opcodes)
+  * [Addressing Modes](#addressing-modes)
+    * [Absolute: `$c000`](#absolute-c000)
+    * [Zero page: `$c0`](#zero-page-c0)
+    * [Zero page,X: `$c0,X`](#zero-pagex-c0x)
+    * [Zero page,Y: `$c0,Y`](#zero-pagey-c0y)
+    * [Absolute,X and absolute,Y: `$c000,X` and `$c000,Y`](#absolutex-and-absolutey-c000x-and-c000y)
+    * [Immediate: `#$c0`](#immediate-c0)
+    * [Relative: `$c0` (or label)](#relative-c0-or-label)
+    * [Implicit](#implicit)
+    * [Indirect: `($c000)`](#indirect-c000)
+    * [Indexed indirect: `($c0,X)`](#indexed-indirect-c0x)
+    * [Indirect indexed: `($c0),Y`](#indirect-indexed-c0y)
+    * [Implied](#implied)
+  * [Fetch/Execute Cycle](#fetchexecute-cycle)
+  * [Clock](#clock)
+  * [Interrupts](#interrupts)
+  * [Interrupt Handling](#interrupt-handling)
+    * [Resources](#resources)
+* [PPU](#ppu)
+  * [Overview](#overview)
+    * [Screen Size](#screen-size)
+    * [Scanlines](#scanlines)
+    * [CHR](#chr)
+    * [Nametable](#nametable)
+    * [Palette](#palette)
+    * [Attributes](#attributes)
+    * [Scrolling](#scrolling)
+    * [Sprites (OAM)](#sprites-oam)
+  * [Registers](#registers-1)
+    * [PPPUCTRL (`$2000`)](#pppuctrl-2000)
+    * [PPUMASK (`$2001`)](#ppumask-2001)
+    * [PPUSTATUS (`$2002`)](#ppustatus-2002)
+    * [OAMADDR (`$2003`)](#oamaddr-2003)
+    * [OAMDATA (`$2004`)](#oamdata-2004)
+    * [PPUSCROLL (`$2005`)](#ppuscroll-2005)
+    * [PPUADDR (`$2006`)](#ppuaddr-2006)
+    * [PPUDATA (`$2007`)](#ppudata-2007)
+    * [OAMDMA (`$4014`)](#oamdma-4014)
+  * [Memory Map](#memory-map-1)
+    * [Hardware mapping](#hardware-mapping)
+  * [Rendering](#rendering)
+  * [Scrolling](#scrolling-1)
+* [APU](#apu)
+  * [Channels](#channels)
 
 <!-- /TOC -->
 
 ## CPU
 
-*   MOS 6502 chip
-*   Runs at 1.789773Mhz, or 1,789,773 cycles per second
-*   Does not support decimal mode.
-*   8-bit processor
-*   16-bit addresses, little-endian (so least-significant bit is stored first in
-    memory).
-*   no I/O lines, so I/O registers must be mapped into the 16-bit address space.
-*   More details on
-    [Wikipedia](https://en.wikipedia.org/wiki/MOS_Technology_6502#Technical_description),
-    [nesdev.com](http://wiki.nesdev.com/w/index.php/CPU_ALL), and
-    [6502.org](http://www.6502.org/tutorials/6502opcodes.html).
+* MOS 6502 chip
+* Runs at 1.789773Mhz, or 1,789,773 cycles per second
+* Does not support decimal mode.
+* 8-bit processor
+* 16-bit addresses, little-endian (so least-significant bit is stored first in
+  memory).
+* no I/O lines, so I/O registers must be mapped into the 16-bit address space.
+* More details on
+  [Wikipedia](https://en.wikipedia.org/wiki/MOS_Technology_6502#Technical_description),
+  [nesdev.com](http://wiki.nesdev.com/w/index.php/CPU_ALL), and
+  [6502.org](http://www.6502.org/tutorials/6502opcodes.html).
 
 ### Registers
 
 All registers are 8-bit, except for `PC` which is 16-bit.
 
-*   **Accumulator** (`A`): The `A` register is used for all arithmetic and logic
-    instructions.
-*   **Index 1 & 2** (`X` and `Y`): Registers `X` and `Y` are used for indirect
-    addressing and also as counters/indexes. `X` is used by certain instructions
-    to save/restore the value of `P` using the stack.
-*   **Stack Pointer** (`SP`): Stores the least-significant byte of the top of
-    the stack. The 6052's stack is hardwired to occupy `$0100` - `$01ff` with
-    `SP` initialized to `$ff` at power-up (stack is at `$01ff`). For example, if
-    the value of `SP` is `$84` then the top of the stack is located at `$0184`.
-    The top of the stack moves downward in memory as values are pushed and
-    upwards as values are popped.
-*   **Program Counter** (`PC`): The only 16-bit register on the 6502, `PC`
-    points to the next instruction to execute.
-*   **Processor Status** (`P`): The bits in `P` indicate the results of the last
-    arithmetic and logic instructions as well as indicate if a break/interrupt
-    instruction has just been executed.
-    *   **Bit 0** (`C`): Carry Flag
-    *   **Bit 1** (`Z`): Zero Flag
-    *   **Bit 2** (`I`): Interrupt Disable
-    *   **Bit 3** (`D`): Decimal Mode
-    *   **Bit 4** (`B`): Break Command
-    *   **Bit 5**: _UNUSED_
-    *   **Bit 6** (`O`): Overflow Flag
-    *   **Bit 7** (`N`): Negative Flag
+* **Accumulator** (`A`): The `A` register is used for all arithmetic and logic
+  instructions.
+* **Index 1 & 2** (`X` and `Y`): Registers `X` and `Y` are used for indirect
+  addressing and also as counters/indexes. `X` is used by certain instructions
+  to save/restore the value of `P` using the stack.
+* **Stack Pointer** (`SP`): Stores the least-significant byte of the top of the
+  stack. The 6052's stack is hardwired to occupy `$0100` - `$01ff` with `SP`
+  initialized to `$ff` at power-up (stack is at `$01ff`). For example, if the
+  value of `SP` is `$84` then the top of the stack is located at `$0184`. The
+  top of the stack moves downward in memory as values are pushed and upwards as
+  values are popped.
+* **Program Counter** (`PC`): The only 16-bit register on the 6502, `PC` points
+  to the next instruction to execute.
+* **Processor Status** (`P`): The bits in `P` indicate the results of the last
+  arithmetic and logic instructions as well as indicate if a break/interrupt
+  instruction has just been executed.
+  * **Bit 0** (`C`): Carry Flag
+  * **Bit 1** (`Z`): Zero Flag
+  * **Bit 2** (`I`): Interrupt Disable
+  * **Bit 3** (`D`): Decimal Mode
+  * **Bit 4** (`B`): Break Command
+  * **Bit 5**: _UNUSED_
+  * **Bit 6** (`O`): Overflow Flag
+  * **Bit 7** (`N`): Negative Flag
 
 ### Memory Map
 
-|   Address Range   |  Size   |                            Description                             |
+| Address Range     | Size    | Description                                                        |
 | ----------------- | ------- | ------------------------------------------------------------------ |
 | `$0000` - `$00ff` | `$0100` | Game RAM Used for zero page addressing instructions                |
 | `$0100` - `$01ff` | `$0100` | Reserved for the system stack                                      |
@@ -121,8 +121,8 @@ All registers are 8-bit, except for `PC` which is 16-bit.
 See [6502.org](http://www.6502.org/tutorials/6502opcodes.html) for a list of all
 the Opcodes.
 
-The NES also included some [unofficial
-opcodes](http://wiki.nesdev.com/w/index.php/Programming_with_unofficial_opcodes)
+The NES also included some
+[unofficial opcodes](http://wiki.nesdev.com/w/index.php/Programming_with_unofficial_opcodes)
 that were officially discouraged, but still had specific functions and could be
 made useful for some games.
 
@@ -234,19 +234,19 @@ instruction itself, and does not need to be explicitly stated. For example, the
 
 ### Fetch/Execute Cycle
 
-*   Each cycle, CPU fetches instruction at the address stored in `PC`, looks up
-    the opcode in the instruction table, and then executes it.
-*   At the end of each cycle, `PC` should increment.
-*   Each instruction needs to determine how many clock cycles it should use up.
+* Each cycle, CPU fetches instruction at the address stored in `PC`, looks up
+  the opcode in the instruction table, and then executes it.
+* At the end of each cycle, `PC` should increment.
+* Each instruction needs to determine how many clock cycles it should use up.
 
 ### Clock
 
-*   The 6502 has specific timings in order for the CPU to interact with other
-    components of the NES such as the PPU and API.
-*   CPU clock needs to stay in sync with master clock.
-*   Different instructions can take different amoutns of clock cycles.
-*   Modern machine will almost certainly be executing emulator cycles much
-    faster than a real 6502 chip, so some throttling will be needed.
+* The 6502 has specific timings in order for the CPU to interact with other
+  components of the NES such as the PPU and API.
+* CPU clock needs to stay in sync with master clock.
+* Different instructions can take different amoutns of clock cycles.
+* Modern machine will almost certainly be executing emulator cycles much faster
+  than a real 6502 chip, so some throttling will be needed.
 
 ### Interrupts
 
@@ -260,18 +260,18 @@ external signals.
 
 These different signals are:
 
-*   NMI (Non-maskable Interrupt)
-*   RESET
-*   IRQ (Interrupt Request)
-*   BRK (Break)
+* NMI (Non-maskable Interrupt)
+* RESET
+* IRQ (Interrupt Request)
+* BRK (Break)
 
 These Vector pointers are located as follows:
 
-SIGNAL  |     VECTOR
-------- | ---------------
-NMI     | `$FFFA`/`$FFFB`
-RESET   | `$FFFC`/`$FFFD`
-IRQ/BRK | `$FFFE`/`$FFFF`
+| SIGNAL  | VECTOR          |
+| ------- | --------------- |
+| NMI     | `$FFFA`/`$FFFB` |
+| RESET   | `$FFFC`/`$FFFD` |
+| IRQ/BRK | `$FFFE`/`$FFFF` |
 
 ### Interrupt Handling
 
@@ -282,18 +282,18 @@ appropriate interrupt vector.
 
 #### Resources
 
-*   High-level overview:
-    [http://6502.org/tutorials/interrupts.html](http://6502.org/tutorials/interrupts.html)
-*   Detailed behavior:
-    [https://wiki.nesdev.com/w/index.php/CPU_interrupts](https://wiki.nesdev.com/w/index.php/CPU_interrupts)
-*   Timing:
-    [http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling](http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling)
+* High-level overview:
+  [http://6502.org/tutorials/interrupts.html](http://6502.org/tutorials/interrupts.html)
+* Detailed behavior:
+  [https://wiki.nesdev.com/w/index.php/CPU_interrupts](https://wiki.nesdev.com/w/index.php/CPU_interrupts)
+* Timing:
+  [http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling](http://visual6502.org/wiki/index.php?title=6502_Timing_of_Interrupt_Handling)
 
 ## PPU
 
-Picture processing unit. The NES used a 2C02 PPU, which is a [character
-generator](https://en.wikipedia.org/wiki/Character_generator) with sprites,
-designed by Nintendo specifically for the NES.
+Picture processing unit. The NES used a 2C02 PPU, which is a
+[character generator](https://en.wikipedia.org/wiki/Character_generator) with
+sprites, designed by Nintendo specifically for the NES.
 
 ### Overview
 
@@ -388,21 +388,20 @@ Memory (OAM).
 
 The 4 bytes of information for each sprite are formatted as follows:
 
-*   **Byte 0**: Y position of top of the sprite. Note that sprite data is
-    delayed by one scanline; sprites are never displayed on the first line of
-    the picture, and it impossible to place a sprite partially off the top of
-    the screen.
-*   **Byte 1**: Tile index number For 8x8 sprites, this is the tile number of
-    this sprite within the pattern table selected by the PPUCTRL register. For
-    8x16 sprites, the PPU ignores the pattern table selection in PPUCTRL, and
-    selects a pattern table from bit 0 of this number.
-*   **Byte 2**: Attribute data
-    *   Bit 0-1: Palette to use
-    *   Bit 2-4: Unused
-    *   Bit 5: Priority (`0`: in front of background; `1`: behind background)
-    *   Bit 6: Flip sprite horizontally
-    *   Bit 7: Flip sprite vertically
-*   **Byte 3**: X position of left side of sprite.
+* **Byte 0**: Y position of top of the sprite. Note that sprite data is delayed
+  by one scanline; sprites are never displayed on the first line of the picture,
+  and it impossible to place a sprite partially off the top of the screen.
+* **Byte 1**: Tile index number For 8x8 sprites, this is the tile number of this
+  sprite within the pattern table selected by the PPUCTRL register. For 8x16
+  sprites, the PPU ignores the pattern table selection in PPUCTRL, and selects a
+  pattern table from bit 0 of this number.
+* **Byte 2**: Attribute data
+  * Bit 0-1: Palette to use
+  * Bit 2-4: Unused
+  * Bit 5: Priority (`0`: in front of background; `1`: behind background)
+  * Bit 6: Flip sprite horizontally
+  * Bit 7: Flip sprite vertically
+* **Byte 3**: X position of left side of sprite.
 
 ### Registers
 
@@ -412,7 +411,7 @@ The PPU has 8 memory-mapped registers accessible by the CPU.
 
 **Write-only**. Various flags controlling PPU operation.
 
-| Bit position |                                                 Description                                                 |
+| Bit position | Description                                                                                                 |
 | ------------ | ----------------------------------------------------------------------------------------------------------- |
 | `.... ..XX`  | Base nametable address. (`0`: `$200`; `1`: `$2400`; `2`: `$2800`; `3`\: `$2c00`)                            |
 | `.... .X..`  | VRAM address increment per CPU read/write of PPUDATA. (`0`: add 1, going across; `1`\: add 32, going down.) |
@@ -435,18 +434,18 @@ immediately.
 **Write-only**. Controls the rendering of sprites and backgrounds, as well as
 colour effects.
 
-Bit position |                           Description
------------- | ---------------------------------------------------------------
-`.... ...X`  | Greyscale (`0`: normal color; `1`: produce a greyscale display)
-`.... ..X.`  | `1`: Show background in leftmost 8 pixels of screen; `0`: Hide
-`.... .X..`  | `1`: Show sprites in leftmost 8 pixels of screen; `0`: Hide
-`.... X...`  | `1`: Show background
-`...X ....`  | `1`: Show sprites
-`..X. ....`  | `1`: Emphasize red*
-`.X.. ....`  | `1`: Emphasize green*
-`X... ....`  | `1`: Emphasize blue*
+| Bit position | Description                                                     |
+| ------------ | --------------------------------------------------------------- |
+| `.... ...X`  | Greyscale (`0`: normal color; `1`: produce a greyscale display) |
+| `.... ..X.`  | `1`: Show background in leftmost 8 pixels of screen; `0`: Hide  |
+| `.... .X..`  | `1`: Show sprites in leftmost 8 pixels of screen; `0`: Hide     |
+| `.... X...`  | `1`: Show background                                            |
+| `...X ....`  | `1`: Show sprites                                               |
+| `..X. ....`  | `1`: Emphasize red\*                                            |
+| `.X.. ....`  | `1`: Emphasize green\*                                          |
+| `X... ....`  | `1`: Emphasize blue\*                                           |
 
-*   NTSC colors. PAL and Dendy swaps green and red.
+* NTSC colors. PAL and Dendy swaps green and red.
 
 Bit 0 controls a greyscale mode, which causes the palette to use only the colors
 from the grey column: `$00`, `$10`, `$20`, `$30`. This is implemented as a
@@ -463,23 +462,23 @@ sprites are hidden.
 **Read-only**. Reflects the state of various functions inside the PPU. It is
 often used for determining timing.
 
-*Bits 0-4* - The least significant bits previously written into a PPU register,
+_Bits 0-4_ - The least significant bits previously written into a PPU register,
 due to the register not being updated for this address.
 
-*Bit 5* - Sprite overflow. The intent was for this flag to be set whenever more
+_Bit 5_ - Sprite overflow. The intent was for this flag to be set whenever more
 than eight sprites appear on a scanline, but a hardware bug causes the actual
 behavior to be more complicated and generate false positives as well as false
-negatives; see [PPU sprite
-evaluation](https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation). This
-flag is set during sprite evaluation and cleared at dot 1 (the second dot) of
-the pre-render line.
+negatives; see
+[PPU sprite evaluation](https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation).
+This flag is set during sprite evaluation and cleared at dot 1 (the second dot)
+of the pre-render line.
 
-*Bit 6* - Sprite 0 hit. Set when a nonzero pixel of sprite 0 overlaps a nonzero
+_Bit 6_ - Sprite 0 hit. Set when a nonzero pixel of sprite 0 overlaps a nonzero
 background pixel; cleared at dot 1 of the pre-render line. Used for raster
 timing.
 
-*Bit 7* - Vertical blank has started (0: not in vblank; 1: in vblank). Set at
-dot 1 of line 241 (the line *after* the post-render line); cleared after reading
+_Bit 7_ - Vertical blank has started (0: not in vblank; 1: in vblank). Set at
+dot 1 of line 241 (the line _after_ the post-render line); cleared after reading
 `$2002` and at dot 1 of the pre-render line.
 
 Note that Sprite 0 hit is not detected at x=255, nor is it detected at x=0
@@ -543,33 +542,33 @@ The NES has 2kB of RAM dedicated to the PPU, normally mapped to the nametable
 address space from `$2000` - `$2fff`, but this can be remapped through custom
 cartridge wiring.
 
-  Address Range   |  Size   |                                Description
------------------ | ------- | -------------------------------------------------------------------------
-`$0000` - `$0fff` | `$1000` | [Pattern table 0](https://wiki.nesdev.com/w/index.php/PPU_pattern_tables)
-`$1000` - `$1fff` | `$1000` | [Pattern table 1](https://wiki.nesdev.com/w/index.php/PPU_pattern_tables)
-`$2000` - `$23ff` | `$0400` | [Nametable 0](https://wiki.nesdev.com/w/index.php/PPU_nametables)
-`$2400` - `$27ff` | `$0400` | [Nametable 1](https://wiki.nesdev.com/w/index.php/PPU_nametables)
-`$2800` - `$2bff` | `$0400` | [Nametable 2](https://wiki.nesdev.com/w/index.php/PPU_nametables)
-`$2c00` - `$2fff` | `$0400` | [Nametable 3](https://wiki.nesdev.com/w/index.php/PPU_nametables)
-`$3000` - `$3eff` | `$0f00` | Mirror of `$2000` - `$2eff`
-`$3f00` - `$3f1f` | `$0020` | [Palette RAM indexes](https://wiki.nesdev.com/w/index.php/PPU_palettes)
-`$3f20` - `$3fff` | `$00e0` | Mirror of `$3f00` - `$3f1f`
+| Address Range     | Size    | Description                                                               |
+| ----------------- | ------- | ------------------------------------------------------------------------- |
+| `$0000` - `$0fff` | `$1000` | [Pattern table 0](https://wiki.nesdev.com/w/index.php/PPU_pattern_tables) |
+| `$1000` - `$1fff` | `$1000` | [Pattern table 1](https://wiki.nesdev.com/w/index.php/PPU_pattern_tables) |
+| `$2000` - `$23ff` | `$0400` | [Nametable 0](https://wiki.nesdev.com/w/index.php/PPU_nametables)         |
+| `$2400` - `$27ff` | `$0400` | [Nametable 1](https://wiki.nesdev.com/w/index.php/PPU_nametables)         |
+| `$2800` - `$2bff` | `$0400` | [Nametable 2](https://wiki.nesdev.com/w/index.php/PPU_nametables)         |
+| `$2c00` - `$2fff` | `$0400` | [Nametable 3](https://wiki.nesdev.com/w/index.php/PPU_nametables)         |
+| `$3000` - `$3eff` | `$0f00` | Mirror of `$2000` - `$2eff`                                               |
+| `$3f00` - `$3f1f` | `$0020` | [Palette RAM indexes](https://wiki.nesdev.com/w/index.php/PPU_palettes)   |
+| `$3f20` - `$3fff` | `$00e0` | Mirror of `$3f00` - `$3f1f`                                               |
 
-In addition, the PPU contains 256 bytes of memory known as [Object Attribute
-Memory](https://wiki.nesdev.com/w/index.php/PPU_OAM) which determines how
-sprites are rendered. The CPU can manipulate this memory the memory mapped
-registers at
+In addition, the PPU contains 256 bytes of memory known as
+[Object Attribute Memory](https://wiki.nesdev.com/w/index.php/PPU_OAM) which
+determines how sprites are rendered. The CPU can manipulate this memory the
+memory mapped registers at
 [OAMADDR](https://wiki.nesdev.com/w/index.php/PPU_registers#OAMADDR) (`$2003`),
 [OAMDATA](https://wiki.nesdev.com/w/index.php/PPU_registers#OAMDATA) (`$2004`),
 and [OAMDMA](https://wiki.nesdev.com/w/index.php/PPU_registers#OAMDMA)
 (`$4014`).
 
     Address Range      | Size  |     Description
----------------------- | ----- | -------------------
-`$00` - `$0c` (0 of 4) | `$40` | Sprite Y coordinate
-`$01` - `$0d` (1 of 4) | `$40` | Sprite tile #
-`$02` - `$0e` (2 of 4) | `$40` | Sprite attribute
-`$03` - `$0f` (3 of 4) | `$40` | Sprite X coordinate
+
+---------------------- | ----- | ------------------- `$00` - `$0c` (0 of 4) |
+`$40` | Sprite Y coordinate `$01` - `$0d` (1 of 4) | `$40` | Sprite tile #
+`$02` - `$0e` (2 of 4) | `$40` | Sprite attribute `$03` - `$0f` (3 of 4) | `$40`
+| Sprite X coordinate
 
 #### Hardware mapping
 
@@ -577,17 +576,17 @@ The mappings above are the fixed addresses that the PPU fetches data during
 rendering. However, the actual device from which the data is fetched may be
 configured by the cartridge.
 
-*   `$0000` - `$1fff` is normally mapped by the cartridge to [CHR-ROM]() or
-    [CHR-RAM](), often with a bank switching mechanism.
-*   `$2000` - `$2fff` is normally mapped to the 2kB NES internal VRAM, providing
-    2 nametables with a mirroring configuration controlled by the cartridge, but
-    it can be partly or fulled remapped to RAM on the cartridge, allowing up to
-    4 simultaneous nametables.
-*   `$3000` - `$3eff` is usually a mirror of the 2kB region from `$2000` -
-    `$2eff`. The PPU does not render from this address range, so this space has
-    negligble utility.
-*   `$3f00` - `$3fff` is not configurable, always mapped to the internal palette
-    control.
+* `$0000` - `$1fff` is normally mapped by the cartridge to [CHR-ROM]() or
+  [CHR-RAM](), often with a bank switching mechanism.
+* `$2000` - `$2fff` is normally mapped to the 2kB NES internal VRAM, providing 2
+  nametables with a mirroring configuration controlled by the cartridge, but it
+  can be partly or fulled remapped to RAM on the cartridge, allowing up to 4
+  simultaneous nametables.
+* `$3000` - `$3eff` is usually a mirror of the 2kB region from `$2000` -
+  `$2eff`. The PPU does not render from this address range, so this space has
+  negligble utility.
+* `$3f00` - `$3fff` is not configurable, always mapped to the internal palette
+  control.
 
 ### Rendering
 
@@ -612,7 +611,7 @@ The channel registers begin at `$4000`, and each channel has four registers
 devoted to it. All but the triangle wave have 4-bit volume control (the triangle
 just has a mute/unmute flag).
 
-*   `$4000` - `$4003`: Pulse wave 1
-*   `$4004` - `$4007`: Pulse wave 2
-*   `$4008` - `$400b`: Triangle wave
-*   `$400c` - `$400f`: Noise
+* `$4000` - `$4003`: Pulse wave 1
+* `$4004` - `$4007`: Pulse wave 2
+* `$4008` - `$400b`: Triangle wave
+* `$400c` - `$400f`: Noise
