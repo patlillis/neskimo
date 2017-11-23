@@ -1,7 +1,7 @@
 use nes::ppu::{SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SIZE};
+use sdl2::{init, Sdl, EventPump};
 use sdl2::pixels::PixelFormatEnum::BGR24;
 use sdl2::render::{Renderer, Texture, TextureAccess};
-use sdl2::{init, Sdl, EventPump};
 
 pub struct Gfx<'a> {
     pub renderer: Renderer<'a>,

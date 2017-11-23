@@ -14,8 +14,8 @@ use neskimolib::nes::cpu::{//
                            V_FLAG,
                            N_FLAG};
 use neskimolib::nes::memory::{BasicMemory, Memory};
-use neskimolib::nes::Options;
 use neskimolib::nes::opcode::Opcode::*;
+use neskimolib::nes::Options;
 
 fn new_cpu() -> Cpu {
     Cpu::new(BasicMemory::new(), Options { ..Default::default() })

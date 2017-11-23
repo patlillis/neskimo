@@ -2,9 +2,9 @@
 extern crate maplit;
 extern crate neskimolib;
 
+use neskimolib::nes::memory::{BasicMemory, MappedMemory, Memory, MemoryMapping};
 use std::cell::RefCell;
 use std::rc::Rc;
-use neskimolib::nes::memory::{BasicMemory, MappedMemory, Memory, MemoryMapping};
 
 #[test]
 fn test_mirror() {

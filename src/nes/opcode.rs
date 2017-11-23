@@ -1,6 +1,5 @@
-use std;
-
 use num::FromPrimitive;
+use std;
 
 // Decodes an opcode by converting an opcode number to an enum value.
 pub fn decode(opcode: u8) -> Opcode {

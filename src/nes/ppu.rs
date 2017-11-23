@@ -1,4 +1,3 @@
-
 /// Emulated screen width in pixels.
 pub const SCREEN_WIDTH: usize = 256;
 /// Emulated screen height in pixels.

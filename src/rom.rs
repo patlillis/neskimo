@@ -1,7 +1,7 @@
 use std::fmt;
 use std::io::{Error, ErrorKind, Result};
-use utils::io::read_binary;
 use std::path::Path;
+use utils::io::read_binary;
 
 pub const TRAINER_SIZE: usize = 0x0200;
 pub const PRG_ROM_SIZE: usize = 0x4000;
