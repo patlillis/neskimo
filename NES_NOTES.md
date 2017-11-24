@@ -413,13 +413,13 @@ The PPU has 8 memory-mapped registers accessible by the CPU.
 
 | Bit position | Description                                                                                                 |
 | ------------ | ----------------------------------------------------------------------------------------------------------- |
-| `....|..XX`  | Base nametable address. (`0`: `$200`; `1`: `$2400`; `2`: `$2800`; `3`\: `$2c00`)                            |
-| `....|.X..`  | VRAM address increment per CPU read/write of PPUDATA. (`0`: add 1, going across; `1`\: add 32, going down.) |
-| `....|X...`  | Sprite pattern table address for 8x8 spries. (`0`: `$0000`; `1`\: `$1000`; ignored in 8x16 mode)            |
-| `...X|....`  | Background pattern table address (`0`: `$0000`; `1`: `$1000`)                                               |
-| `..X.|....`  | Sprite size (`0`: 8x8; `1`: 8x16)                                                                           |
-| `.X..|....`  | PPU master/slave select (`0`: read background from EXT pins; `1`\: output color on EXT pins)                |
-| `X...|....`  | Generate an NMI at the start of the vertical blanking interval. (`0`\: off; `1`\: on)                       |
+| `..../..XX`  | Base nametable address. (`0`: `$200`; `1`: `$2400`; `2`: `$2800`; `3`\: `$2c00`)                            |
+| `..../.X..`  | VRAM address increment per CPU read/write of PPUDATA. (`0`: add 1, going across; `1`\: add 32, going down.) |
+| `..../X...`  | Sprite pattern table address for 8x8 spries. (`0`: `$0000`; `1`\: `$1000`; ignored in 8x16 mode)            |
+| `...X/....`  | Background pattern table address (`0`: `$0000`; `1`: `$1000`)                                               |
+| `..X./....`  | Sprite size (`0`: 8x8; `1`: 8x16)                                                                           |
+| `.X../....`  | PPU master/slave select (`0`: read background from EXT pins; `1`\: output color on EXT pins)                |
+| `X.../....`  | Generate an NMI at the start of the vertical blanking interval. (`0`\: off; `1`\: on)                       |
 
 Equivalently, bits `0` and `1` are the most significant bit of the scrolling
 coordinates. If bit `0` is `1`, add 256 to the X scroll position. If bit `1` is
@@ -436,14 +436,14 @@ colour effects.
 
 | Bit position | Description                                                     |
 | ------------ | --------------------------------------------------------------- |
-| `....|...X`  | Greyscale (`0`: normal color; `1`: produce a greyscale display) |
-| `....|..X.`  | `1`: Show background in leftmost 8 pixels of screen; `0`: Hide  |
-| `....|.X..`  | `1`: Show sprites in leftmost 8 pixels of screen; `0`: Hide     |
-| `....|X...`  | `1`: Show background                                            |
-| `...X|....`  | `1`: Show sprites                                               |
-| `..X.|....`  | `1`: Emphasize red\*                                            |
-| `.X..|....`  | `1`: Emphasize green\*                                          |
-| `X...|....`  | `1`: Emphasize blue\*                                           |
+| `..../...X`  | Greyscale (`0`: normal color; `1`: produce a greyscale display) |
+| `..../..X.`  | `1`: Show background in leftmost 8 pixels of screen; `0`: Hide  |
+| `..../.X..`  | `1`: Show sprites in leftmost 8 pixels of screen; `0`: Hide     |
+| `..../X...`  | `1`: Show background                                            |
+| `...X/....`  | `1`: Show sprites                                               |
+| `..X./....`  | `1`: Emphasize red\*                                            |
+| `.X../....`  | `1`: Emphasize green\*                                          |
+| `X.../....`  | `1`: Emphasize blue\*                                           |
 
 * NTSC colors. PAL and Dendy swaps green and red.
 
