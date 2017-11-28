@@ -13,12 +13,13 @@ use neskimolib::nes::cpu::{//
                            U_FLAG,
                            V_FLAG,
                            N_FLAG};
-use neskimolib::nes::memory::{BasicMemory, Memory};
+use neskimolib::nes::memory::BasicMemory;
 use neskimolib::nes::opcode::Opcode::*;
 use neskimolib::nes::Options;
 
 fn new_cpu() -> Cpu {
-    Cpu::new(BasicMemory::new(), Options { ..Default::default() })
+    Cpu::new(Box::new(BasicMemory::new()),
+             Options { ..Default::default() })
 }
 
 #[test]
