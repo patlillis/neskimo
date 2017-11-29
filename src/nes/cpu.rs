@@ -236,9 +236,9 @@ pub struct Cpu {
     pub irq: bool,
     pub nmi: bool,
     pub reset: bool,
-    logfile: Option<File>,
-    // The log for the current execution frame.
     pub frame_log: Log,
+    cycle: u32,
+    logfile: Option<File>,
     mem_dump_pc: Option<u16>,
 }
 
@@ -267,8 +267,9 @@ impl Cpu {
             irq: false,
             nmi: false,
             reset: false,
-            logfile: buffer,
             frame_log: Log { ..Default::default() },
+            cycle: 0,
+            logfile: buffer,
             mem_dump_pc: options.mem_dump_counter,
         }
     }
@@ -350,6 +351,8 @@ impl Cpu {
 
         // Check interrupts.
         self.check_interrupts();
+
+        self.cycle += definition.cycles as u32;
 
         definition.cycles as u32
     }

@@ -152,7 +152,7 @@ impl MappedMemory {
         }
     }
 
-    fn add_mirror(&mut self, from: u16, to: u16) {
+    pub fn add_mirror(&mut self, from: u16, to: u16) {
         if from == to {
             warn!("Address {} cannot be mirrored to itself", from);
         }

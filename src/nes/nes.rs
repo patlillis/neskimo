@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use nes::cpu::Cpu;
 use nes::memory::{BasicMemory, MappedMemory, Memory};
 use nes::ppu::Ppu;
+use rom::PRG_ROM_SIZE;
 use std::rc::Rc;
 use rom::RomFile;
 
@@ -35,15 +36,23 @@ impl Nes {
         }
 
         // Copy PRG ROM into 0x800.
-        // TODO: map upper bank to lower bank instead of copying it twice.
+        let lower_bank = 0x8000;
+        let upper_bank = 0xc000;
         match rom.prg_rom_data.len() {
             1 => {
-                memory.store_bytes(0x8000, &rom.prg_rom_data[0]);
-                memory.store_bytes(0xc000, &rom.prg_rom_data[0]);
+                // Store PRG ROM in lower bank.
+                memory.store_bytes(lower_bank, &rom.prg_rom_data[0]);
+
+                // Mirror the upper bank to point to the lower bank.
+                for offset in 0x0000..PRG_ROM_SIZE {
+                    let from = upper_bank + offset as u16;
+                    let to = lower_bank + offset as u16;
+                    memory.add_mirror(from, to);
+                }
             }
             2 => {
-                memory.store_bytes(0x8000, &rom.prg_rom_data[0]);
-                memory.store_bytes(0xc000, &rom.prg_rom_data[1]);
+                memory.store_bytes(lower_bank, &rom.prg_rom_data[0]);
+                memory.store_bytes(upper_bank, &rom.prg_rom_data[1]);
             }
             _ => {}
         }
