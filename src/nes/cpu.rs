@@ -1,4 +1,4 @@
-use nes::instruction::Instruction;
+use nes::instruction::{BranchTaken, Instruction};
 use nes::memory::Memory;
 use nes::nes::Options;
 use std;
@@ -31,17 +31,18 @@ pub struct Log {
     pub registers: String,
 
     // Current cycle ticks.
-    pub ticks: u64,
+    pub cycle: u32,
 }
 
 impl Log {
     fn log(&self) -> String {
-        format!("{:04X}  {:8} {:3} {:26}  {}",
+        format!("{:04X}  {:8} {:3} {:26}  {} CYC:{:3}",
                 self.pc,
                 self.instruction,
                 self.mneumonic,
                 self.decoded_args,
-                self.registers)
+                self.registers,
+                self.cycle)
     }
 }
 
@@ -325,6 +326,7 @@ impl Cpu {
         self.frame_log = Log {
             pc: self.registers.pc,
             registers: self.registers.log(),
+            cycle: self.cycle % 340,
             ..Default::default()
         };
 
@@ -334,7 +336,8 @@ impl Cpu {
             _ => {}
         }
 
-        let (instr, definition) = Instruction::parse(self.registers.pc, self);
+        let instruction_location = self.registers.pc;
+        let (instr, definition) = Instruction::parse(instruction_location, self);
 
         // For visual indication of how long each cycle is taking.
         // print!("\rExecuting instruction{}.", opcode::decode(instr.0));
@@ -343,7 +346,7 @@ impl Cpu {
         self.registers.pc = self.registers.pc + definition.len;
 
         // Execute the instruction.
-        instr.execute(self);
+        let cycles = instr.execute(self, instruction_location);
 
         if self.logfile.is_some() {
             self.log();
@@ -352,9 +355,9 @@ impl Cpu {
         // Check interrupts.
         self.check_interrupts();
 
-        self.cycle += definition.cycles as u32;
+        self.cycle += cycles as u32;
 
-        definition.cycles as u32
+        cycles as u32
     }
 
     // Checks the interrupt lines, and sets the pc to the
@@ -1377,73 +1380,74 @@ impl Cpu {
     // Branches to the specified address only if the Negative flag is cleared.
     //
     // No processor status flags are affected.
-    pub fn bpl(&mut self, address: u16) {
+    pub fn bpl(&mut self, address: u16) -> BranchTaken {
         let condition = self.registers.p.n() == false;
-        self.branch(condition, address);
+        self.branch(condition, address)
     }
 
     // Branches to the specified address only if the Negative flag is set.
     //
     // No processor status flags are affected.
-    pub fn bmi(&mut self, address: u16) {
+    pub fn bmi(&mut self, address: u16) -> BranchTaken {
         let condition = self.registers.p.n() == true;
-        self.branch(condition, address);
+        self.branch(condition, address)
     }
 
     // Branches to the specified address only if the Overflow flag is cleared.
     //
     // No processor status flags are affected.
-    pub fn bvc(&mut self, address: u16) {
+    pub fn bvc(&mut self, address: u16) -> BranchTaken {
         let condition = self.registers.p.v() == false;
-        self.branch(condition, address);
+        self.branch(condition, address)
     }
 
     // Branches to the specified address only if the Overflow flag is set.
     //
     // No processor status flags are affected.
-    pub fn bvs(&mut self, address: u16) {
+    pub fn bvs(&mut self, address: u16) -> BranchTaken {
         let condition = self.registers.p.v() == true;
-        self.branch(condition, address);
+        self.branch(condition, address)
     }
 
     // Branches to the specified address only if the Carry flag is cleared.
     //
     // No processor status flags are affected.
-    pub fn bcc(&mut self, address: u16) {
+    pub fn bcc(&mut self, address: u16) -> BranchTaken {
         let condition = self.registers.p.c() == false;
-        self.branch(condition, address);
+        self.branch(condition, address)
     }
 
     // Branches to the specified address only if the Carry flag is set.
     //
     // No processor status flags are affected.
-    pub fn bcs(&mut self, address: u16) {
+    pub fn bcs(&mut self, address: u16) -> BranchTaken {
         let condition = self.registers.p.c() == true;
-        self.branch(condition, address);
+        self.branch(condition, address)
     }
 
     // Branches to the specified address only if the Zero flag is cleared.
     //
     // No processor status flags are affected.
-    pub fn bne(&mut self, address: u16) {
+    pub fn bne(&mut self, address: u16) -> BranchTaken {
         let condition = self.registers.p.z() == false;
-        self.branch(condition, address);
+        self.branch(condition, address)
     }
 
     // Branches to the specified address only if the Zero flag is set.
     //
     // No processor status flags are affected.
-    pub fn beq(&mut self, address: u16) {
+    pub fn beq(&mut self, address: u16) -> BranchTaken {
         let condition = self.registers.p.z() == true;
-        self.branch(condition, address);
+        self.branch(condition, address)
     }
 
-    // If condition is true, sets program counter to the
-    // specified address.
-    fn branch(&mut self, condition: bool, address: u16) {
+    // If condition is true, sets program counter to the specified address.
+    fn branch(&mut self, condition: bool, address: u16) -> BranchTaken {
         if condition {
             self.registers.pc = address;
         }
+
+        condition
     }
 
 

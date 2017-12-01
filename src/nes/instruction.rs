@@ -2,8 +2,13 @@ use nes::cpu;
 use nes::opcode;
 use std;
 use utils::arithmetic::{concat_bytes, add_relative};
+use utils::paging::{page_cross, PageCross};
 
 use nes::definition::*;
+
+// Whether a branch was taken. This is used to figure out whether we need to
+// take an extra cycle when executing a branch instruction.
+pub type BranchTaken = bool;
 
 // An instruction.
 //
@@ -82,31 +87,34 @@ impl Instruction {
     }
 
     // Get the absolute address from the instruction args, and add an offset
-    // from the X index register.
-    fn absolute_address_x(&self, cpu: &mut cpu::Cpu) -> u16 {
-        let value = self.absolute_address(cpu)
-            .wrapping_add(cpu.registers.x as u16);
+    // from the X index register. Also returns whether a page boundary was
+    // crossed.
+    fn absolute_address_x(&self, cpu: &mut cpu::Cpu) -> (u16, PageCross) {
+        let base_addr = self.absolute_address(cpu);
+        let address = base_addr.wrapping_add(cpu.registers.x as u16);
         cpu.frame_log
             .decoded_args
-            .push_str(format!(",X @ {:04X}", value).as_str());
-        value
+            .push_str(format!(",X @ {:04X}", address).as_str());
+        (address, page_cross(base_addr, address))
     }
 
     // Get the absolute address from the instruction args, and add an offset
-    // from the Y index register.
-    fn absolute_address_y(&self, cpu: &mut cpu::Cpu) -> u16 {
-        let value = self.absolute_address(cpu)
-            .wrapping_add(cpu.registers.y as u16);
+    // from the Y index register. Also returns whether a page boundary was
+    // crossed.
+    fn absolute_address_y(&self, cpu: &mut cpu::Cpu) -> (u16, PageCross) {
+        let base_addr = self.absolute_address(cpu);
+        let address = base_addr.wrapping_add(cpu.registers.y as u16);
         cpu.frame_log
             .decoded_args
-            .push_str(format!(",Y @ {:04X}", value).as_str());
-        value
+            .push_str(format!(",Y @ {:04X}", address).as_str());
+        (address, page_cross(base_addr, address))
     }
 
     // Uses a signed variation of the instruction args, plus the current PC.
     //
     // This is used for branch operations, which uses a signed offset from the
-    // current program counter. In other words, branches can jump forward or back.
+    // current program counter. In other words, branches can jump forward or
+    // back.
     fn relative_address(&self, cpu: &mut cpu::Cpu) -> u16 {
         let arg = self.arg1() as i8;
         let address = add_relative(cpu.registers.pc, arg);
@@ -175,7 +183,10 @@ impl Instruction {
         result
     }
 
-    fn indirect_address_y(&self, cpu: &mut cpu::Cpu) -> u16 {
+    // Similar to indirect_address_x, except that the y register value is added
+    // after dereferencing the 8-bit value. Also returns whether a page
+    // boundary was crossed.
+    fn indirect_address_y(&self, cpu: &mut cpu::Cpu) -> (u16, PageCross) {
         let address = self.zero_page_address(cpu);
         let intermediate = cpu.memory.fetch_u16_wrap_msb(address);
         let result = intermediate.wrapping_add(cpu.registers.y as u16);
@@ -183,19 +194,22 @@ impl Instruction {
                                              self.arg1(),
                                              intermediate,
                                              result);
-        result
+        (result, page_cross(intermediate, result))
     }
 
-    // Execute the instruction on the cpu.
-    pub fn execute(&self, cpu: &mut cpu::Cpu) {
+    // Execute the instruction on the cpu. Returns the number of cycles taken.
+    pub fn execute(&self, cpu: &mut cpu::Cpu, instruction_location: u16) -> u8 {
         use nes::opcode::Opcode::*;
         let opcode = opcode::decode(self.opcode());
+        let def = lookup_instruction_definition(opcode);
+        let mut cycles = def.cycles;
 
         match opcode {
             // ADd with Carry
             ADC_Imm => {
                 let value = self.immediate_value(cpu);
                 cpu.adc_value(value);
+                cycles += 0;
             }
             ADC_Zero => {
                 let address = self.zero_page_address(cpu);
@@ -210,20 +224,29 @@ impl Instruction {
                 cpu.adc(address);
             }
             ADC_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, page_cross) = self.absolute_address_x(cpu);
                 cpu.adc(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             ADC_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, page_cross) = self.absolute_address_y(cpu);
                 cpu.adc(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             ADC_Ind_X => {
                 let address = self.indirect_address_x(cpu);
                 cpu.adc(address);
             }
             ADC_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, page_cross) = self.indirect_address_y(cpu);
                 cpu.adc(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // bitwise AND with accumulator
@@ -244,20 +267,29 @@ impl Instruction {
                 cpu.and(address);
             }
             AND_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, page_cross) = self.absolute_address_x(cpu);
                 cpu.and(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             AND_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, page_cross) = self.absolute_address_y(cpu);
                 cpu.and(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             AND_Ind_X => {
                 let address = self.indirect_address_x(cpu);
                 cpu.and(address);
             }
             AND_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, page_cross) = self.indirect_address_y(cpu);
                 cpu.and(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // Arithmetic Shift Left
@@ -277,7 +309,7 @@ impl Instruction {
                 cpu.asl(address);
             }
             ASL_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu.asl(address);
             }
 
@@ -294,35 +326,91 @@ impl Instruction {
             // Branch instructions
             BPL => {
                 let address = self.relative_address(cpu);
-                cpu.bpl(address);
+                let branch_taken = cpu.bpl(address);
+                let page_cross = page_cross(instruction_location + def.len, address);
+                if branch_taken {
+                    cycles += 1;
+                }
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             BMI => {
                 let address = self.relative_address(cpu);
-                cpu.bmi(address);
+                let branch_taken = cpu.bmi(address);
+                let page_cross = page_cross(instruction_location + def.len, address);
+                if branch_taken {
+                    cycles += 1;
+                }
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             BVC => {
                 let address = self.relative_address(cpu);
-                cpu.bvc(address);
+                let branch_taken = cpu.bvc(address);
+                let page_cross = page_cross(instruction_location + def.len, address);
+                if branch_taken {
+                    cycles += 1;
+                }
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             BVS => {
                 let address = self.relative_address(cpu);
-                cpu.bvs(address);
+                let branch_taken = cpu.bvs(address);
+                let page_cross = page_cross(instruction_location + def.len, address);
+                if branch_taken {
+                    cycles += 1;
+                }
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             BCC => {
                 let address = self.relative_address(cpu);
-                cpu.bcc(address);
+                let branch_taken = cpu.bcc(address);
+                let page_cross = page_cross(instruction_location + def.len, address);
+                if branch_taken {
+                    cycles += 1;
+                }
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             BCS => {
                 let address = self.relative_address(cpu);
-                cpu.bcs(address);
+                let branch_taken = cpu.bcs(address);
+                let page_cross = page_cross(instruction_location + def.len, address);
+                if branch_taken {
+                    cycles += 1;
+                }
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             BNE => {
                 let address = self.relative_address(cpu);
-                cpu.bne(address);
+                let branch_taken = cpu.bne(address);
+                let page_cross = page_cross(instruction_location + def.len, address);
+                if branch_taken {
+                    cycles += 1;
+                }
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             BEQ => {
                 let address = self.relative_address(cpu);
-                cpu.beq(address);
+                let branch_taken = cpu.beq(address);
+                let page_cross = page_cross(instruction_location + def.len, address);
+                if branch_taken {
+                    cycles += 1;
+                }
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // BReaK
@@ -355,20 +443,29 @@ impl Instruction {
                 cpu.cmp(address);
             }
             CMP_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, page_cross) = self.absolute_address_x(cpu);
                 cpu.cmp(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             CMP_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, page_cross) = self.absolute_address_y(cpu);
                 cpu.cmp(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             CMP_Ind_X => {
                 let address = self.indirect_address_x(cpu);
                 cpu.cmp(address);
             }
             CMP_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, page_cross) = self.indirect_address_y(cpu);
                 cpu.cmp(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // ComPare X register
@@ -413,7 +510,7 @@ impl Instruction {
                 cpu.dec(address);
             }
             DEC_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu.dec(address);
             }
 
@@ -435,20 +532,29 @@ impl Instruction {
                 cpu.eor(address);
             }
             EOR_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, page_cross) = self.absolute_address_x(cpu);
                 cpu.eor(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             EOR_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, page_cross) = self.absolute_address_y(cpu);
                 cpu.eor(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             EOR_Ind_X => {
                 let address = self.indirect_address_x(cpu);
                 cpu.eor(address);
             }
             EOR_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, page_cross) = self.indirect_address_y(cpu);
                 cpu.eor(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // INCrement memory
@@ -465,7 +571,7 @@ impl Instruction {
                 cpu.inc(address);
             }
             INC_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu.inc(address);
             }
 
@@ -503,20 +609,29 @@ impl Instruction {
                 cpu.lda(address);
             }
             LDA_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, page_cross) = self.absolute_address_x(cpu);
                 cpu.lda(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             LDA_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, page_cross) = self.absolute_address_y(cpu);
                 cpu.lda(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             LDA_Ind_X => {
                 let address = self.indirect_address_x(cpu);
                 cpu.lda(address);
             }
             LDA_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, page_cross) = self.indirect_address_y(cpu);
                 cpu.lda(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // LoaD X register
@@ -537,8 +652,11 @@ impl Instruction {
                 cpu.ldx(address);
             }
             LDX_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, page_cross) = self.absolute_address_y(cpu);
                 cpu.ldx(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // LoaD Y register
@@ -559,8 +677,11 @@ impl Instruction {
                 cpu.ldy(address);
             }
             LDY_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, page_cross) = self.absolute_address_x(cpu);
                 cpu.ldy(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // Logical Shift Right
@@ -580,7 +701,7 @@ impl Instruction {
                 cpu.lsr(address);
             }
             LSR_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu.lsr(address);
             }
 
@@ -602,20 +723,29 @@ impl Instruction {
                 cpu.ora(address);
             }
             ORA_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, page_cross) = self.absolute_address_x(cpu);
                 cpu.ora(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             ORA_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, page_cross) = self.absolute_address_y(cpu);
                 cpu.ora(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             ORA_Ind_X => {
                 let address = self.indirect_address_x(cpu);
                 cpu.ora(address);
             }
             ORA_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, page_cross) = self.indirect_address_y(cpu);
                 cpu.ora(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // No OPeration
@@ -640,7 +770,7 @@ impl Instruction {
                 cpu.rol(address);
             }
             ROL_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu.rol(address);
             }
 
@@ -661,7 +791,7 @@ impl Instruction {
                 cpu.ror(address);
             }
             ROR_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu.ror(address);
             }
 
@@ -689,20 +819,29 @@ impl Instruction {
                 cpu.sbc(address);
             }
             SBC_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, page_cross) = self.absolute_address_x(cpu);
                 cpu.sbc(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             SBC_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, page_cross) = self.absolute_address_y(cpu);
                 cpu.sbc(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             SBC_Ind_X => {
                 let address = self.indirect_address_x(cpu);
                 cpu.sbc(address);
             }
             SBC_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, page_cross) = self.indirect_address_y(cpu);
                 cpu.sbc(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // STore Accumulator
@@ -719,11 +858,11 @@ impl Instruction {
                 cpu.sta(address);
             }
             STA_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu.sta(address);
             }
             STA_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, _) = self.absolute_address_y(cpu);
                 cpu.sta(address);
             }
             STA_Ind_X => {
@@ -731,7 +870,7 @@ impl Instruction {
                 cpu.sta(address);
             }
             STA_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, _) = self.indirect_address_y(cpu);
                 cpu.sta(address);
             }
 
@@ -798,9 +937,12 @@ impl Instruction {
             }
             _NOP_Abs_X_1 | _NOP_Abs_X_2 | _NOP_Abs_X_3 | _NOP_Abs_X_4 | _NOP_Abs_X_5 |
             _NOP_Abs_X_6 => {
-                let address = self.absolute_address_x(cpu);
+                let (address, page_cross) = self.absolute_address_x(cpu);
                 let value = cpu.memory.fetch(address);
                 cpu.decode_operand_value(value);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             _NOP_Zero_1 | _NOP_Zero_2 | _NOP_Zero_3 => {
                 let address = self.zero_page_address(cpu);
@@ -820,8 +962,11 @@ impl Instruction {
                 cpu._lax(address);
             }
             _LAX_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, page_cross) = self.absolute_address_y(cpu);
                 cpu._lax(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
             _LAX_Zero => {
                 let address = self.zero_page_address(cpu);
@@ -836,8 +981,11 @@ impl Instruction {
                 cpu._lax(address);
             }
             _LAX_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, page_cross) = self.indirect_address_y(cpu);
                 cpu._lax(address);
+                if page_cross != PageCross::Same {
+                    cycles += 1;
+                }
             }
 
             // Store bitwise and of Accumulator and X register
@@ -870,11 +1018,11 @@ impl Instruction {
                 cpu._dcp(address);
             }
             _DCP_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu._dcp(address);
             }
             _DCP_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, _) = self.absolute_address_y(cpu);
                 cpu._dcp(address);
             }
             _DCP_Zero => {
@@ -890,7 +1038,7 @@ impl Instruction {
                 cpu._dcp(address);
             }
             _DCP_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, _) = self.indirect_address_y(cpu);
                 cpu._dcp(address);
             }
 
@@ -900,11 +1048,11 @@ impl Instruction {
                 cpu._isb(address);
             }
             _ISB_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu._isb(address);
             }
             _ISB_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, _) = self.absolute_address_y(cpu);
                 cpu._isb(address);
             }
             _ISB_Zero => {
@@ -920,7 +1068,7 @@ impl Instruction {
                 cpu._isb(address);
             }
             _ISB_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, _) = self.indirect_address_y(cpu);
                 cpu._isb(address);
             }
 
@@ -930,11 +1078,11 @@ impl Instruction {
                 cpu._slo(address);
             }
             _SLO_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu._slo(address);
             }
             _SLO_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, _) = self.absolute_address_y(cpu);
                 cpu._slo(address);
             }
             _SLO_Zero => {
@@ -950,7 +1098,7 @@ impl Instruction {
                 cpu._slo(address);
             }
             _SLO_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, _) = self.indirect_address_y(cpu);
                 cpu._slo(address);
             }
 
@@ -960,11 +1108,11 @@ impl Instruction {
                 cpu._rla(address);
             }
             _RLA_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu._rla(address);
             }
             _RLA_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, _) = self.absolute_address_y(cpu);
                 cpu._rla(address);
             }
             _RLA_Zero => {
@@ -980,7 +1128,7 @@ impl Instruction {
                 cpu._rla(address);
             }
             _RLA_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, _) = self.indirect_address_y(cpu);
                 cpu._rla(address);
             }
 
@@ -990,11 +1138,11 @@ impl Instruction {
                 cpu._sre(address);
             }
             _SRE_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu._sre(address);
             }
             _SRE_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, _) = self.absolute_address_y(cpu);
                 cpu._sre(address);
             }
             _SRE_Zero => {
@@ -1010,7 +1158,7 @@ impl Instruction {
                 cpu._sre(address);
             }
             _SRE_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, _) = self.indirect_address_y(cpu);
                 cpu._sre(address);
             }
 
@@ -1020,11 +1168,11 @@ impl Instruction {
                 cpu._rra(address);
             }
             _RRA_Abs_X => {
-                let address = self.absolute_address_x(cpu);
+                let (address, _) = self.absolute_address_x(cpu);
                 cpu._rra(address);
             }
             _RRA_Abs_Y => {
-                let address = self.absolute_address_y(cpu);
+                let (address, _) = self.absolute_address_y(cpu);
                 cpu._rra(address);
             }
             _RRA_Zero => {
@@ -1040,9 +1188,11 @@ impl Instruction {
                 cpu._rra(address);
             }
             _RRA_Ind_Y => {
-                let address = self.indirect_address_y(cpu);
+                let (address, _) = self.indirect_address_y(cpu);
                 cpu._rra(address);
             }
         }
+
+        cycles
     }
 }
