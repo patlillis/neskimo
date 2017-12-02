@@ -1,9 +1,7 @@
 use nes::instruction::{BranchTaken, Instruction};
 use nes::memory::Memory;
-use nes::nes::Options;
 use std;
-use std::fs::{File, OpenOptions};
-use std::io::Write;
+use std::fs::File;
 use std::thread;
 use std::time::Duration;
 use utils::arithmetic::{is_negative, concat_bytes};
@@ -29,20 +27,16 @@ pub struct Log {
 
     // Registers.
     pub registers: String,
-
-    // Current cycle ticks.
-    pub cycle: u32,
 }
 
 impl Log {
-    fn log(&self) -> String {
-        format!("{:04X}  {:8} {:3} {:26}  {} CYC:{:3}",
+    pub fn log(&self) -> String {
+        format!("{:04X}  {:8} {:3} {:26}  {}",
                 self.pc,
                 self.instruction,
                 self.mneumonic,
                 self.decoded_args,
-                self.registers,
-                self.cycle)
+                self.registers)
     }
 }
 
@@ -238,29 +232,19 @@ pub struct Cpu {
     pub nmi: bool,
     pub reset: bool,
     pub frame_log: Log,
-    cycle: u32,
-    logfile: Option<File>,
     mem_dump_pc: Option<u16>,
 }
 
 impl Cpu {
-    pub fn new(memory: Box<Memory>, options: Options) -> Cpu {
+    pub fn new(memory: Box<Memory>,
+               program_counter: Option<u16>,
+               mem_dump_counter: Option<u16>)
+               -> Cpu {
         // Get the PC from the RESET vector pointer.
-        let pc = match options.program_counter {
+        let pc = match program_counter {
             Some(pc) => pc,
             None => memory.fetch_u16(RESET_VECTOR),
         };
-
-        let buffer = options
-            .logfile
-            .and_then(|f| {
-                          OpenOptions::new()
-                              .write(true)
-                              .create(true)
-                              .truncate(true)
-                              .open(f)
-                              .ok()
-                      });
 
         Cpu {
             registers: Registers::new_at_pc(pc),
@@ -269,9 +253,7 @@ impl Cpu {
             nmi: false,
             reset: false,
             frame_log: Log { ..Default::default() },
-            cycle: 0,
-            logfile: buffer,
-            mem_dump_pc: options.mem_dump_counter,
+            mem_dump_pc: mem_dump_counter,
         }
     }
 
@@ -291,15 +273,6 @@ impl Cpu {
     /// Time is determined by multiplying the cycles by the clock speed.
     pub fn sleep(&mut self, cycles: u32) {
         thread::sleep(Duration::new(0, (CPU_CLOCK_SPEED * cycles as f32) as u32));
-    }
-
-    pub fn log(&mut self) {
-        match self.logfile {
-            Some(ref mut file) => {
-                writeln!(file, "{}", self.frame_log.log()).ok();
-            }
-            _ => {}
-        }
     }
 
     pub fn decode_operand_value(&mut self, operand: u8) {
@@ -326,7 +299,6 @@ impl Cpu {
         self.frame_log = Log {
             pc: self.registers.pc,
             registers: self.registers.log(),
-            cycle: (self.cycle * 3) % 341,
             ..Default::default()
         };
 
@@ -339,23 +311,14 @@ impl Cpu {
         let instruction_location = self.registers.pc;
         let (instr, definition) = Instruction::parse(instruction_location, self);
 
-        // For visual indication of how long each cycle is taking.
-        // print!("\rExecuting instruction{}.", opcode::decode(instr.0));
-
         // Increment program counter.
         self.registers.pc = self.registers.pc + definition.len;
 
         // Execute the instruction.
         let cycles = instr.execute(self, instruction_location);
 
-        if self.logfile.is_some() {
-            self.log();
-        }
-
         // Check interrupts.
         self.check_interrupts();
-
-        self.cycle += cycles as u32;
 
         cycles as u32
     }

@@ -1,10 +1,12 @@
-use std::cell::RefCell;
 use nes::cpu::Cpu;
 use nes::memory::{BasicMemory, MappedMemory, Memory};
 use nes::ppu::Ppu;
 use rom::PRG_ROM_SIZE;
-use std::rc::Rc;
 use rom::RomFile;
+use std::cell::RefCell;
+use std::fs::{File, OpenOptions};
+use std::io::Write;
+use std::rc::Rc;
 
 #[derive(Debug, Default)]
 pub struct Options {
@@ -21,10 +23,24 @@ pub struct Options {
 pub struct Nes {
     pub cpu: Cpu,
     pub ppu: Rc<RefCell<Ppu>>,
+    cycle: u32,
+    logfile: Option<File>,
 }
 
 impl Nes {
     pub fn new(rom: RomFile, options: Options) -> Nes {
+        // Set up log file.
+        let buffer = options
+            .logfile
+            .and_then(|f| {
+                          OpenOptions::new()
+                              .write(true)
+                              .create(true)
+                              .truncate(true)
+                              .open(f)
+                              .ok()
+                      });
+
         let mut memory = MappedMemory::new(Box::new(BasicMemory::new()));
         let ppu = Rc::new(RefCell::new(Ppu::new()));
         memory.add_mapping(ppu.clone(), ppu.clone());
@@ -58,13 +74,33 @@ impl Nes {
         }
 
         Nes {
-            cpu: Cpu::new(Box::new(memory), options),
+            cpu: Cpu::new(Box::new(memory),
+                          options.program_counter,
+                          options.mem_dump_counter),
             ppu: ppu,
+            cycle: 0,
+            logfile: buffer,
         }
     }
 
     pub fn step(&mut self) {
-        self.cpu.execute();
+        let cycles_taken = self.cpu.execute();
         self.ppu.borrow_mut().step();
+
+        if self.logfile.is_some() {
+            self.log();
+        }
+
+        self.cycle += cycles_taken * 3;
+    }
+
+    fn log(&mut self) {
+        match self.logfile {
+            Some(ref mut file) => {
+                let current_cycle = self.cycle % 341;
+                writeln!(file, "{} CYC:{:3}", self.cpu.frame_log.log(), current_cycle).ok();
+            }
+            _ => {}
+        }
     }
 }
