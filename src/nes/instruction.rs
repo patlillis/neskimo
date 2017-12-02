@@ -329,10 +329,10 @@ impl Instruction {
                 let branch_taken = cpu.bpl(address);
                 let page_cross = page_cross(instruction_location + def.len, address);
                 if branch_taken {
-                    cycles += 1;
-                }
-                if page_cross != PageCross::Same {
-                    cycles += 1;
+                    match page_cross {
+                        PageCross::Same => cycles += 1,
+                        _ => cycles += 2,
+                    }
                 }
             }
             BMI => {
@@ -340,10 +340,10 @@ impl Instruction {
                 let branch_taken = cpu.bmi(address);
                 let page_cross = page_cross(instruction_location + def.len, address);
                 if branch_taken {
-                    cycles += 1;
-                }
-                if page_cross != PageCross::Same {
-                    cycles += 1;
+                    match page_cross {
+                        PageCross::Same => cycles += 1,
+                        _ => cycles += 2,
+                    }
                 }
             }
             BVC => {
@@ -351,10 +351,10 @@ impl Instruction {
                 let branch_taken = cpu.bvc(address);
                 let page_cross = page_cross(instruction_location + def.len, address);
                 if branch_taken {
-                    cycles += 1;
-                }
-                if page_cross != PageCross::Same {
-                    cycles += 1;
+                    match page_cross {
+                        PageCross::Same => cycles += 1,
+                        _ => cycles += 2,
+                    }
                 }
             }
             BVS => {
@@ -362,10 +362,10 @@ impl Instruction {
                 let branch_taken = cpu.bvs(address);
                 let page_cross = page_cross(instruction_location + def.len, address);
                 if branch_taken {
-                    cycles += 1;
-                }
-                if page_cross != PageCross::Same {
-                    cycles += 1;
+                    match page_cross {
+                        PageCross::Same => cycles += 1,
+                        _ => cycles += 2,
+                    }
                 }
             }
             BCC => {
@@ -373,10 +373,10 @@ impl Instruction {
                 let branch_taken = cpu.bcc(address);
                 let page_cross = page_cross(instruction_location + def.len, address);
                 if branch_taken {
-                    cycles += 1;
-                }
-                if page_cross != PageCross::Same {
-                    cycles += 1;
+                    match page_cross {
+                        PageCross::Same => cycles += 1,
+                        _ => cycles += 2,
+                    }
                 }
             }
             BCS => {
@@ -384,10 +384,10 @@ impl Instruction {
                 let branch_taken = cpu.bcs(address);
                 let page_cross = page_cross(instruction_location + def.len, address);
                 if branch_taken {
-                    cycles += 1;
-                }
-                if page_cross != PageCross::Same {
-                    cycles += 1;
+                    match page_cross {
+                        PageCross::Same => cycles += 1,
+                        _ => cycles += 2,
+                    }
                 }
             }
             BNE => {
@@ -395,10 +395,10 @@ impl Instruction {
                 let branch_taken = cpu.bne(address);
                 let page_cross = page_cross(instruction_location + def.len, address);
                 if branch_taken {
-                    cycles += 1;
-                }
-                if page_cross != PageCross::Same {
-                    cycles += 1;
+                    match page_cross {
+                        PageCross::Same => cycles += 1,
+                        _ => cycles += 2,
+                    }
                 }
             }
             BEQ => {
@@ -406,10 +406,10 @@ impl Instruction {
                 let branch_taken = cpu.beq(address);
                 let page_cross = page_cross(instruction_location + def.len, address);
                 if branch_taken {
-                    cycles += 1;
-                }
-                if page_cross != PageCross::Same {
-                    cycles += 1;
+                    match page_cross {
+                        PageCross::Same => cycles += 1,
+                        _ => cycles += 2,
+                    }
                 }
             }
 

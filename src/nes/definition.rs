@@ -21,7 +21,7 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
         ADC_Imm => def(2, 2),
         ADC_Zero => def(2, 3),
         ADC_Zero_X => def(2, 4),
-        ADC_Abs => def(3, 3),
+        ADC_Abs => def(3, 4),
         ADC_Abs_X => def(3, 4),
         ADC_Abs_Y => def(3, 4),
         ADC_Ind_X => def(2, 6),
@@ -178,7 +178,7 @@ pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefin
 
         // Stack Instructions
         TXS => def(1, 2),
-        TSX => def(1, 3),
+        TSX => def(1, 2),
         PHA => def(1, 3),
         PLA => def(1, 4),
         PHP => def(1, 3),

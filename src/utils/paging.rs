@@ -1,8 +1,20 @@
-#[derive(PartialEq)]
+use std::fmt;
+
+#[derive(PartialEq, Debug)]
 pub enum PageCross {
     Same,
     Backwards,
     Forwards,
+}
+
+impl fmt::Display for PageCross {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            PageCross::Same => write!(f, "Same"),
+            PageCross::Backwards => write!(f, "Backwards"),
+            PageCross::Forwards => write!(f, "Forwards"),
+        }
+    }
 }
 
 // Gets the page for addr, which is the upper byte. So for example, the address
@@ -20,7 +32,7 @@ pub fn page_cross(addr1: u16, addr2: u16) -> PageCross {
 
     if page1 > page2 {
         PageCross::Backwards
-    } else if page1 > page2 {
+    } else if page1 < page2 {
         PageCross::Forwards
     } else {
         PageCross::Same

@@ -326,7 +326,7 @@ impl Cpu {
         self.frame_log = Log {
             pc: self.registers.pc,
             registers: self.registers.log(),
-            cycle: self.cycle % 340,
+            cycle: (self.cycle * 3) % 341,
             ..Default::default()
         };
 
