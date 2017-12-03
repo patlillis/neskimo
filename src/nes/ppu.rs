@@ -1,16 +1,19 @@
 use nes::memory::{Memory, MemoryMapping};
 
-/// Emulated screen width in pixels.
+// Each CPU cycle takes as long as 3 PPU cycles.
+pub const PPU_CYCLE_MULTIPLIER: u32 = 3;
+
+// Emulated screen width in pixels.
 pub const SCREEN_WIDTH: usize = 256;
-/// Emulated screen height in pixels.
+// Emulated screen height in pixels.
 pub const SCREEN_HEIGHT: usize = 240;
-/// Number of pixels in the emulated screen.
+// Number of pixels in the emulated screen.
 pub const PIXEL_COUNT: usize = SCREEN_WIDTH * SCREEN_HEIGHT;
-/// Screen texture size in bytes.
+// Screen texture size in bytes.
 pub const SCREEN_SIZE: usize = PIXEL_COUNT * 3;
 
 pub struct Ppu {
-    pub cycle: usize,
+    pub cycle: u32,
     pub screen: [u8; SCREEN_SIZE],
     ppuctrl: u8,
     ppumask: u8,
@@ -50,18 +53,20 @@ impl Ppu {
         }
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self, cycles: u32) {
         for i in 0..(PIXEL_COUNT - 1) {
             self.screen[i * 3] = self.cycle as u8;
             self.screen[i * 3 + 1] = 0;
             self.screen[i * 3 + 2] = 0;
         }
 
-        self.screen[115 * SCREEN_WIDTH + (self.cycle * 3)] = 255;
-        self.screen[115 * SCREEN_WIDTH + (self.cycle * 3) + 1] = 255;
-        self.screen[115 * SCREEN_WIDTH + (self.cycle * 3) + 2] = 255;
+        let cycle_index = (self.cycle * 3) as usize;
 
-        self.cycle = self.cycle + 1;;
+        self.screen[115 * SCREEN_WIDTH + cycle_index] = 255;
+        self.screen[115 * SCREEN_WIDTH + cycle_index + 1] = 255;
+        self.screen[115 * SCREEN_WIDTH + cycle_index + 2] = 255;
+
+        self.cycle = (self.cycle + cycles) % 341;
     }
 }
 

@@ -1,6 +1,6 @@
 use nes::cpu::Cpu;
 use nes::memory::{BasicMemory, MappedMemory, Memory};
-use nes::ppu::Ppu;
+use nes::ppu::{PPU_CYCLE_MULTIPLIER, Ppu};
 use rom::PRG_ROM_SIZE;
 use rom::RomFile;
 use std::cell::RefCell;
@@ -84,14 +84,14 @@ impl Nes {
     }
 
     pub fn step(&mut self) {
-        let cycles_taken = self.cpu.execute();
-        self.ppu.borrow_mut().step();
+        let cycles_taken = self.cpu.execute() * PPU_CYCLE_MULTIPLIER;
+        self.ppu.borrow_mut().step(cycles_taken);
 
         if self.logfile.is_some() {
             self.log();
         }
 
-        self.cycle += cycles_taken * 3;
+        self.cycle += cycles_taken;
     }
 
     fn log(&mut self) {
