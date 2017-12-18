@@ -38,6 +38,10 @@ fn main() {
                 .value_name("PROGRAM COUNTER")
                 .takes_value(true)
                 .help("When executaion reaches this point, contents of memory will be written to mem_dump.bin"))
+        .arg(Arg::with_name("FPS")
+                .short("f")
+                .long("fps")
+                .help("Print frames-per-second during emulator run"))
         .after_help("EXAMPLES:
     neskimo mario.nes
     neskimo -l=testing.log donkey_kong.nes
@@ -62,6 +66,8 @@ fn main() {
         .value_of("MEM_DUMP")
         .and_then(|s| u16::from_str_radix(s, 16).ok());
 
+    let fps = matches.is_present("FPS");
+
     let options = Options {
         logfile: logfile,
         program_counter: pc,
@@ -75,12 +81,15 @@ fn main() {
 
     // Test screen that fades from black to blue and has a single pixel moving
     // across it.
-    let (mut gfx, _) = Gfx::new();
+    let (mut gfx, _) = Gfx::new(fps);
 
     'run: loop {
-        nes.step();
+        let new_frame = nes.step();
 
-        gfx.composite(&nes.ppu.borrow().screen);
+        if new_frame {
+            gfx.composite(&mut nes.ppu.borrow_mut().screen);
+        }
+
         for event in gfx.events.poll_iter() {
             match event {
                 Event::Quit { .. } => break 'run,
