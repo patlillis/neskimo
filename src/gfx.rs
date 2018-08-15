@@ -1,7 +1,8 @@
-use nes::ppu::{SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_SIZE};
-use sdl2::{init, Sdl, EventPump};
+use nes::ppu::{SCREEN_HEIGHT, SCREEN_SIZE, SCREEN_WIDTH};
 use sdl2::pixels::PixelFormatEnum::BGR24;
-use sdl2::render::{Renderer, Texture, TextureAccess};
+use sdl2::render::{Canvas, TextureAccess, TextureCreator};
+use sdl2::video::{Window, WindowContext};
+use sdl2::{init, EventPump, Sdl};
 use time::PreciseTime;
 
 const FONT_HEIGHT: usize = 10;
@@ -18,6 +19,7 @@ const STATUS_LINE_Y: usize = SCREEN_HEIGHT - STATUS_LINE_PADDING - FONT_HEIGHT;
 // (c) Yusuke Kamiyamane, http://pinvoke.com/
 //
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 const FONT_GLYPHS: [u8; FONT_GLYPH_LENGTH] = [
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  // ' '
       0,  64,  64,  64,  64,  64,   0,  64,   0,   0,  // '!'
@@ -116,6 +118,7 @@ const FONT_GLYPHS: [u8; FONT_GLYPH_LENGTH] = [
       0,  80, 160,   0,   0,   0,   0,   0,   0,   0,  // '~'
 ];
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 const FONT_ADVANCES: [u8; FONT_GLYPH_COUNT] =
     [3 /*   */, 3 /* ! */, 4 /* " */, 6 /* # */, 6 /* $ */,
      8 /* % */, 6 /* & */, 2 /* ' */, 4 /* ( */, 4 /* ) */,
@@ -146,12 +149,14 @@ enum GlyphColor {
     Black,
 }
 
-fn draw_glyph(pixels: &mut [u8],
-              surface_width: usize,
-              x: isize,
-              y: isize,
-              color: GlyphColor,
-              glyph_index: usize) {
+fn draw_glyph(
+    pixels: &mut [u8],
+    surface_width: usize,
+    x: isize,
+    y: isize,
+    color: GlyphColor,
+    glyph_index: usize,
+) {
     let color_byte = match color {
         GlyphColor::White => 0xff,
         GlyphColor::Black => 0x00,
@@ -161,8 +166,8 @@ fn draw_glyph(pixels: &mut [u8],
         for x_index in 0..8 {
             if ((row >> (7 - x_index) as usize) & 1) != 0 {
                 for channel in 0..3 {
-                    let mut index = (y + y_index) * (surface_width as isize) * 3 +
-                                    (x + x_index) * 3;
+                    let mut index =
+                        (y + y_index) * (surface_width as isize) * 3 + (x + x_index) * 3;
                     index += channel;
 
                     if index >= 0 && index < pixels.len() as isize {
@@ -178,61 +183,61 @@ pub fn draw_text(pixels: &mut [u8], surface_width: usize, mut x: isize, y: isize
     for i in 0..string.len() {
         let glyph_index = (string.as_bytes()[i] - 32) as usize;
         if glyph_index < FONT_ADVANCES.len() {
-            draw_glyph(pixels,
-                       surface_width,
-                       x,
-                       y + 1,
-                       GlyphColor::Black,
-                       glyph_index); // Shadow
+            draw_glyph(
+                pixels,
+                surface_width,
+                x,
+                y + 1,
+                GlyphColor::Black,
+                glyph_index,
+            ); // Shadow
             draw_glyph(pixels, surface_width, x, y, GlyphColor::White, glyph_index); // Main
             x += FONT_ADVANCES[glyph_index] as isize;
         }
     }
 }
 
-
-pub struct Gfx<'a> {
-    pub renderer: Renderer<'a>,
-    pub texture: Texture,
+pub struct Gfx {
+    pub canvas: Canvas<Window>,
+    pub texture_creator: TextureCreator<WindowContext>,
     pub events: EventPump,
     show_fps: bool,
     // Used to measure FPS.
     last_render: PreciseTime,
 }
 
-impl<'a> Gfx<'a> {
-    pub fn new(show_fps: bool) -> (Gfx<'a>, Sdl) {
-        // FIXME: Handle SDL better
+impl Gfx {
+    pub fn new(show_fps: bool) -> (Gfx, Sdl) {
+        // TODO: Handle SDL better.
 
         let sdl = init().unwrap();
-        let mut window_builder = sdl.video()
-            .unwrap()
-            .window("neskimo", SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
+        let mut window_builder =
+            sdl.video()
+                .unwrap()
+                .window("neskimo", SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
         let window = window_builder.position_centered().build().unwrap();
 
-        let renderer = window
-            .renderer()
+        let canvas = window
+            .into_canvas()
             .accelerated()
             .present_vsync()
             .build()
             .unwrap();
-        let texture = renderer
-            .create_texture(BGR24,
-                            TextureAccess::Streaming,
-                            SCREEN_WIDTH as u32,
-                            SCREEN_HEIGHT as u32)
-            .unwrap();
+
+        let texture_creator = canvas.texture_creator();
 
         let events = sdl.event_pump().unwrap();
 
-        (Gfx {
-             renderer: renderer,
-             texture: texture,
-             events: events,
-             show_fps: show_fps,
-             last_render: PreciseTime::now(),
-         },
-         sdl)
+        (
+            Gfx {
+                canvas: canvas,
+                texture_creator: texture_creator,
+                events: events,
+                show_fps: show_fps,
+                last_render: PreciseTime::now(),
+            },
+            sdl,
+        )
     }
 
     /// Copies the overlay onto the given screen and displays it to the SDL window.
@@ -244,23 +249,30 @@ impl<'a> Gfx<'a> {
         self.last_render = new_time;
 
         if self.show_fps {
-            draw_text(ppu_screen,
-                      SCREEN_WIDTH,
-                      STATUS_LINE_X as isize,
-                      STATUS_LINE_Y as isize,
-                      &format!("FPS: {:.1}", fps));
+            draw_text(
+                ppu_screen,
+                SCREEN_WIDTH,
+                STATUS_LINE_X as isize,
+                STATUS_LINE_Y as isize,
+                &format!("FPS: {:.1}", fps),
+            );
         }
 
-        self.blit(ppu_screen);
-        self.renderer.clear();
-        self.renderer.copy(&self.texture, None, None).ok();
-        self.renderer.present();
-    }
+        // TODO: Don't create a new texture each time.
+        let mut texture = self
+            .texture_creator
+            .create_texture(
+                BGR24,
+                TextureAccess::Streaming,
+                SCREEN_WIDTH as u32,
+                SCREEN_HEIGHT as u32,
+            )
+            .unwrap();
 
-    /// Updates the window texture with new screen data.
-    fn blit(&mut self, ppu_screen: &[u8; SCREEN_SIZE]) {
-        self.texture
-            .update(None, ppu_screen, SCREEN_WIDTH * 3)
-            .unwrap()
+        texture.update(None, ppu_screen, SCREEN_WIDTH * 3).unwrap();
+
+        self.canvas.clear();
+        self.canvas.copy(&texture, None, None).ok();
+        self.canvas.present();
     }
 }
