@@ -56,8 +56,9 @@ pub struct RomFile {
 // TODO: finish this up.
 impl fmt::Debug for RomFile {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f,
-                 "\
+        writeln!(
+            f,
+            "\
 Game name        : {:?}
 Has trainer data : {:?}
 PRG ROM size     : {:?} bytes
@@ -68,16 +69,17 @@ TV System        : {:?}
 VS Unisystem     : {:?}
 PlayChoice-10    : {:?}
 Mapper #         : {:?}",
-                 self.game_name,
-                 self.trainer_data.is_some(),
-                 self.prg_rom_data.len() * PRG_ROM_SIZE,
-                 self.chr_rom_data.len() * CHR_ROM_SIZE,
-                 self.prg_ram_size * PRG_RAM_SIZE,
-                 self.mirror_type,
-                 self.tv_system,
-                 self.vs_cart,
-                 self.play_choice,
-                 self.mapper)
+            self.game_name,
+            self.trainer_data.is_some(),
+            self.prg_rom_data.len() * PRG_ROM_SIZE,
+            self.chr_rom_data.len() * CHR_ROM_SIZE,
+            self.prg_ram_size * PRG_RAM_SIZE,
+            self.mirror_type,
+            self.tv_system,
+            self.vs_cart,
+            self.play_choice,
+            self.mapper
+        )
     }
 }
 
@@ -103,14 +105,18 @@ impl RomFile {
     pub fn new_from_buffer(game_name: String, rom: &[u8]) -> Result<RomFile> {
         // File must have enough space to be a valid header.
         if rom.len() < 16 {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "Invalid iNES header: file less than 16 bytes."));
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Invalid iNES header: file less than 16 bytes.",
+            ));
         }
 
         // Bytes 0-3: Check "NES" declaration.
         if &rom[0..3] != "NES".as_bytes() || rom[3] != 0x1a {
-            return Err(Error::new(ErrorKind::InvalidData,
-                                  "Invalid iNES header: missing \"NES\" declaration."));
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Invalid iNES header: missing \"NES\" declaration.",
+            ));
         }
 
         // Byte 4: PRG ROM size.

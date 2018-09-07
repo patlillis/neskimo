@@ -78,7 +78,9 @@ pub struct BasicMemory {
 
 impl BasicMemory {
     pub fn new() -> BasicMemory {
-        BasicMemory { backing_store: [0; MEMORY_SIZE] }
+        BasicMemory {
+            backing_store: [0; MEMORY_SIZE],
+        }
     }
 }
 
@@ -169,9 +171,11 @@ impl MappedMemory {
         }
     }
 
-    pub fn add_mapping(&mut self,
-                       memory: Rc<RefCell<Memory>>,
-                       mapping: Rc<RefCell<MemoryMapping>>) {
+    pub fn add_mapping(
+        &mut self,
+        memory: Rc<RefCell<Memory>>,
+        mapping: Rc<RefCell<MemoryMapping>>,
+    ) {
         let fetch_addresses = mapping.borrow().fetch_mappings();
         let store_addresses = mapping.borrow().store_mappings();
 
@@ -186,8 +190,10 @@ impl MappedMemory {
         // Add fetch mappings.
         for fetch_address in &fetch_addresses {
             if self.fetch.contains_key(fetch_address) {
-                warn!("Address {:#04x} is already mapped for fetch",
-                      *fetch_address);
+                warn!(
+                    "Address {:#04x} is already mapped for fetch",
+                    *fetch_address
+                );
                 continue;
             }
             self.fetch.insert(*fetch_address, delegate_index);
@@ -196,8 +202,10 @@ impl MappedMemory {
         // Add store mappings.
         for store_address in &store_addresses {
             if self.store.contains_key(store_address) {
-                warn!("Address {:#04x} is already mapped for store",
-                      *store_address);
+                warn!(
+                    "Address {:#04x} is already mapped for store",
+                    *store_address
+                );
                 continue;
             }
             self.store.insert(*store_address, delegate_index);
@@ -216,11 +224,9 @@ impl Memory for MappedMemory {
 
         // Use the mirrored fetch, or the backing memory.
         match self.fetch.get(&mapped_address) {
-            Some(delegate_index) => {
-                self.delegates[*delegate_index]
-                    .borrow()
-                    .fetch(mapped_address)
-            }
+            Some(delegate_index) => self.delegates[*delegate_index]
+                .borrow()
+                .fetch(mapped_address),
             None => self.fallback_memory.fetch(mapped_address),
         }
     }
@@ -230,11 +236,9 @@ impl Memory for MappedMemory {
 
         // Use the mirrored store, or the backing memory.
         match self.store.get_mut(&mapped_address) {
-            Some(delegate_index) => {
-                self.delegates[*delegate_index]
-                    .borrow_mut()
-                    .store(mapped_address, value)
-            }
+            Some(delegate_index) => self.delegates[*delegate_index]
+                .borrow_mut()
+                .store(mapped_address, value),
             None => self.fallback_memory.store(mapped_address, value),
         }
     }

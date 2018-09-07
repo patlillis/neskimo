@@ -2,7 +2,7 @@ extern crate clap;
 extern crate neskimolib;
 extern crate sdl2;
 
-use clap::{Arg, App};
+use clap::{App, Arg};
 use neskimolib::gfx::Gfx;
 use neskimolib::nes::{Nes, Options};
 use neskimolib::rom::RomFile;
@@ -48,7 +48,6 @@ fn main() {
     neskimo -p=C000 castlevania.nes
     neskimo --logfile=testing.log --program-counter=0F00 my-cool-game.nes")
         .get_matches();
-
 
     // .unwrap() is safe here ROM is required, so clap will crash if it's not there.
     let file_name = matches.value_of("ROM").unwrap();

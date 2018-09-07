@@ -99,9 +99,11 @@ impl Ppu {
 
     pub fn read_from_screen(&self, x: usize, y: usize) -> [u8; 3] {
         let base_index = x + (y * SCREEN_WIDTH);
-        [self.screen[base_index],
-         self.screen[base_index + 1],
-         self.screen[base_index + 2]]
+        [
+            self.screen[base_index],
+            self.screen[base_index + 1],
+            self.screen[base_index + 2],
+        ]
     }
 
     // Perform the number of PPU operations for the set number of cycles. Note
@@ -151,7 +153,6 @@ impl Ppu {
         // self.screen[115 * SCREEN_WIDTH + cycle_index] = 255;
         // self.screen[115 * SCREEN_WIDTH + cycle_index + 1] = 255;
         // self.screen[115 * SCREEN_WIDTH + cycle_index + 2] = 255;
-
     }
 
     // Renders a scanline to the internal "screen".
@@ -190,10 +191,10 @@ impl Memory for Ppu {
             0x2006 => self.ppuaddr,
             0x2007 => self.ppudata,
             0x4014 => self.oamdma,
-            _ => {
-                panic!("Tried to access non-existent PPU register at {:#04x}",
-                       address)
-            }
+            _ => panic!(
+                "Tried to access non-existent PPU register at {:#04x}",
+                address
+            ),
         }
     }
 
@@ -212,10 +213,10 @@ impl Memory for Ppu {
             0x2006 => self.ppuaddr = value,
             0x2007 => self.ppudata = value,
             0x4014 => self.oamdma = value,
-            _ => {
-                panic!("Tried to access non-existent PPU register at {:#04x}",
-                       address)
-            }
+            _ => panic!(
+                "Tried to access non-existent PPU register at {:#04x}",
+                address
+            ),
         };
         old_value
     }
@@ -223,10 +224,14 @@ impl Memory for Ppu {
 
 impl MemoryMapping for Ppu {
     fn fetch_mappings(&self) -> Vec<u16> {
-        vec![0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x4014]
+        vec![
+            0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x4014,
+        ]
     }
 
     fn store_mappings(&self) -> Vec<u16> {
-        vec![0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x4014]
+        vec![
+            0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x4014,
+        ]
     }
 }

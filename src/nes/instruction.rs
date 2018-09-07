@@ -1,7 +1,7 @@
 use nes::cpu;
 use nes::opcode;
 use std;
-use utils::arithmetic::{concat_bytes, add_relative};
+use utils::arithmetic::{add_relative, concat_bytes};
 use utils::paging::{page_cross, PageCross};
 
 use nes::definition::*;
@@ -176,10 +176,12 @@ impl Instruction {
     fn indirect_address_x(&self, cpu: &mut cpu::Cpu) -> u16 {
         let address = self.zero_page_address_x(cpu);
         let result = cpu.memory.fetch_u16_wrap_msb(address);
-        cpu.frame_log.decoded_args = format!("(${:02X},X) @ {:02X} = {:04X}",
-                                             self.arg1(),
-                                             address,
-                                             result);
+        cpu.frame_log.decoded_args = format!(
+            "(${:02X},X) @ {:02X} = {:04X}",
+            self.arg1(),
+            address,
+            result
+        );
         result
     }
 
@@ -190,10 +192,12 @@ impl Instruction {
         let address = self.zero_page_address(cpu);
         let intermediate = cpu.memory.fetch_u16_wrap_msb(address);
         let result = intermediate.wrapping_add(cpu.registers.y as u16);
-        cpu.frame_log.decoded_args = format!("(${:02X}),Y = {:04X} @ {:04X}",
-                                             self.arg1(),
-                                             intermediate,
-                                             result);
+        cpu.frame_log.decoded_args = format!(
+            "(${:02X}),Y = {:04X} @ {:04X}",
+            self.arg1(),
+            intermediate,
+            result
+        );
         (result, page_cross(intermediate, result))
     }
 
@@ -935,8 +939,8 @@ impl Instruction {
                 let value = cpu.memory.fetch(address);
                 cpu.decode_operand_value(value);
             }
-            _NOP_Abs_X_1 | _NOP_Abs_X_2 | _NOP_Abs_X_3 | _NOP_Abs_X_4 | _NOP_Abs_X_5 |
-            _NOP_Abs_X_6 => {
+            _NOP_Abs_X_1 | _NOP_Abs_X_2 | _NOP_Abs_X_3 | _NOP_Abs_X_4 | _NOP_Abs_X_5
+            | _NOP_Abs_X_6 => {
                 let (address, page_cross) = self.absolute_address_x(cpu);
                 let value = cpu.memory.fetch(address);
                 cpu.decode_operand_value(value);
@@ -949,8 +953,8 @@ impl Instruction {
                 let value = cpu.memory.fetch(address);
                 cpu.decode_operand_value(value);
             }
-            _NOP_Zero_X_1 | _NOP_Zero_X_2 | _NOP_Zero_X_3 | _NOP_Zero_X_4 | _NOP_Zero_X_5 |
-            _NOP_Zero_X_6 => {
+            _NOP_Zero_X_1 | _NOP_Zero_X_2 | _NOP_Zero_X_3 | _NOP_Zero_X_4 | _NOP_Zero_X_5
+            | _NOP_Zero_X_6 => {
                 let address = self.zero_page_address_x(cpu);
                 let value = cpu.memory.fetch(address);
                 cpu.decode_operand_value(value);

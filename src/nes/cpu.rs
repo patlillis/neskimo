@@ -4,7 +4,7 @@ use std;
 use std::fs::File;
 use std::thread;
 use std::time::Duration;
-use utils::arithmetic::{is_negative, concat_bytes};
+use utils::arithmetic::{concat_bytes, is_negative};
 
 // How long in nanoseconds it takes for a cpu cycle to complete.
 const CPU_CLOCK_SPEED: f32 = 558.65921787709;
@@ -31,12 +31,10 @@ pub struct Log {
 
 impl Log {
     pub fn log(&self) -> String {
-        format!("{:04X}  {:8} {:3} {:26}  {}",
-                self.pc,
-                self.instruction,
-                self.mneumonic,
-                self.decoded_args,
-                self.registers)
+        format!(
+            "{:04X}  {:8} {:3} {:26}  {}",
+            self.pc, self.instruction, self.mneumonic, self.decoded_args, self.registers
+        )
     }
 }
 
@@ -172,20 +170,17 @@ pub struct Registers {
 
 impl std::fmt::Display for Registers {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f,
-               "Registers(\
-                a: {:#04x}, \
-                x: {:#04x}, \
-                y: {:#04x}, \
-                p: {}, \
-                sp: {:#04x}, \
-                pc: {:#06x})",
-               self.a,
-               self.x,
-               self.y,
-               self.p,
-               self.sp,
-               self.pc)
+        write!(
+            f,
+            "Registers(\
+             a: {:#04x}, \
+             x: {:#04x}, \
+             y: {:#04x}, \
+             p: {}, \
+             sp: {:#04x}, \
+             pc: {:#06x})",
+            self.a, self.x, self.y, self.p, self.sp, self.pc
+        )
     }
 }
 
@@ -216,12 +211,14 @@ impl Registers {
     }
 
     pub fn log(&self) -> String {
-        format!("A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}",
-                self.a,
-                self.x,
-                self.y,
-                self.p.0 | U_FLAG,
-                self.sp)
+        format!(
+            "A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}",
+            self.a,
+            self.x,
+            self.y,
+            self.p.0 | U_FLAG,
+            self.sp
+        )
     }
 }
 
@@ -236,10 +233,11 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(memory: Box<Memory>,
-               program_counter: Option<u16>,
-               mem_dump_counter: Option<u16>)
-               -> Cpu {
+    pub fn new(
+        memory: Box<Memory>,
+        program_counter: Option<u16>,
+        mem_dump_counter: Option<u16>,
+    ) -> Cpu {
         // Get the PC from the RESET vector pointer.
         let pc = match program_counter {
             Some(pc) => pc,
@@ -252,7 +250,9 @@ impl Cpu {
             irq: false,
             nmi: false,
             reset: false,
-            frame_log: Log { ..Default::default() },
+            frame_log: Log {
+                ..Default::default()
+            },
             mem_dump_pc: mem_dump_counter,
         }
     }
@@ -488,7 +488,6 @@ impl Cpu {
         self.registers.p.set_i(true);
     }
 
-
     // Copies the current contents of the X register into the stack
     // register.
     //
@@ -503,7 +502,6 @@ impl Cpu {
         let value = self.registers.x;
         self.registers.sp = value;
     }
-
 
     // Copies the current contents of the stack register into the X
     // register and sets the zero and negative flags as appropriate.
@@ -521,7 +519,6 @@ impl Cpu {
         self.set_z_flag(value);
         self.set_n_flag(value);
     }
-
 
     // Push value onto stack, and decrement stack pointer.
     pub fn push(&mut self, value: u8) {
@@ -596,7 +593,6 @@ impl Cpu {
         self.registers.p.0 = value & !B_FLAG & !U_FLAG;
     }
 
-
     // This instruction adds the contents of a memory location to the
     // accumulator together with the carry bit, and stores the sum
     // in the accumulator. If overflow occurs the carry bit is set.
@@ -643,7 +639,6 @@ impl Cpu {
         self.registers.p.set_v(overflow);
     }
 
-
     // Performs a bitwise and of the contents of a memory location
     // with the accumulator, storing the result back in the accumulator.
     //
@@ -667,7 +662,6 @@ impl Cpu {
         self.set_n_flag(result);
     }
 
-
     // This instruction subtracts the contents a memory location from
     // the accumulator, adding the carry bit, and stores the result
     // in the accumulator. If overflow does not occur, the carry bit is set.
@@ -690,7 +684,6 @@ impl Cpu {
     pub fn sbc_value(&mut self, arg: u8) {
         self.adc_value(!arg);
     }
-
 
     // Rotates bits in the memory address to the left. Bit 7 is placed in
     // the carry flag, and bit 0 is set to the old value of the carry flag.
@@ -731,7 +724,6 @@ impl Cpu {
         rotated_value
     }
 
-
     // Rotates bits in the memory address to the right. Bit 0 is placed in
     // the carry flag, and bit 7 is set to the old value of the carry flag.
     //
@@ -770,7 +762,6 @@ impl Cpu {
 
         rotated_value
     }
-
 
     // Shifts all bits of the value one bit left. Bit 0 is set to 0,
     // and bit 7 is placed in the carry flag. This multiplies the value
@@ -811,7 +802,6 @@ impl Cpu {
         shifted_value
     }
 
-
     // Shifts all bits of the value one bit right. Bit 7 is set to 0,
     // and bit 0 is placed in the carry flag.
     //
@@ -848,7 +838,6 @@ impl Cpu {
 
         shifted_value
     }
-
 
     // Used to test if one or more bits are set at the specified memory
     // location. The value in A is ANDed with the value in memory to
@@ -910,7 +899,6 @@ impl Cpu {
         self.decode_operand_value(old_value);
     }
 
-
     // Performs a bitwise exclusive or of the contents of a memory location
     // with the accumulator, storing the result back in the accumulator.
     //
@@ -933,7 +921,6 @@ impl Cpu {
         self.set_z_flag(result);
         self.set_n_flag(result);
     }
-
 
     // Compares the contents of A, X, or Y register with another value,
     // and sets the carry, zero, and negative flags as appropriate.
@@ -995,14 +982,12 @@ impl Cpu {
         self.compare(register, value);
     }
 
-
     // Sets the program counter to the address specified.
     //
     // No processor status flags are affected.
     pub fn jmp(&mut self, address: u16) {
         self.registers.pc = address;
     }
-
 
     // Pushes the program counter (minus one) of the return from
     // the subroutine onto the stack, then sets the program counter
@@ -1015,7 +1000,6 @@ impl Cpu {
         self.registers.pc = address;
     }
 
-
     // Address is pulled off the stack, and program counter is set to
     // that address + 1.
     //
@@ -1024,7 +1008,6 @@ impl Cpu {
         let address = self.pull_u16();
         self.registers.pc = address + 1;
     }
-
 
     // Loads a byte into the accumulator setting the zero and
     // negative flags as appropriate.
@@ -1048,7 +1031,6 @@ impl Cpu {
         self.set_z_flag(value);
         self.set_n_flag(value);
     }
-
 
     // Loads a byte of memory into the X register setting the zero and
     // negative flags as appropriate.
@@ -1095,7 +1077,6 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
-
     // Performs a bitwise or of the contents of a memory location
     // with the accumulator, storing the result back in the accumulator.
     //
@@ -1118,7 +1099,6 @@ impl Cpu {
         self.set_z_flag(result);
         self.set_n_flag(result);
     }
-
 
     // Causes no chage to the processor other than normal incrementing
     // of the program counter.
@@ -1313,7 +1293,6 @@ impl Cpu {
         self.set_n_flag(value);
     }
 
-
     // Forces an interrupt. The PC and status flags are pushed onto the stack,
     // then the PC is set to the value in the IRQ vector ($fffe) and the
     // break status flag is set to 1.
@@ -1413,7 +1392,6 @@ impl Cpu {
         condition
     }
 
-
     // Used to return from an interrupt handling routine. Pulls
     // the processor flags and PC from the stack.
     //
@@ -1430,7 +1408,6 @@ impl Cpu {
         self.registers.p.0 = status;
         self.registers.pc = pc;
     }
-
 
     // UNOFFICIAL OPERATION
     // Shortcut for LDA value then TAX.

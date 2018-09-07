@@ -1,8 +1,8 @@
 use nes::cpu::Cpu;
 use nes::memory::{BasicMemory, MappedMemory, Memory};
-use nes::ppu::{PPU_CYCLE_MULTIPLIER, Ppu};
-use rom::PRG_ROM_SIZE;
+use nes::ppu::{Ppu, PPU_CYCLE_MULTIPLIER};
 use rom::RomFile;
+use rom::PRG_ROM_SIZE;
 use std::cell::RefCell;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
@@ -30,16 +30,14 @@ pub struct Nes {
 impl Nes {
     pub fn new(rom: RomFile, options: Options) -> Nes {
         // Set up log file.
-        let buffer = options
-            .logfile
-            .and_then(|f| {
-                          OpenOptions::new()
-                              .write(true)
-                              .create(true)
-                              .truncate(true)
-                              .open(f)
-                              .ok()
-                      });
+        let buffer = options.logfile.and_then(|f| {
+            OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(f)
+                .ok()
+        });
 
         let mut memory = MappedMemory::new(Box::new(BasicMemory::new()));
         let ppu = Rc::new(RefCell::new(Ppu::new()));
@@ -74,9 +72,11 @@ impl Nes {
         }
 
         Nes {
-            cpu: Cpu::new(Box::new(memory),
-                          options.program_counter,
-                          options.mem_dump_counter),
+            cpu: Cpu::new(
+                Box::new(memory),
+                options.program_counter,
+                options.mem_dump_counter,
+            ),
             ppu: ppu,
             cycle: 0,
             logfile: buffer,
