@@ -47,7 +47,7 @@ static PALETTE: [u8; 192] = [
 
 pub struct Ppu {
     pub cycle: u32,
-    pub screen: [u8; SCREEN_SIZE],
+    pub screen: Box<[u8; SCREEN_SIZE]>,
     current_scanline: u16,
     odd_frame: bool,
     ppuctrl: u8,
@@ -65,7 +65,7 @@ impl Default for Ppu {
     fn default() -> Ppu {
         Ppu {
             cycle: 0,
-            screen: [0x00; SCREEN_SIZE],
+            screen: Box::new([0x00; SCREEN_SIZE]),
             current_scanline: 241,
             odd_frame: false,
             ppuctrl: 0x00,
@@ -84,8 +84,6 @@ impl Default for Ppu {
 impl Ppu {
     pub fn new() -> Ppu {
         Ppu {
-            cycle: 0,
-            screen: [0x00; SCREEN_SIZE],
             ..Default::default()
         }
     }

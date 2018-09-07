@@ -44,7 +44,7 @@ brew install sdl2
 
 #### Windows & Linux
 
-(Detailed instructions pending)
+Follow the installation instructions on the [`rust-sdl2` GitHub page](https://github.com/Rust-SDL2/rust-sdl2/blob/master/README.md).
 
 ### Install Cargo
 

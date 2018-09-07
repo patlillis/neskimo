@@ -86,7 +86,7 @@ impl Nes {
     // Returns true if we're on a new frame.
     pub fn step(&mut self) -> bool {
         let cycles_taken = self.cpu.execute() * PPU_CYCLE_MULTIPLIER;
-        let (new_frame, v_blank) = self.ppu.borrow_mut().step(cycles_taken);
+        let (new_frame, _v_blank) = self.ppu.borrow_mut().step(cycles_taken);
 
         if self.logfile.is_some() {
             self.log();

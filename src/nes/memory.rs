@@ -73,13 +73,13 @@ pub trait Memory {
 }
 
 pub struct BasicMemory {
-    backing_store: MemoryArray,
+    backing_store: Box<MemoryArray>,
 }
 
 impl BasicMemory {
     pub fn new() -> BasicMemory {
         BasicMemory {
-            backing_store: [0; MEMORY_SIZE],
+            backing_store: Box::new([0x00; MEMORY_SIZE]),
         }
     }
 }
@@ -88,7 +88,7 @@ impl BasicMemory {
 impl Memory for BasicMemory {
     // Resets the memory to an initial state.
     fn reset(&mut self) {
-        self.backing_store = [0; MEMORY_SIZE];
+        self.backing_store = Box::new([0x00; MEMORY_SIZE]);
     }
 
     // Fetches a byte from the specified address in memory.
@@ -107,7 +107,7 @@ impl Memory for BasicMemory {
     // Dumps the memory contents to a string (most likely
     // for writing to a dump file).
     fn dump(&self, file: &mut File) -> io::Result<()> {
-        file.write_all(&self.backing_store)
+        file.write_all(self.backing_store.as_ref())
     }
 }
 
@@ -122,7 +122,7 @@ pub trait MemoryMapping: Memory {
     fn store_mappings(&self) -> Vec<u16>;
 }
 
-// A memory storage type that can defer memory operations to of memory
+// A memory storage type that can defer memory operations to memory
 // implementations, with each fetch/store operation potentially mapped to a
 // specific memory implementation. In addition, memory addresses can be
 // mirrored to always point at another memory address.
@@ -138,14 +138,13 @@ pub struct MappedMemory {
 
 impl MappedMemory {
     pub fn new(fallback_memory: Box<Memory>) -> MappedMemory {
-        let mapped_memory = MappedMemory {
+        MappedMemory {
             fallback_memory: fallback_memory,
             mirrors: HashMap::new(),
             delegates: Vec::new(),
             fetch: HashMap::new(),
             store: HashMap::new(),
-        };
-        mapped_memory
+        }
     }
 
     pub fn add_mirrors(&mut self, mirrors: HashMap<u16, u16>) {
