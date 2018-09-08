@@ -1,10 +1,9 @@
-use nes::cpu;
-use nes::opcode;
+use cpu::{opcode, Cpu};
 use std;
 use utils::arithmetic::{add_relative, concat_bytes};
 use utils::paging::{page_cross, PageCross};
 
-use nes::definition::*;
+use cpu::definition::*;
 
 // Whether a branch was taken. This is used to figure out whether we need to
 // take an extra cycle when executing a branch instruction.
@@ -32,7 +31,7 @@ impl Instruction {
     //
     // If the instruction takes arguments, they will be read from
     // subsequent locations. Also sets CPU's decoded args.
-    pub fn parse(pc: u16, cpu: &mut cpu::Cpu) -> (Instruction, InstructionDefinition) {
+    pub fn parse(pc: u16, cpu: &mut Cpu) -> (Instruction, InstructionDefinition) {
         let raw_opcode = cpu.memory.fetch(pc);
         let opcode = opcode::decode(raw_opcode);
         let def = lookup_instruction_definition(opcode);
@@ -71,14 +70,14 @@ impl Instruction {
         self.2
     }
 
-    fn immediate_value(&self, cpu: &mut cpu::Cpu) -> u8 {
+    fn immediate_value(&self, cpu: &mut Cpu) -> u8 {
         let value = self.arg1();
         cpu.frame_log.decoded_args = format!("#${:02X}", value);
         value
     }
 
     // Get the absolute address from the instruction args.
-    fn absolute_address(&self, cpu: &mut cpu::Cpu) -> u16 {
+    fn absolute_address(&self, cpu: &mut Cpu) -> u16 {
         let address = concat_bytes(self.arg2(), self.arg1());
         cpu.frame_log
             .decoded_args
@@ -89,7 +88,7 @@ impl Instruction {
     // Get the absolute address from the instruction args, and add an offset
     // from the X index register. Also returns whether a page boundary was
     // crossed.
-    fn absolute_address_x(&self, cpu: &mut cpu::Cpu) -> (u16, PageCross) {
+    fn absolute_address_x(&self, cpu: &mut Cpu) -> (u16, PageCross) {
         let base_addr = self.absolute_address(cpu);
         let address = base_addr.wrapping_add(cpu.registers.x as u16);
         cpu.frame_log
@@ -101,7 +100,7 @@ impl Instruction {
     // Get the absolute address from the instruction args, and add an offset
     // from the Y index register. Also returns whether a page boundary was
     // crossed.
-    fn absolute_address_y(&self, cpu: &mut cpu::Cpu) -> (u16, PageCross) {
+    fn absolute_address_y(&self, cpu: &mut Cpu) -> (u16, PageCross) {
         let base_addr = self.absolute_address(cpu);
         let address = base_addr.wrapping_add(cpu.registers.y as u16);
         cpu.frame_log
@@ -115,7 +114,7 @@ impl Instruction {
     // This is used for branch operations, which uses a signed offset from the
     // current program counter. In other words, branches can jump forward or
     // back.
-    fn relative_address(&self, cpu: &mut cpu::Cpu) -> u16 {
+    fn relative_address(&self, cpu: &mut Cpu) -> u16 {
         let arg = self.arg1() as i8;
         let address = add_relative(cpu.registers.pc, arg);
         cpu.frame_log.decoded_args = format!("${:04X}", address);
@@ -123,7 +122,7 @@ impl Instruction {
     }
 
     // Get the zero page address from the instruction args.
-    fn zero_page_address(&self, cpu: &mut cpu::Cpu) -> u16 {
+    fn zero_page_address(&self, cpu: &mut Cpu) -> u16 {
         let address = self.arg1();
         cpu.frame_log.decoded_args = format!("${:02X}", address);
         address as u16
@@ -132,7 +131,7 @@ impl Instruction {
     // Get the zero page address from the instruciton args, and add an offset
     // from the X index register. Note that this add wraps around to always be
     // on the zero page.
-    fn zero_page_address_x(&self, cpu: &mut cpu::Cpu) -> u16 {
+    fn zero_page_address_x(&self, cpu: &mut Cpu) -> u16 {
         let arg1 = self.arg1();
         let result = arg1.wrapping_add(cpu.registers.x);
         cpu.frame_log
@@ -144,7 +143,7 @@ impl Instruction {
     // Get the zero page address from the instruction args, and add an offset
     // from the Y index register. Note that this add wraps around to always be
     // on the zero page.
-    fn zero_page_address_y(&self, cpu: &mut cpu::Cpu) -> u16 {
+    fn zero_page_address_y(&self, cpu: &mut Cpu) -> u16 {
         let arg1 = self.arg1();
         let result = arg1.wrapping_add(cpu.registers.y);
         cpu.frame_log
@@ -160,7 +159,7 @@ impl Instruction {
     // where the two bytes read had to be on the same page. So if the low
     // byte is stored at 0x33ff, then the high byte would be fetched from
     // 0x3300 instead of 0x3400.
-    fn indirect_address(&self, cpu: &mut cpu::Cpu) -> u16 {
+    fn indirect_address(&self, cpu: &mut Cpu) -> u16 {
         cpu.frame_log.decoded_args.push_str("(");
         let address = self.absolute_address(cpu);
         let result = cpu.memory.fetch_u16_wrap_msb(address);
@@ -173,7 +172,7 @@ impl Instruction {
     // Calculates a memory address using by adding X to the 8-bit value in the
     // instruction, THEN use that address to find ANOTHER address, then return
     // THAT address.
-    fn indirect_address_x(&self, cpu: &mut cpu::Cpu) -> u16 {
+    fn indirect_address_x(&self, cpu: &mut Cpu) -> u16 {
         let address = self.zero_page_address_x(cpu);
         let result = cpu.memory.fetch_u16_wrap_msb(address);
         cpu.frame_log.decoded_args = format!(
@@ -188,7 +187,7 @@ impl Instruction {
     // Similar to indirect_address_x, except that the y register value is added
     // after dereferencing the 8-bit value. Also returns whether a page
     // boundary was crossed.
-    fn indirect_address_y(&self, cpu: &mut cpu::Cpu) -> (u16, PageCross) {
+    fn indirect_address_y(&self, cpu: &mut Cpu) -> (u16, PageCross) {
         let address = self.zero_page_address(cpu);
         let intermediate = cpu.memory.fetch_u16_wrap_msb(address);
         let result = intermediate.wrapping_add(cpu.registers.y as u16);
@@ -202,8 +201,8 @@ impl Instruction {
     }
 
     // Execute the instruction on the cpu. Returns the number of cycles taken.
-    pub fn execute(&self, cpu: &mut cpu::Cpu, instruction_location: u16) -> u8 {
-        use nes::opcode::Opcode::*;
+    pub fn execute(&self, cpu: &mut Cpu, instruction_location: u16) -> u8 {
+        use cpu::opcode::Opcode::*;
         let opcode = opcode::decode(self.opcode());
         let def = lookup_instruction_definition(opcode);
         let mut cycles = def.cycles;

@@ -1,6 +1,6 @@
-use nes::cpu::Cpu;
+use cpu::Cpu;
 use nes::memory::{BasicMemory, MappedMemory, Memory};
-use nes::ppu::{Ppu, PPU_CYCLE_MULTIPLIER};
+use ppu::{Ppu, PPU_CYCLE_MULTIPLIER};
 use rom::RomFile;
 use rom::PRG_ROM_SIZE;
 use std::cell::RefCell;

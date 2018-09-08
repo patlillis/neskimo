@@ -1,5 +1,5 @@
-use nes::opcode;
-use nes::opcode::Opcode::*;
+use cpu::opcode::Opcode;
+use cpu::opcode::Opcode::*;
 
 // Details about an instruction.
 pub struct InstructionDefinition {
@@ -15,7 +15,7 @@ fn def(len: u16, cycles: u8) -> InstructionDefinition {
 }
 
 // Get an instruction definition, based on opcode.
-pub fn lookup_instruction_definition(opcode: opcode::Opcode) -> InstructionDefinition {
+pub fn lookup_instruction_definition(opcode: Opcode) -> InstructionDefinition {
     match opcode {
         // ADd with Carry
         ADC_Imm => def(2, 2),

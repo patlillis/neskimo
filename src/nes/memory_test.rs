@@ -1,8 +1,4 @@
-#[macro_use]
-extern crate maplit;
-extern crate neskimolib;
-
-use neskimolib::nes::memory::{BasicMemory, MappedMemory, Memory, MemoryMapping};
+use nes::memory::{BasicMemory, MappedMemory, Memory, MemoryMapping};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -49,7 +45,9 @@ struct TestMemoryMapping {
 
 impl TestMemoryMapping {
     fn new() -> TestMemoryMapping {
-        TestMemoryMapping { last_stored_value: 0x00 }
+        TestMemoryMapping {
+            last_stored_value: 0x00,
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-use nes::instruction::{BranchTaken, Instruction};
+use cpu::instruction::{BranchTaken, Instruction};
 use nes::memory::Memory;
 use std;
 use std::fs::File;

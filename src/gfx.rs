@@ -1,4 +1,4 @@
-use nes::ppu::{SCREEN_HEIGHT, SCREEN_SIZE, SCREEN_WIDTH};
+use ppu::{SCREEN_HEIGHT, SCREEN_SIZE, SCREEN_WIDTH};
 use sdl2::pixels::PixelFormatEnum::BGR24;
 use sdl2::render::{Canvas, TextureAccess, TextureCreator};
 use sdl2::video::{Window, WindowContext};

@@ -50,6 +50,8 @@ pub struct Ppu {
     pub screen: Box<[u8; SCREEN_SIZE]>,
     current_scanline: u16,
     odd_frame: bool,
+
+    // Fields for when the CPU access memory being mapped to the CPU.
     ppuctrl: u8,
     ppumask: u8,
     ppustatus: u8,
@@ -59,6 +61,9 @@ pub struct Ppu {
     ppuaddr: u8,
     ppudata: u8,
     oamdma: u8,
+
+    // VRAM.
+    
 }
 
 impl Default for Ppu {
