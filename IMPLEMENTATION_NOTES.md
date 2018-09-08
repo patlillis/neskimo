@@ -2,11 +2,11 @@ Notes on emulator implementation, options, trade-offs, etc.
 
 <!-- TOC -->
 
-* [Memory Mapping Options](#memory-mapping-options)
-  * [nintengo](#nintengo)
-  * [nes-rs](#nes-rs)
-  * [sprocketnes](#sprocketnes)
-  * [oxidenes](#oxidenes)
+- [Memory Mapping Options](#memory-mapping-options)
+  - [nintengo](#nintengo)
+  - [nes-rs](#nes-rs)
+  - [sprocketnes](#sprocketnes)
+  - [oxidenes](#oxidenes)
 
 <!-- /TOC -->
 

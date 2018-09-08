@@ -104,14 +104,14 @@ EXAMPLES:
 
 Inspiration drawn from these fantastic projects:
 
-* [Nintengo](https://github.com/nwidger/nintengo) by Niels Widger (written in
+- [Nintengo](https://github.com/nwidger/nintengo) by Niels Widger (written in
   Go)
-* [nes-rs](https://github.com/Reshurum/nes-rs) by Walter Kuppens (written in
+- [nes-rs](https://github.com/Reshurum/nes-rs) by Walter Kuppens (written in
   Rust)
-* [sprocketnes](https://github.com/pcwalton/sprocketnes) by Patrick Walton
+- [sprocketnes](https://github.com/pcwalton/sprocketnes) by Patrick Walton
   (written in Rust)
-* [pinky](https://github.com/koute/pinky) by Koute (written in Rust)
-* [oxidenes](https://github.com/iamsix/oxidenes) by iamsix (written in Rust)
+- [pinky](https://github.com/koute/pinky) by Koute (written in Rust)
+- [oxidenes](https://github.com/iamsix/oxidenes) by iamsix (written in Rust)
 
 ## License
 
