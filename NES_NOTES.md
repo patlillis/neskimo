@@ -563,12 +563,12 @@ memory mapped registers at
 and [OAMDMA](https://wiki.nesdev.com/w/index.php/PPU_registers#OAMDMA)
 (`$4014`).
 
-| Address Range          | Size  | Description         |
-| ---------------------- | ----- | ------------------- |
-| `$00` - `$0c` (0 of 4) | `$40` | Sprite Y coordinate |
-| `$01` - `$0d` (1 of 4) | `$40` | Sprite tile #       |
-| `$02` - `$0e` (2 of 4) | `$40` | Sprite attribute    |
-| `$03` - `$0f` (3 of 4) | `$40` | Sprite X coordinate |
+| Address Range          | Size            | Description         |
+| ---------------------- | --------------- | ------------------- |
+| `$00` - `$0c` (0 of 4) | `$40`, 64 bytes | Sprite Y coordinate |
+| `$01` - `$0d` (1 of 4) | `$40`, 64 bytes | Sprite tile #       |
+| `$02` - `$0e` (2 of 4) | `$40`, 64 bytes | Sprite attribute    |
+| `$03` - `$0f` (3 of 4) | `$40`, 64 bytes | Sprite X coordinate |
 
 #### Hardware mapping
 
