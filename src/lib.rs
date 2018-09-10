@@ -1,3 +1,4 @@
+extern crate arrayvec;
 #[macro_use]
 extern crate enum_primitive;
 #[macro_use]

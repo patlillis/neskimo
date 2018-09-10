@@ -1,4 +1,5 @@
-use nes::memory::{Memory, MemoryMapping};
+use arrayvec::ArrayVec;
+use nes::memory::Memory;
 
 // Each CPU cycle takes as long as 3 PPU cycles.
 pub const PPU_CYCLE_MULTIPLIER: u32 = 3;
@@ -61,9 +62,7 @@ pub struct Ppu {
     ppuaddr: u8,
     ppudata: u8,
     oamdma: u8,
-
     // VRAM.
-    
 }
 
 impl Default for Ppu {
@@ -91,6 +90,12 @@ impl Ppu {
         Ppu {
             ..Default::default()
         }
+    }
+
+    pub fn mapped_addresses() -> ArrayVec<[u16; 9]> {
+        ArrayVec::from([
+            0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x4014,
+        ])
     }
 
     pub fn write_to_screen(&mut self, x: usize, y: usize, color: [u8; 3]) {
@@ -179,9 +184,6 @@ impl Ppu {
 }
 
 impl Memory for Ppu {
-    // Resets the memory to an initial state.
-    fn reset(&mut self) {}
-
     // Fetches a byte from the specified address in memory.
     fn fetch(&self, address: u16) -> u8 {
         match address {
@@ -222,19 +224,5 @@ impl Memory for Ppu {
             ),
         };
         old_value
-    }
-}
-
-impl MemoryMapping for Ppu {
-    fn fetch_mappings(&self) -> Vec<u16> {
-        vec![
-            0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x4014,
-        ]
-    }
-
-    fn store_mappings(&self) -> Vec<u16> {
-        vec![
-            0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x4014,
-        ]
     }
 }

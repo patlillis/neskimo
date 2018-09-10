@@ -12,6 +12,7 @@ name = "neskimo"
 path = "src/main.rs"
 
 [dependencies]
+arrayvec = "0.4.7"
 clap = "2.23.3"
 enum_primitive = "0.1"
 log = "0.3"

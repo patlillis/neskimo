@@ -17,7 +17,11 @@ use cpu::{
 use nes::memory::BasicMemory;
 
 fn new_cpu() -> Cpu {
-    Cpu::new(Box::new(BasicMemory::new()), Option::None, Option::None)
+    Cpu::new(
+        Box::new(BasicMemory::with_default_size()),
+        Option::None,
+        Option::None,
+    )
 }
 
 #[test]

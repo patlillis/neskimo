@@ -1,5 +1,5 @@
 use cpu::Cpu;
-use nes::memory::{BasicMemory, MappedMemory, Memory};
+use nes::memory::{BasicMemory, MappedMemory, Memory, DEFAULT_MEMORY_SIZE};
 use ppu::{Ppu, PPU_CYCLE_MULTIPLIER};
 use rom::RomFile;
 use rom::PRG_ROM_SIZE;
@@ -39,9 +39,18 @@ impl Nes {
                 .ok()
         });
 
-        let mut memory = MappedMemory::new(Box::new(BasicMemory::new()));
+        let mut memory = MappedMemory::new();
+        memory.add_mapping(
+            Rc::new(RefCell::new(BasicMemory::with_default_size())),
+            (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
+            (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
+        );
         let ppu = Rc::new(RefCell::new(Ppu::new()));
-        memory.add_mapping(ppu.clone(), ppu.clone());
+        memory.add_mapping(
+            ppu.clone(),
+            Ppu::mapped_addresses(),
+            Ppu::mapped_addresses(),
+        );
 
         // Copy trainer data to 0x7000.
         match rom.trainer_data {
