@@ -110,7 +110,12 @@ impl Nes {
         match self.logfile {
             Some(ref mut file) => {
                 let current_cycle = self.cycle % 341;
-                writeln!(file, "{} CYC:{:3}", self.cpu.frame_log.log(), current_cycle).ok();
+                writeln!(
+                    file,
+                    "{} CYC:{:3}",
+                    self.cpu.frame_log.log(),
+                    current_cycle
+                ).ok();
             }
             _ => {}
         }

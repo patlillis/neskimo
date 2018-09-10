@@ -94,7 +94,8 @@ impl Ppu {
 
     pub fn mapped_addresses() -> ArrayVec<[u16; 9]> {
         ArrayVec::from([
-            0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x4014,
+            0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007,
+            0x4014,
         ])
     }
 
@@ -120,7 +121,8 @@ impl Ppu {
     pub fn step(&mut self, cycles: u32) -> (bool, bool) {
         let mut new_frame = false;
         let mut v_blank = false;
-        let skip_cycle = self.current_scanline == PRE_RENDER_SCANLINE && self.odd_frame;
+        let skip_cycle =
+            self.current_scanline == PRE_RENDER_SCANLINE && self.odd_frame;
         let cycles_per_scanline = if skip_cycle {
             CYCLES_PER_SCANLINE - 1
         } else {
@@ -139,7 +141,9 @@ impl Ppu {
             }
 
             match self.current_scanline {
-                FIRST_VISIBLE_SCANLINE...LAST_VISIBLE_SCANLINE => self.render_scanline(),
+                FIRST_VISIBLE_SCANLINE...LAST_VISIBLE_SCANLINE => {
+                    self.render_scanline()
+                }
                 V_BLANK_SCANLINE => v_blank = true,
                 _ => (),
             }

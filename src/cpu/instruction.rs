@@ -31,7 +31,10 @@ impl Instruction {
     //
     // If the instruction takes arguments, they will be read from
     // subsequent locations. Also sets CPU's decoded args.
-    pub fn parse(pc: u16, cpu: &mut Cpu) -> (Instruction, InstructionDefinition) {
+    pub fn parse(
+        pc: u16,
+        cpu: &mut Cpu,
+    ) -> (Instruction, InstructionDefinition) {
         let raw_opcode = cpu.memory.fetch(pc);
         let opcode = opcode::decode(raw_opcode);
         let def = lookup_instruction_definition(opcode);
@@ -330,7 +333,8 @@ impl Instruction {
             BPL => {
                 let address = self.relative_address(cpu);
                 let branch_taken = cpu.bpl(address);
-                let page_cross = page_cross(instruction_location + def.len, address);
+                let page_cross =
+                    page_cross(instruction_location + def.len, address);
                 if branch_taken {
                     match page_cross {
                         PageCross::Same => cycles += 1,
@@ -341,7 +345,8 @@ impl Instruction {
             BMI => {
                 let address = self.relative_address(cpu);
                 let branch_taken = cpu.bmi(address);
-                let page_cross = page_cross(instruction_location + def.len, address);
+                let page_cross =
+                    page_cross(instruction_location + def.len, address);
                 if branch_taken {
                     match page_cross {
                         PageCross::Same => cycles += 1,
@@ -352,7 +357,8 @@ impl Instruction {
             BVC => {
                 let address = self.relative_address(cpu);
                 let branch_taken = cpu.bvc(address);
-                let page_cross = page_cross(instruction_location + def.len, address);
+                let page_cross =
+                    page_cross(instruction_location + def.len, address);
                 if branch_taken {
                     match page_cross {
                         PageCross::Same => cycles += 1,
@@ -363,7 +369,8 @@ impl Instruction {
             BVS => {
                 let address = self.relative_address(cpu);
                 let branch_taken = cpu.bvs(address);
-                let page_cross = page_cross(instruction_location + def.len, address);
+                let page_cross =
+                    page_cross(instruction_location + def.len, address);
                 if branch_taken {
                     match page_cross {
                         PageCross::Same => cycles += 1,
@@ -374,7 +381,8 @@ impl Instruction {
             BCC => {
                 let address = self.relative_address(cpu);
                 let branch_taken = cpu.bcc(address);
-                let page_cross = page_cross(instruction_location + def.len, address);
+                let page_cross =
+                    page_cross(instruction_location + def.len, address);
                 if branch_taken {
                     match page_cross {
                         PageCross::Same => cycles += 1,
@@ -385,7 +393,8 @@ impl Instruction {
             BCS => {
                 let address = self.relative_address(cpu);
                 let branch_taken = cpu.bcs(address);
-                let page_cross = page_cross(instruction_location + def.len, address);
+                let page_cross =
+                    page_cross(instruction_location + def.len, address);
                 if branch_taken {
                     match page_cross {
                         PageCross::Same => cycles += 1,
@@ -396,7 +405,8 @@ impl Instruction {
             BNE => {
                 let address = self.relative_address(cpu);
                 let branch_taken = cpu.bne(address);
-                let page_cross = page_cross(instruction_location + def.len, address);
+                let page_cross =
+                    page_cross(instruction_location + def.len, address);
                 if branch_taken {
                     match page_cross {
                         PageCross::Same => cycles += 1,
@@ -407,7 +417,8 @@ impl Instruction {
             BEQ => {
                 let address = self.relative_address(cpu);
                 let branch_taken = cpu.beq(address);
-                let page_cross = page_cross(instruction_location + def.len, address);
+                let page_cross =
+                    page_cross(instruction_location + def.len, address);
                 if branch_taken {
                     match page_cross {
                         PageCross::Same => cycles += 1,
@@ -938,8 +949,8 @@ impl Instruction {
                 let value = cpu.memory.fetch(address);
                 cpu.decode_operand_value(value);
             }
-            _NOP_Abs_X_1 | _NOP_Abs_X_2 | _NOP_Abs_X_3 | _NOP_Abs_X_4 | _NOP_Abs_X_5
-            | _NOP_Abs_X_6 => {
+            _NOP_Abs_X_1 | _NOP_Abs_X_2 | _NOP_Abs_X_3 | _NOP_Abs_X_4
+            | _NOP_Abs_X_5 | _NOP_Abs_X_6 => {
                 let (address, page_cross) = self.absolute_address_x(cpu);
                 let value = cpu.memory.fetch(address);
                 cpu.decode_operand_value(value);
@@ -952,8 +963,8 @@ impl Instruction {
                 let value = cpu.memory.fetch(address);
                 cpu.decode_operand_value(value);
             }
-            _NOP_Zero_X_1 | _NOP_Zero_X_2 | _NOP_Zero_X_3 | _NOP_Zero_X_4 | _NOP_Zero_X_5
-            | _NOP_Zero_X_6 => {
+            _NOP_Zero_X_1 | _NOP_Zero_X_2 | _NOP_Zero_X_3 | _NOP_Zero_X_4
+            | _NOP_Zero_X_5 | _NOP_Zero_X_6 => {
                 let address = self.zero_page_address_x(cpu);
                 let value = cpu.memory.fetch(address);
                 cpu.decode_operand_value(value);

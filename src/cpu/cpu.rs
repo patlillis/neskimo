@@ -33,7 +33,11 @@ impl Log {
     pub fn log(&self) -> String {
         format!(
             "{:04X}  {:8} {:3} {:26}  {}",
-            self.pc, self.instruction, self.mneumonic, self.decoded_args, self.registers
+            self.pc,
+            self.instruction,
+            self.mneumonic,
+            self.decoded_args,
+            self.registers
         )
     }
 }
@@ -272,7 +276,10 @@ impl Cpu {
     /// Sleeps the CPU for an amount of time corresponding to the passed cycles.
     /// Time is determined by multiplying the cycles by the clock speed.
     pub fn sleep(&mut self, cycles: u32) {
-        thread::sleep(Duration::new(0, (CPU_CLOCK_SPEED * cycles as f32) as u32));
+        thread::sleep(Duration::new(
+            0,
+            (CPU_CLOCK_SPEED * cycles as f32) as u32,
+        ));
     }
 
     pub fn decode_operand_value(&mut self, operand: u8) {
@@ -309,7 +316,8 @@ impl Cpu {
         }
 
         let instruction_location = self.registers.pc;
-        let (instr, definition) = Instruction::parse(instruction_location, self);
+        let (instr, definition) =
+            Instruction::parse(instruction_location, self);
 
         // Increment program counter.
         self.registers.pc = self.registers.pc + definition.len;
@@ -620,10 +628,12 @@ impl Cpu {
 
         // The overflow flag is set when the sign of the addends is the same and
         // differs from the sign of the sum
-        //  !(self.registers.a ^ value) ==> Do the addends sign match?
-        // & (self.registers.a ^ sum) ====> Do A and result have different signs?
-        // & 0x80                     ====> Extract sign bit.
-        let overflow = !(self.registers.a ^ value) & (self.registers.a ^ sum) & 0x80 == 0x80;
+        //  !(self.registers.a ^ value) => Do the addends sign match?
+        // & (self.registers.a ^ sum) ===> Do A and result have different signs?
+        // & 0x80                     ===> Extract sign bit.
+        let overflow = !(self.registers.a ^ value)
+            & (self.registers.a ^ sum)
+            & 0x80 == 0x80;
 
         // Store result in accumulator.
         self.registers.a = sum;

@@ -166,8 +166,8 @@ fn draw_glyph(
         for x_index in 0..8 {
             if ((row >> (7 - x_index) as usize) & 1) != 0 {
                 for channel in 0..3 {
-                    let mut index =
-                        (y + y_index) * (surface_width as isize) * 3 + (x + x_index) * 3;
+                    let mut index = (y + y_index) * (surface_width as isize) * 3
+                        + (x + x_index) * 3;
                     index += channel;
 
                     if index >= 0 && index < pixels.len() as isize {
@@ -179,7 +179,13 @@ fn draw_glyph(
     }
 }
 
-pub fn draw_text(pixels: &mut [u8], surface_width: usize, mut x: isize, y: isize, string: &str) {
+pub fn draw_text(
+    pixels: &mut [u8],
+    surface_width: usize,
+    mut x: isize,
+    y: isize,
+    string: &str,
+) {
     for i in 0..string.len() {
         let glyph_index = (string.as_bytes()[i] - 32) as usize;
         if glyph_index < FONT_ADVANCES.len() {
@@ -191,7 +197,14 @@ pub fn draw_text(pixels: &mut [u8], surface_width: usize, mut x: isize, y: isize
                 GlyphColor::Black,
                 glyph_index,
             ); // Shadow
-            draw_glyph(pixels, surface_width, x, y, GlyphColor::White, glyph_index); // Main
+            draw_glyph(
+                pixels,
+                surface_width,
+                x,
+                y,
+                GlyphColor::White,
+                glyph_index,
+            ); // Main
             x += FONT_ADVANCES[glyph_index] as isize;
         }
     }
@@ -211,10 +224,11 @@ impl Gfx {
         // TODO: Handle SDL better.
 
         let sdl = init().unwrap();
-        let mut window_builder =
-            sdl.video()
-                .unwrap()
-                .window("neskimo", SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
+        let mut window_builder = sdl.video().unwrap().window(
+            "neskimo",
+            SCREEN_WIDTH as u32,
+            SCREEN_HEIGHT as u32,
+        );
         let window = window_builder.position_centered().build().unwrap();
 
         let canvas = window
@@ -240,7 +254,8 @@ impl Gfx {
         )
     }
 
-    /// Copies the overlay onto the given screen and displays it to the SDL window.
+    /// Copies the overlay onto the given screen and displays it to the SDL
+    /// window.
     pub fn composite(&mut self, ppu_screen: &mut [u8; SCREEN_SIZE]) {
         let new_time = PreciseTime::now();
         let duration_millis = self.last_render.to(new_time).num_milliseconds();

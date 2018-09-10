@@ -244,14 +244,15 @@ pub fn lookup_instruction_definition(opcode: Opcode) -> InstructionDefinition {
         _NOP_6 => def(1, 2),
 
         // No-op reads
-        _NOP_Imm_1 | _NOP_Imm_2 | _NOP_Imm_3 | _NOP_Imm_4 | _NOP_Imm_5 => def(2, 2),
-        _NOP_Abs => def(3, 4),
-        _NOP_Abs_X_1 | _NOP_Abs_X_2 | _NOP_Abs_X_3 | _NOP_Abs_X_4 | _NOP_Abs_X_5 | _NOP_Abs_X_6 => {
-            def(3, 4)
+        _NOP_Imm_1 | _NOP_Imm_2 | _NOP_Imm_3 | _NOP_Imm_4 | _NOP_Imm_5 => {
+            def(2, 2)
         }
+        _NOP_Abs => def(3, 4),
+        _NOP_Abs_X_1 | _NOP_Abs_X_2 | _NOP_Abs_X_3 | _NOP_Abs_X_4
+        | _NOP_Abs_X_5 | _NOP_Abs_X_6 => def(3, 4),
         _NOP_Zero_1 | _NOP_Zero_2 | _NOP_Zero_3 => def(2, 3),
-        _NOP_Zero_X_1 | _NOP_Zero_X_2 | _NOP_Zero_X_3 | _NOP_Zero_X_4 | _NOP_Zero_X_5
-        | _NOP_Zero_X_6 => def(2, 4),
+        _NOP_Zero_X_1 | _NOP_Zero_X_2 | _NOP_Zero_X_3 | _NOP_Zero_X_4
+        | _NOP_Zero_X_5 | _NOP_Zero_X_6 => def(2, 4),
 
         // Load Accumulator into X register
         _LAX_Abs => def(3, 4),

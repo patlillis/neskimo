@@ -158,8 +158,12 @@ impl MappedMemory {
         }
         match self.mirrors.insert(from, to) {
             Some(old_mirror) => warn!(
-                "Address {:#04x} is already mirrored to address {:#04x}. Overriding with new mirroring.",
-                from, old_mirror
+                concat!(
+                    "Address {:#04x} is already mirrored to address {:#04x}. ",
+                    "Overriding with new mirroring."
+                ),
+                from,
+                old_mirror
             ),
             _ => (),
         }
@@ -187,7 +191,8 @@ impl MappedMemory {
         I1: IntoIterator<Item = u16>,
         I2: IntoIterator<Item = u16>,
     {
-        // If we don't end up adding any mappings, then we don't need to keep the delegate around.
+        // If we don't end up adding any mappings, then we don't need to keep
+        // the delegate around.
         let mut mappings_added = false;
 
         self.delegates.push(memory.clone());
@@ -197,7 +202,10 @@ impl MappedMemory {
         for fetch_address in fetch_addresses.into_iter() {
             match self.fetch.insert(fetch_address, delegate_index) {
                 Some(_) => warn!(
-                    "Address {:#04x} is already mapped for fetch. Overriding with new mapping.",
+                    concat!(
+                        "Address {:#04x} is already mapped for fetch. ",
+                        "Overriding with new mapping."
+                    ),
                     fetch_address
                 ),
                 _ => (),
@@ -209,7 +217,10 @@ impl MappedMemory {
         for store_address in store_addresses.into_iter() {
             match self.store.insert(store_address, delegate_index) {
                 Some(_) => warn!(
-                    "Address {:#04x} is already mapped for store. Overriding with new mapping.",
+                    concat!(
+                        "Address {:#04x} is already mapped for store. ",
+                        "Overriding with new mapping."
+                    ),
                     store_address
                 ),
                 _ => (),
@@ -233,7 +244,10 @@ impl Memory for MappedMemory {
             Some(delegate_index) => self.delegates[*delegate_index]
                 .borrow()
                 .fetch(mapped_address),
-            None => panic!("No delegate memory for fetch at address {:#04x}", address),
+            None => panic!(
+                "No delegate memory for fetch at address {:#04x}",
+                address
+            ),
         }
     }
 
@@ -245,7 +259,10 @@ impl Memory for MappedMemory {
             Some(delegate_index) => self.delegates[*delegate_index]
                 .borrow_mut()
                 .store(mapped_address, value),
-            None => panic!("No delegate memory for store at address {:#04x}", address),
+            None => panic!(
+                "No delegate memory for store at address {:#04x}",
+                address
+            ),
         }
     }
 }

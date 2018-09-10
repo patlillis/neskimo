@@ -190,7 +190,11 @@ fn test_mappings() {
     // Set up values in destination addresses of fallback memory.
     let mappings = Rc::new(RefCell::new(TestMemoryMapping::new()));
     let mut mapped_memory = MappedMemory::new();
-    mapped_memory.add_mapping(mappings.clone(), vec![0x0000, 0x0100], vec![0x0000, 0x0100]);
+    mapped_memory.add_mapping(
+        mappings.clone(),
+        vec![0x0000, 0x0100],
+        vec![0x0000, 0x0100],
+    );
 
     assert_eq!(mapped_memory.fetch(0x0000), 0x0001);
     assert_eq!(mapped_memory.store(0x0100, 0xff), 0x00);

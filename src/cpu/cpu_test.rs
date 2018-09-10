@@ -45,7 +45,8 @@ fn test_adc() {
         cpu.reset();
 
         // Store value in memory locations for testing.
-        let adc_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        let adc_addresses =
+            [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
         for addr in adc_addresses.iter() {
             cpu.memory.store(*addr, adc_result.0);
         }
@@ -131,7 +132,8 @@ fn test_and() {
         cpu.reset();
 
         // Store value in memory locations for testing.
-        let and_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        let and_addresses =
+            [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
         for addr in and_addresses.iter() {
             cpu.memory.store(*addr, and_result.0);
         }
@@ -492,8 +494,11 @@ fn test_cmp() {
         cpu.registers.x = 0xff;
         cpu.registers.y = 0xfe;
 
-        // Store the value in several memory locations for lookup during CMP instructions.
-        for addr in [0x002a, 0x003a, 0x004a, 0x005a, 0x123a, 0x223a, 0x423a].iter() {
+        // Store the value in several memory locations for lookup during CMP
+        // instructions.
+        for addr in
+            [0x002a, 0x003a, 0x004a, 0x005a, 0x123a, 0x223a, 0x423a].iter()
+        {
             cpu.memory.store(*addr as u16, cmp_result.0);
         }
 
@@ -567,7 +572,8 @@ fn test_cpx() {
         // Set X register for comparisons.
         cpu.registers.x = x_value;
 
-        // Store the value in several memory locations for lookup during CMP instructions.
+        // Store the value in several memory locations for lookup during CMP
+        // instructions.
         for addr in [0x002a, 0x423a].iter() {
             cpu.memory.store(*addr as u16, cpx_result.0);
         }
@@ -621,7 +627,8 @@ fn test_cpy() {
         // Set Y register for comparisons.
         cpu.registers.y = y_value;
 
-        // Store the value in several memory locations for lookup during CMP instructions.
+        // Store the value in several memory locations for lookup during CMP
+        // instructions.
         for addr in [0x002a, 0x423a].iter() {
             cpu.memory.store(*addr as u16, cpy_result.0);
         }
@@ -724,7 +731,8 @@ fn test_eor() {
         cpu.reset();
 
         // Store value in memory locations for testing.
-        let eor_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        let eor_addresses =
+            [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
         for addr in eor_addresses.iter() {
             cpu.memory.store(*addr, eor_result.0);
         }
@@ -1128,7 +1136,8 @@ fn test_lsr() {
         // Test asl on memory.
         cpu.reset();
 
-        // Store the value in several memory locations for lookup during LSR instructions.
+        // Store the value in several memory locations for lookup during LSR
+        // instructions.
         let lsr_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in lsr_addresses.iter() {
             cpu.memory.store(*addr as u16, lsr_result.0);
@@ -1197,7 +1206,8 @@ fn test_ora() {
         cpu.reset();
 
         // Store value in memory locations for testing.
-        let ora_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        let ora_addresses =
+            [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
         for addr in ora_addresses.iter() {
             cpu.memory.store(*addr, ora_result.0);
         }
@@ -1360,7 +1370,8 @@ fn test_rol() {
         // Test asl on memory.
         cpu.reset();
 
-        // Store the value in several memory locations for lookup during ROL instructions.
+        // Store the value in several memory locations for lookup during ROL
+        // instructions.
         let rol_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in rol_addresses.iter() {
             cpu.memory.store(*addr as u16, rol_result.0);
@@ -1449,7 +1460,8 @@ fn test_ror() {
         // Test asl on memory.
         cpu.reset();
 
-        // Store the value in several memory locations for lookup during ROR instructions.
+        // Store the value in several memory locations for lookup during ROR
+        // instructions.
         let ror_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in ror_addresses.iter() {
             cpu.memory.store(*addr as u16, ror_result.0);
@@ -1521,7 +1533,8 @@ fn test_sbc() {
         cpu.reset();
 
         // Store value in memory locations for testing.
-        let sbc_addresses = [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
+        let sbc_addresses =
+            [0x003a, 0x004a, 0x123a, 0x234a, 0x345a, 0xfada, 0xbeea];
         for addr in sbc_addresses.iter() {
             cpu.memory.store(*addr, sbc_result.0);
         }
