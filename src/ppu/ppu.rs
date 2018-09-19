@@ -92,6 +92,8 @@ impl Ppu {
         }
     }
 
+    // Addresses that PPU can provide access to for CPU's mapped registers.
+    // TODO: separate out registers that are read-only, write-only, etc.
     pub fn mapped_addresses() -> ArrayVec<[u16; 9]> {
         ArrayVec::from([
             0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007,
