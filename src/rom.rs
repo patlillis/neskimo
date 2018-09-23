@@ -8,7 +8,7 @@ pub const PRG_ROM_SIZE: usize = 0x4000;
 pub const CHR_ROM_SIZE: usize = 0x2000;
 pub const PRG_RAM_SIZE: usize = 0x2000;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum MirrorType {
     Horizontal,
     Vertical,

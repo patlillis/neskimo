@@ -45,7 +45,7 @@ impl Nes {
             (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
             (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
         );
-        let ppu = Rc::new(RefCell::new(Ppu::new()));
+        let ppu = Rc::new(RefCell::new(Ppu::new(&rom.mirror_type)));
         memory.add_mapping(
             ppu.clone(),
             Ppu::mapped_addresses(),

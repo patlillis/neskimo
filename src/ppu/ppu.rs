@@ -1,5 +1,7 @@
 use arrayvec::ArrayVec;
 use nes::memory::Memory;
+use ppu::internal_memory::InternalMemory;
+use rom::MirrorType;
 
 // Each CPU cycle takes as long as 3 PPU cycles.
 pub const PPU_CYCLE_MULTIPLIER: u32 = 3;
@@ -62,11 +64,13 @@ pub struct Ppu {
     ppuaddr: u8,
     ppudata: u8,
     oamdma: u8,
-    // VRAM.
+
+    // Internal memory storage/access.
+    internal_memory: InternalMemory,
 }
 
-impl Default for Ppu {
-    fn default() -> Ppu {
+impl Ppu {
+    pub fn new(nametable_mirror_type: &MirrorType) -> Ppu {
         Ppu {
             cycle: 0,
             screen: Box::new([0x00; SCREEN_SIZE]),
@@ -81,14 +85,7 @@ impl Default for Ppu {
             ppuaddr: 0x00,
             ppudata: 0x00,
             oamdma: 0x00,
-        }
-    }
-}
-
-impl Ppu {
-    pub fn new() -> Ppu {
-        Ppu {
-            ..Default::default()
+            internal_memory: InternalMemory::new(nametable_mirror_type),
         }
     }
 
