@@ -9,7 +9,7 @@ use neskimolib::rom::RomFile;
 use sdl2::event::Event;
 
 // The version of neskimo that we're building.
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
     let matches = App::new("neskimo")
@@ -21,16 +21,14 @@ fn main() {
                 .help("The .nes ROM file to run")
                 .required(true)
                 .index(1),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("LOGFILE")
                 .short("l")
                 .long("logfile")
                 .value_name("LOGFILE")
                 .takes_value(true)
                 .help("Writes the CPU log to a file"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("PROGRAM_COUNTER")
                 .short("p")
                 .long("program-counter")
@@ -40,8 +38,7 @@ fn main() {
                     "Sets the initial program counter to ",
                     "the provided hex value"
                 )),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("MEM_DUMP")
                 .short("d")
                 .long("mem-dump")
@@ -51,21 +48,18 @@ fn main() {
                     "When executaion reaches this point, ",
                     "contents of memory will be written to mem_dump.bin"
                 )),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("FPS")
                 .short("f")
                 .long("fps")
                 .help("Print frames-per-second during emulator run"),
-        )
-        .after_help(
+        ).after_help(
             "EXAMPLES:
     neskimo mario.nes
     neskimo -l=testing.log donkey_kong.nes
     neskimo -p=C000 castlevania.nes
     neskimo --logfile=testing.log --program-counter=0F00 my-cool-game.nes",
-        )
-        .get_matches();
+        ).get_matches();
 
     // .unwrap() is safe here ROM is required, so clap will crash if it's not
     // there.
@@ -87,13 +81,13 @@ fn main() {
     let fps = matches.is_present("FPS");
 
     let options = Options {
-        logfile: logfile,
+        logfile,
         program_counter: pc,
         mem_dump_counter: dump_pc,
     };
 
     let mut nes = match rom {
-        Ok(rom) => Nes::new(rom, options),
+        Ok(rom) => Nes::new(&rom, options),
         Err(e) => panic!(e),
     };
 

@@ -95,11 +95,11 @@ pub struct Vram {
 }
 
 impl Vram {
-    pub fn new(mirroring: &MirrorType) -> Self {
+    pub fn new(mirroring: MirrorType) -> Self {
         Vram {
             nametable_a: Nametable::new(),
             nametable_b: Nametable::new(),
-            mirroring: *mirroring,
+            mirroring,
         }
     }
 }

@@ -7,7 +7,7 @@ use std::time::Duration;
 use utils::arithmetic::{concat_bytes, is_negative};
 
 // How long in nanoseconds it takes for a cpu cycle to complete.
-const CPU_CLOCK_SPEED: f32 = 558.65921787709;
+const CPU_CLOCK_SPEED: f32 = 558.65924;
 
 // Log from a single frame of execution.
 #[derive(Debug, Default)]
@@ -43,6 +43,7 @@ impl Log {
 }
 
 // The status of the system processor.
+#[derive(Default)]
 pub struct Status(pub u8);
 
 pub const C_FLAG: u8 = 1 << 0;
@@ -197,7 +198,7 @@ impl Registers {
             y: 0x00,
             p: Status::new(),
             sp: 0xfd,
-            pc: pc,
+            pc,
         }
     }
 
@@ -250,7 +251,7 @@ impl Cpu {
 
         Cpu {
             registers: Registers::new_at_pc(pc),
-            memory: memory,
+            memory,
             irq: false,
             nmi: false,
             reset: false,
@@ -293,11 +294,8 @@ impl Cpu {
     }
 
     pub fn mem_dump(&self) {
-        match File::create("mem-dump.bin").ok() {
-            Some(mut file) => {
-                self.memory.dump(&mut file).ok();
-            }
-            _ => {}
+        if let Ok(mut file) = File::create("mem-dump.bin") {
+            self.memory.dump(&mut file).ok();
         }
     }
 
@@ -320,7 +318,7 @@ impl Cpu {
             Instruction::parse(instruction_location, self);
 
         // Increment program counter.
-        self.registers.pc = self.registers.pc + definition.len;
+        self.registers.pc += definition.len;
 
         // Execute the instruction.
         let cycles = instr.execute(self, instruction_location);
@@ -328,7 +326,7 @@ impl Cpu {
         // Check interrupts.
         self.check_interrupts();
 
-        cycles as u32
+        u32::from(cycles)
     }
 
     // Checks the interrupt lines, and sets the pc to the
@@ -532,7 +530,7 @@ impl Cpu {
     pub fn push(&mut self, value: u8) {
         self.memory
             .store(concat_bytes(0x01, self.registers.sp), value);
-        self.registers.sp = self.registers.sp - 1;
+        self.registers.sp -= 1;
     }
 
     // Push value onto stack, high byte first then low byte.
@@ -543,7 +541,7 @@ impl Cpu {
 
     // Pull a value off of the stack, and increment stack pointer.
     pub fn pull(&mut self) -> u8 {
-        self.registers.sp = self.registers.sp + 1;
+        self.registers.sp += 1;
         self.memory.fetch(concat_bytes(0x01, self.registers.sp))
     }
 
@@ -631,9 +629,9 @@ impl Cpu {
         //  !(self.registers.a ^ value) => Do the addends sign match?
         // & (self.registers.a ^ sum) ===> Do A and result have different signs?
         // & 0x80                     ===> Extract sign bit.
-        let overflow = !(self.registers.a ^ value)
-            & (self.registers.a ^ sum)
-            & 0x80 == 0x80;
+        let overflow =
+            !(self.registers.a ^ value) & (self.registers.a ^ sum) & 0x80
+                == 0x80;
 
         // Store result in accumulator.
         self.registers.a = sum;
@@ -1333,7 +1331,7 @@ impl Cpu {
     //
     // No processor status flags are affected.
     pub fn bpl(&mut self, address: u16) -> BranchTaken {
-        let condition = self.registers.p.n() == false;
+        let condition = !self.registers.p.n();
         self.branch(condition, address)
     }
 
@@ -1341,7 +1339,7 @@ impl Cpu {
     //
     // No processor status flags are affected.
     pub fn bmi(&mut self, address: u16) -> BranchTaken {
-        let condition = self.registers.p.n() == true;
+        let condition = self.registers.p.n();
         self.branch(condition, address)
     }
 
@@ -1349,7 +1347,7 @@ impl Cpu {
     //
     // No processor status flags are affected.
     pub fn bvc(&mut self, address: u16) -> BranchTaken {
-        let condition = self.registers.p.v() == false;
+        let condition = !self.registers.p.v();
         self.branch(condition, address)
     }
 
@@ -1357,7 +1355,7 @@ impl Cpu {
     //
     // No processor status flags are affected.
     pub fn bvs(&mut self, address: u16) -> BranchTaken {
-        let condition = self.registers.p.v() == true;
+        let condition = self.registers.p.v();
         self.branch(condition, address)
     }
 
@@ -1365,7 +1363,7 @@ impl Cpu {
     //
     // No processor status flags are affected.
     pub fn bcc(&mut self, address: u16) -> BranchTaken {
-        let condition = self.registers.p.c() == false;
+        let condition = !self.registers.p.c();
         self.branch(condition, address)
     }
 
@@ -1373,7 +1371,7 @@ impl Cpu {
     //
     // No processor status flags are affected.
     pub fn bcs(&mut self, address: u16) -> BranchTaken {
-        let condition = self.registers.p.c() == true;
+        let condition = self.registers.p.c();
         self.branch(condition, address)
     }
 
@@ -1381,7 +1379,7 @@ impl Cpu {
     //
     // No processor status flags are affected.
     pub fn bne(&mut self, address: u16) -> BranchTaken {
-        let condition = self.registers.p.z() == false;
+        let condition = !self.registers.p.z();
         self.branch(condition, address)
     }
 
@@ -1389,7 +1387,7 @@ impl Cpu {
     //
     // No processor status flags are affected.
     pub fn beq(&mut self, address: u16) -> BranchTaken {
-        let condition = self.registers.p.z() == true;
+        let condition = self.registers.p.z();
         self.branch(condition, address)
     }
 

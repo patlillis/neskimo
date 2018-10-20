@@ -1,4 +1,4 @@
-const SIGN_BITMASK: u8 = 0b10000000;
+const SIGN_BITMASK: u8 = 0b1000_0000;
 
 // Checks if an unsigned number would be negative if it was signed. This is
 // done by checking if the 7th bit is set.
@@ -8,7 +8,7 @@ pub fn is_negative(byte: u8) -> bool {
 
 // Combne low and high bytes into a u16.
 pub fn concat_bytes(high: u8, low: u8) -> u16 {
-    ((high as u16) << 8) | (low as u16)
+    (u16::from(high) << 8) | u16::from(low)
 }
 
 // Adds a relative displacement to an address. This is useful for operations

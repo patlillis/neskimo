@@ -93,7 +93,7 @@ impl Instruction {
     // crossed.
     fn absolute_address_x(&self, cpu: &mut Cpu) -> (u16, PageCross) {
         let base_addr = self.absolute_address(cpu);
-        let address = base_addr.wrapping_add(cpu.registers.x as u16);
+        let address = base_addr.wrapping_add(u16::from(cpu.registers.x));
         cpu.frame_log
             .decoded_args
             .push_str(format!(",X @ {:04X}", address).as_str());
@@ -105,7 +105,7 @@ impl Instruction {
     // crossed.
     fn absolute_address_y(&self, cpu: &mut Cpu) -> (u16, PageCross) {
         let base_addr = self.absolute_address(cpu);
-        let address = base_addr.wrapping_add(cpu.registers.y as u16);
+        let address = base_addr.wrapping_add(u16::from(cpu.registers.y));
         cpu.frame_log
             .decoded_args
             .push_str(format!(",Y @ {:04X}", address).as_str());
@@ -128,7 +128,7 @@ impl Instruction {
     fn zero_page_address(&self, cpu: &mut Cpu) -> u16 {
         let address = self.arg1();
         cpu.frame_log.decoded_args = format!("${:02X}", address);
-        address as u16
+        u16::from(address)
     }
 
     // Get the zero page address from the instruciton args, and add an offset
@@ -140,7 +140,7 @@ impl Instruction {
         cpu.frame_log
             .decoded_args
             .push_str(format!("${:02X},X @ {:02X}", arg1, result).as_str());
-        result as u16
+        u16::from(result)
     }
 
     // Get the zero page address from the instruction args, and add an offset
@@ -152,7 +152,7 @@ impl Instruction {
         cpu.frame_log
             .decoded_args
             .push_str(format!("${:02X},Y @ {:02X}", arg1, result).as_str());
-        result as u16
+        u16::from(result)
     }
 
     // Get the absolute address from the instruction args, and return the value
@@ -193,7 +193,7 @@ impl Instruction {
     fn indirect_address_y(&self, cpu: &mut Cpu) -> (u16, PageCross) {
         let address = self.zero_page_address(cpu);
         let intermediate = cpu.memory.fetch_u16_wrap_msb(address);
-        let result = intermediate.wrapping_add(cpu.registers.y as u16);
+        let result = intermediate.wrapping_add(u16::from(cpu.registers.y));
         cpu.frame_log.decoded_args = format!(
             "(${:02X}),Y = {:04X} @ {:04X}",
             self.arg1(),

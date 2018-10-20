@@ -142,7 +142,7 @@ fn test_mirror() {
         (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
         (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
     );
-    mapped_memory.add_mirrors(hashmap!{
+    mapped_memory.add_mirrors(&hashmap!{
         0x0c00 => 0xc000,
         0x0d00 => 0xd000,
     });

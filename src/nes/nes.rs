@@ -28,7 +28,7 @@ pub struct Nes {
 }
 
 impl Nes {
-    pub fn new(rom: RomFile, options: Options) -> Nes {
+    pub fn new(rom: &RomFile, options: Options) -> Nes {
         // Set up log file.
         let buffer = options.logfile.and_then(|f| {
             OpenOptions::new()
@@ -45,7 +45,7 @@ impl Nes {
             (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
             (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
         );
-        let ppu = Rc::new(RefCell::new(Ppu::new(&rom.mirror_type)));
+        let ppu = Rc::new(RefCell::new(Ppu::new(rom.mirror_type)));
         memory.add_mapping(
             ppu.clone(),
             Ppu::mapped_addresses(),
@@ -53,9 +53,8 @@ impl Nes {
         );
 
         // Copy trainer data to 0x7000.
-        match rom.trainer_data {
-            Some(data) => memory.store_bytes(0x7000, &data),
-            None => {}
+        if let Some(data) = rom.trainer_data {
+            memory.store_bytes(0x7000, &data);
         }
 
         // Copy PRG ROM into 0x800.
@@ -86,7 +85,7 @@ impl Nes {
                 options.program_counter,
                 options.mem_dump_counter,
             ),
-            ppu: ppu,
+            ppu,
             cycle: 0,
             logfile: buffer,
         }
@@ -107,17 +106,14 @@ impl Nes {
     }
 
     fn log(&mut self) {
-        match self.logfile {
-            Some(ref mut file) => {
-                let current_cycle = self.cycle % 341;
-                writeln!(
-                    file,
-                    "{} CYC:{:3}",
-                    self.cpu.frame_log.log(),
-                    current_cycle
-                ).ok();
-            }
-            _ => {}
+        if let Some(ref mut file) = self.logfile {
+            let current_cycle = self.cycle % 341;
+            writeln!(
+                file,
+                "{} CYC:{:3}",
+                self.cpu.frame_log.log(),
+                current_cycle
+            ).ok();
         }
     }
 }

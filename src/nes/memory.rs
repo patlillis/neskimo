@@ -88,6 +88,10 @@ impl BasicMemory {
     pub fn len(&self) -> usize {
         self.backing_store.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.backing_store.is_empty()
+    }
 }
 
 // TODO: Little-endian?
@@ -123,6 +127,7 @@ impl Memory for BasicMemory {
 // implementations, with each fetch/store operation potentially mapped to a
 // specific memory implementation. In addition, memory addresses can be
 // mirrored to always point at another memory address.
+#[derive(Default)]
 pub struct MappedMemory {
     mirrors: HashMap<u16, u16>,
     delegates: Vec<Rc<RefCell<Memory>>>,
@@ -144,8 +149,8 @@ impl MappedMemory {
 
     // Add new address mirrors. Note that this will override any previous
     // mirroring for those addresses.
-    pub fn add_mirrors(&mut self, mirrors: HashMap<u16, u16>) {
-        for (from, to) in &mirrors {
+    pub fn add_mirrors(&mut self, mirrors: &HashMap<u16, u16>) {
+        for (from, to) in mirrors {
             self.add_mirror(*from, *to);
         }
     }
@@ -156,16 +161,15 @@ impl MappedMemory {
         if from == to {
             warn!("Address {} cannot be mirrored to itself", from);
         }
-        match self.mirrors.insert(from, to) {
-            Some(old_mirror) => warn!(
+        if let Some(old_mirror) = self.mirrors.insert(from, to) {
+            warn!(
                 concat!(
                     "Address {:#04x} is already mirrored to address {:#04x}. ",
                     "Overriding with new mirroring."
                 ),
                 from,
                 old_mirror
-            ),
-            _ => (),
+            );
         }
     }
 
@@ -199,31 +203,29 @@ impl MappedMemory {
         let delegate_index = self.delegates.len() - 1;
 
         // Add fetch mappings.
-        for fetch_address in fetch_addresses.into_iter() {
-            match self.fetch.insert(fetch_address, delegate_index) {
-                Some(_) => warn!(
+        for fetch_address in fetch_addresses {
+            if self.fetch.insert(fetch_address, delegate_index).is_some() {
+                warn!(
                     concat!(
                         "Address {:#04x} is already mapped for fetch. ",
                         "Overriding with new mapping."
                     ),
                     fetch_address
-                ),
-                _ => (),
+                );
             }
             mappings_added = true;
         }
 
         // Add store mappings.
-        for store_address in store_addresses.into_iter() {
-            match self.store.insert(store_address, delegate_index) {
-                Some(_) => warn!(
+        for store_address in store_addresses {
+            if self.store.insert(store_address, delegate_index).is_some() {
+                warn!(
                     concat!(
                         "Address {:#04x} is already mapped for store. ",
                         "Overriding with new mapping."
                     ),
                     store_address
-                ),
-                _ => (),
+                );
             }
             mappings_added = true;
         }

@@ -70,7 +70,7 @@ pub struct Ppu {
 }
 
 impl Ppu {
-    pub fn new(nametable_mirror_type: &MirrorType) -> Ppu {
+    pub fn new(nametable_mirror_type: MirrorType) -> Ppu {
         Ppu {
             cycle: 0,
             screen: Box::new([0x00; SCREEN_SIZE]),
@@ -128,12 +128,12 @@ impl Ppu {
             CYCLES_PER_SCANLINE
         };
 
-        self.cycle = self.cycle + cycles;
+        self.cycle += cycles;
 
         // Check for new scanline.
         if self.cycle >= cycles_per_scanline {
             self.cycle -= cycles_per_scanline;
-            self.current_scanline = self.current_scanline + 1;
+            self.current_scanline += 1;
             if self.current_scanline >= TOTAL_SCANLINE_COUNT {
                 new_frame = true;
                 self.current_scanline -= TOTAL_SCANLINE_COUNT;
@@ -176,9 +176,9 @@ impl Ppu {
             _ => (0, 0, 0),
         };
         if self.odd_frame {
-            r = (r as f32 * 0.75) as u8;
-            g = (g as f32 * 0.75) as u8;
-            b = (b as f32 * 0.75) as u8;
+            r = (f32::from(r) * 0.75) as u8;
+            g = (f32::from(g) * 0.75) as u8;
+            b = (f32::from(b) * 0.75) as u8;
         }
         for x in 0..SCREEN_WIDTH {
             self.write_to_screen(x, y, [r, g, b]);

@@ -144,6 +144,7 @@ const FONT_ADVANCES: [u8; FONT_GLYPH_COUNT] =
 // Text output
 //
 
+#[derive(Copy, Clone)]
 enum GlyphColor {
     White,
     Black,
@@ -166,8 +167,9 @@ fn draw_glyph(
         for x_index in 0..8 {
             if ((row >> (7 - x_index) as usize) & 1) != 0 {
                 for channel in 0..3 {
-                    let mut index = (y + y_index) * (surface_width as isize) * 3
-                        + (x + x_index) * 3;
+                    let mut index =
+                        (y + y_index) * (surface_width as isize) * 3
+                            + (x + x_index) * 3;
                     index += channel;
 
                     if index >= 0 && index < pixels.len() as isize {
@@ -244,10 +246,10 @@ impl Gfx {
 
         (
             Gfx {
-                canvas: canvas,
-                texture_creator: texture_creator,
-                events: events,
-                show_fps: show_fps,
+                canvas,
+                texture_creator,
+                events,
+                show_fps,
                 last_render: PreciseTime::now(),
             },
             sdl,
@@ -281,8 +283,7 @@ impl Gfx {
                 TextureAccess::Streaming,
                 SCREEN_WIDTH as u32,
                 SCREEN_HEIGHT as u32,
-            )
-            .unwrap();
+            ).unwrap();
 
         texture.update(None, ppu_screen, SCREEN_WIDTH * 3).unwrap();
 

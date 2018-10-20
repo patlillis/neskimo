@@ -7,7 +7,7 @@ pub struct InternalMemory {
 }
 
 impl InternalMemory {
-    pub fn new(nametable_mirror_type: &MirrorType) -> InternalMemory {
+    pub fn new(nametable_mirror_type: MirrorType) -> InternalMemory {
         InternalMemory {
             vram: Vram::new(nametable_mirror_type),
         }

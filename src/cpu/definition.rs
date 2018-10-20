@@ -8,10 +8,7 @@ pub struct InstructionDefinition {
 }
 
 fn def(len: u16, cycles: u8) -> InstructionDefinition {
-    InstructionDefinition {
-        len: len,
-        cycles: cycles,
-    }
+    InstructionDefinition { len, cycles }
 }
 
 // Get an instruction definition, based on opcode.

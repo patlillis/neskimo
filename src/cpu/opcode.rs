@@ -26,8 +26,8 @@ impl std::fmt::Display for Opcode {
 }
 
 impl Opcode {
-    pub fn val(&self) -> String {
-        format!("{:#04x}", *self as u8)
+    pub fn val(self) -> String {
+        format!("{:#04x}", self as u8)
     }
 }
 

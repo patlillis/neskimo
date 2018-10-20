@@ -90,7 +90,7 @@ impl fmt::Display for RomFile {
 }
 
 impl RomFile {
-    pub fn new(file_name: &String) -> Result<RomFile> {
+    pub fn new(file_name: &str) -> Result<RomFile> {
         let bytes = try!(read_binary(file_name));
         let game_name = Path::new(&file_name)
             .file_stem()
@@ -112,7 +112,7 @@ impl RomFile {
         }
 
         // Bytes 0-3: Check "NES" declaration.
-        if &rom[0..3] != "NES".as_bytes() || rom[3] != 0x1a {
+        if &rom[0..3] != b"NES" || rom[3] != 0x1a {
             return Err(Error::new(
                 ErrorKind::InvalidData,
                 "Invalid iNES header: missing \"NES\" declaration.",
@@ -157,7 +157,7 @@ impl RomFile {
         // Byte 8: PRG RAM size (0 implies 1 8KB bank).
         let prg_ram_size = match rom[8] {
             0x00 => 0x01,
-            size @ _ => size,
+            size => size,
         };
 
         // Byte 9 flags:
@@ -170,24 +170,15 @@ impl RomFile {
         };
 
         let mut rom_file = RomFile {
-            game_name: game_name,
-
+            game_name,
             trainer_data: None,
-
             prg_rom_data: Vec::new(),
-
             chr_rom_data: Vec::new(),
-
             prg_ram_size: prg_ram_size as usize,
-
-            mirror_type: mirror_type,
-
-            tv_system: tv_system,
-
-            vs_cart: vs_cart,
-
-            play_choice: play_choice,
-
+            mirror_type,
+            tv_system,
+            vs_cart,
+            play_choice,
             mapper: mapper_upper | mapper_lower,
         };
 
