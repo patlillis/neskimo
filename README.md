@@ -115,7 +115,7 @@ Inspiration drawn from these fantastic projects:
 
 ## License
 
-[Code licensed MIT](LICENSE). © 2018 Pat Lillis.
+[Code licensed MIT](LICENSE). © 2019 Pat Lillis.
 
 [![Built With
 Love](http://forthebadge.com/images/badges/built-with-love.svg)](http://forthebadge.com)
