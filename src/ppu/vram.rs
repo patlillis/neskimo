@@ -2,8 +2,8 @@
 
 // 960 bytes of CHR tile position data, one byte for each 8x8 pixel tile. There
 // are 30 rows and 30 columns, which gives 960 total tiles.
-use nes::memory::Memory;
-use rom::MirrorType;
+use crate::nes::memory::Memory;
+use crate::rom::MirrorType;
 
 const TILE_DATA_SIZE: u16 = 960;
 

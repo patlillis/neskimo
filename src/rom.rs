@@ -1,7 +1,7 @@
+use crate::utils::io::read_binary;
 use std::fmt;
 use std::io::{Error, ErrorKind, Result};
 use std::path::Path;
-use utils::io::read_binary;
 
 pub const TRAINER_SIZE: usize = 0x0200;
 pub const PRG_ROM_SIZE: usize = 0x4000;
@@ -91,7 +91,7 @@ impl fmt::Display for RomFile {
 
 impl RomFile {
     pub fn new(file_name: &str) -> Result<RomFile> {
-        let bytes = try!(read_binary(file_name));
+        let bytes = read_binary(file_name)?;
         let game_name = Path::new(&file_name)
             .file_stem()
             .unwrap()

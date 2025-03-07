@@ -11,3 +11,6 @@ target
 
 # SDL DLL goes in the base project directory on Windows, but don't include it in the Git repo.
 SDL2.dll
+
+# RustRover
+.idea/

@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
-use utils;
+use crate::utils;
 
 // 2^16 unsigned bytes.
 pub const DEFAULT_MEMORY_SIZE: usize = 65536;
@@ -130,7 +130,7 @@ impl Memory for BasicMemory {
 #[derive(Default)]
 pub struct MappedMemory {
     mirrors: HashMap<u16, u16>,
-    delegates: Vec<Rc<RefCell<Memory>>>,
+    delegates: Vec<Rc<RefCell<dyn Memory>>>,
     // Maps from memory address to index in "delegates" where the address is
     // mapped to.
     fetch: HashMap<u16, usize>,
@@ -188,7 +188,7 @@ impl MappedMemory {
     // addresses.
     pub fn add_mapping<I1, I2>(
         &mut self,
-        memory: Rc<RefCell<Memory>>,
+        memory: Rc<RefCell<dyn Memory>>,
         fetch_addresses: I1,
         store_addresses: I2,
     ) where

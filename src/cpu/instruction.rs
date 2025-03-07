@@ -1,9 +1,9 @@
-use cpu::{opcode, Cpu};
+use crate::cpu::{opcode, Cpu};
 use std;
-use utils::arithmetic::{add_relative, concat_bytes};
-use utils::paging::{page_cross, PageCross};
+use crate::utils::arithmetic::{add_relative, concat_bytes};
+use crate::utils::paging::{page_cross, PageCross};
 
-use cpu::definition::*;
+use crate::cpu::definition::*;
 
 // Whether a branch was taken. This is used to figure out whether we need to
 // take an extra cycle when executing a branch instruction.
@@ -205,7 +205,7 @@ impl Instruction {
 
     // Execute the instruction on the cpu. Returns the number of cycles taken.
     pub fn execute(&self, cpu: &mut Cpu, instruction_location: u16) -> u8 {
-        use cpu::opcode::Opcode::*;
+        use crate::cpu::opcode::Opcode::*;
         let opcode = opcode::decode(self.opcode());
         let def = lookup_instruction_definition(opcode);
         let mut cycles = def.cycles;

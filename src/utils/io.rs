@@ -6,7 +6,7 @@ use std::result::Result;
 
 pub fn read_binary<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
     let mut buffer: Vec<u8> = Vec::new();
-    let mut file = try!(File::open(path));
-    try!(file.read_to_end(&mut buffer));
+    let mut file = File::open(path)?;
+    file.read_to_end(&mut buffer)?;
     Ok(buffer)
 }

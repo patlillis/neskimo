@@ -1,5 +1,5 @@
-use cpu::opcode::Opcode;
-use cpu::opcode::Opcode::*;
+use crate::cpu::opcode::Opcode;
+use crate::cpu::opcode::Opcode::*;
 
 // Details about an instruction.
 pub struct InstructionDefinition {

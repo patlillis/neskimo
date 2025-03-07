@@ -1,6 +1,6 @@
-use cpu::opcode::Opcode::*;
+use crate::cpu::opcode::Opcode::*;
 #[allow(unused_imports)]
-use cpu::{
+use crate::cpu::{
     //
     Cpu,
     Status,
@@ -14,7 +14,7 @@ use cpu::{
     V_FLAG,
     Z_FLAG,
 };
-use nes::memory::BasicMemory;
+use crate::nes::memory::BasicMemory;
 
 fn new_cpu() -> Cpu {
     Cpu::new(

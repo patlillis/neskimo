@@ -8,7 +8,6 @@ extern crate log;
 extern crate maplit;
 extern crate num;
 extern crate sdl2;
-extern crate time;
 
 pub mod cpu;
 pub mod gfx;

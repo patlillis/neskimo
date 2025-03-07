@@ -1,7 +1,7 @@
+use crate::nes::memory::Memory;
+use crate::ppu::internal_memory::InternalMemory;
+use crate::rom::MirrorType;
 use arrayvec::ArrayVec;
-use nes::memory::Memory;
-use ppu::internal_memory::InternalMemory;
-use rom::MirrorType;
 
 // Each CPU cycle takes as long as 3 PPU cycles.
 pub const PPU_CYCLE_MULTIPLIER: u32 = 3;
@@ -66,6 +66,7 @@ pub struct Ppu {
     oamdma: u8,
 
     // Internal memory storage/access.
+    #[allow(dead_code)]
     internal_memory: InternalMemory,
 }
 
@@ -91,7 +92,7 @@ impl Ppu {
 
     // Addresses that PPU can provide access to for CPU's mapped registers.
     // TODO: separate out registers that are read-only, write-only, etc.
-    pub fn mapped_addresses() -> ArrayVec<[u16; 9]> {
+    pub fn mapped_addresses() -> ArrayVec<u16, 9> {
         ArrayVec::from([
             0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007,
             0x4014,
@@ -140,7 +141,7 @@ impl Ppu {
             }
 
             match self.current_scanline {
-                FIRST_VISIBLE_SCANLINE...LAST_VISIBLE_SCANLINE => {
+                FIRST_VISIBLE_SCANLINE..=LAST_VISIBLE_SCANLINE => {
                     self.render_scanline()
                 }
                 V_BLANK_SCANLINE => v_blank = true,

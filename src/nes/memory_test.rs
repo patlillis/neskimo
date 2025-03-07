@@ -1,4 +1,4 @@
-use nes::memory::{BasicMemory, MappedMemory, Memory, DEFAULT_MEMORY_SIZE};
+use crate::nes::memory::{BasicMemory, MappedMemory, Memory, DEFAULT_MEMORY_SIZE};
 use std::cell::RefCell;
 use std::rc::Rc;
 

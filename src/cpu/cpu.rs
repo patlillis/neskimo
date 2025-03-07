@@ -1,10 +1,10 @@
-use cpu::instruction::{BranchTaken, Instruction};
-use nes::memory::Memory;
+use crate::cpu::instruction::{BranchTaken, Instruction};
+use crate::nes::memory::Memory;
 use std;
 use std::fs::File;
 use std::thread;
 use std::time::Duration;
-use utils::arithmetic::{concat_bytes, is_negative};
+use crate::utils::arithmetic::{concat_bytes, is_negative};
 
 // How long in nanoseconds it takes for a cpu cycle to complete.
 const CPU_CLOCK_SPEED: f32 = 558.65924;
@@ -229,7 +229,7 @@ impl Registers {
 
 pub struct Cpu {
     pub registers: Registers,
-    pub memory: Box<Memory>,
+    pub memory: Box<dyn Memory>,
     pub irq: bool,
     pub nmi: bool,
     pub reset: bool,
@@ -239,7 +239,7 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new(
-        memory: Box<Memory>,
+        memory: Box<dyn Memory>,
         program_counter: Option<u16>,
         mem_dump_counter: Option<u16>,
     ) -> Cpu {

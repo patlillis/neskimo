@@ -1,9 +1,9 @@
-use ppu::{SCREEN_HEIGHT, SCREEN_SIZE, SCREEN_WIDTH};
+use crate::ppu::{SCREEN_HEIGHT, SCREEN_SIZE, SCREEN_WIDTH};
 use sdl2::pixels::PixelFormatEnum::BGR24;
 use sdl2::render::{Canvas, TextureAccess, TextureCreator};
 use sdl2::video::{Window, WindowContext};
 use sdl2::{init, EventPump, Sdl};
-use time::PreciseTime;
+use std::time::{Instant};
 
 const FONT_HEIGHT: usize = 10;
 const FONT_GLYPH_COUNT: usize = 95;
@@ -218,7 +218,7 @@ pub struct Gfx {
     pub events: EventPump,
     show_fps: bool,
     // Used to measure FPS.
-    last_render: PreciseTime,
+    last_render: Instant,
 }
 
 impl Gfx {
@@ -250,7 +250,7 @@ impl Gfx {
                 texture_creator,
                 events,
                 show_fps,
-                last_render: PreciseTime::now(),
+                last_render: Instant::now(),
             },
             sdl,
         )
@@ -259,8 +259,8 @@ impl Gfx {
     /// Copies the overlay onto the given screen and displays it to the SDL
     /// window.
     pub fn composite(&mut self, ppu_screen: &mut [u8; SCREEN_SIZE]) {
-        let new_time = PreciseTime::now();
-        let duration_millis = self.last_render.to(new_time).num_milliseconds();
+        let new_time = Instant::now();
+        let duration_millis = new_time.duration_since(self.last_render).as_millis();
         let duration = duration_millis as f32 / 1000.0;
         let fps = if duration == 0.0 { 0.0 } else { 1.0 / duration };
         self.last_render = new_time;

@@ -1,7 +1,8 @@
 [package]
 name = "neskimo"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Pat Lillis <lillispm@gmail.com>"]
+edition = "2024"
 
 [lib]
 name = "neskimolib"
@@ -12,11 +13,10 @@ name = "neskimo"
 path = "src/main.rs"
 
 [dependencies]
-arrayvec = "0.4.7"
-clap = "2.23.3"
+arrayvec = "0.7.6"
+clap = { version = "4.5.31", features = ["cargo"] }
 enum_primitive = "0.1"
-log = "0.3"
+log = "0.4.26"
 maplit = "1.0.0"
-num = "0.1"
-sdl2 = "0.31"
-time = "*"
+num = "0.4.3"
+sdl2 = "0.37.0"

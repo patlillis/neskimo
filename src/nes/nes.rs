@@ -1,8 +1,8 @@
-use cpu::Cpu;
-use nes::memory::{BasicMemory, MappedMemory, Memory, DEFAULT_MEMORY_SIZE};
-use ppu::{Ppu, PPU_CYCLE_MULTIPLIER};
-use rom::RomFile;
-use rom::PRG_ROM_SIZE;
+use crate::cpu::Cpu;
+use crate::nes::memory::{BasicMemory, MappedMemory, Memory, DEFAULT_MEMORY_SIZE};
+use crate::ppu::{Ppu, PPU_CYCLE_MULTIPLIER};
+use crate::rom::RomFile;
+use crate::rom::PRG_ROM_SIZE;
 use std::cell::RefCell;
 use std::fs::{File, OpenOptions};
 use std::io::Write;

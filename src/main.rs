@@ -2,7 +2,7 @@ extern crate clap;
 extern crate neskimolib;
 extern crate sdl2;
 
-use clap::{App, Arg};
+use clap::{arg, command, ArgAction};
 use neskimolib::gfx::Gfx;
 use neskimolib::nes::{Nes, Options};
 use neskimolib::rom::RomFile;
@@ -12,73 +12,49 @@ use sdl2::event::Event;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
-    let matches = App::new("neskimo")
+    let matches = command!("neskimo")
         .version(VERSION)
         .author("Pat Lillis <lillispm@gmail.com>")
         .about("A bare-bones NES emulator written in Rust.")
+        .arg(arg!(<ROM> "The .nes ROM file to run"))
+        .arg(arg!(-l --logfile <LOGFILE> "Writes the CPU log to a file"))
         .arg(
-            Arg::with_name("ROM")
-                .help("The .nes ROM file to run")
-                .required(true)
-                .index(1),
-        ).arg(
-            Arg::with_name("LOGFILE")
-                .short("l")
-                .long("logfile")
-                .value_name("LOGFILE")
-                .takes_value(true)
-                .help("Writes the CPU log to a file"),
-        ).arg(
-            Arg::with_name("PROGRAM_COUNTER")
-                .short("p")
-                .long("program-counter")
-                .value_name("PROGRAM COUNTER")
-                .takes_value(true)
-                .help(concat!(
-                    "Sets the initial program counter to ",
-                    "the provided hex value"
-                )),
-        ).arg(
-            Arg::with_name("MEM_DUMP")
-                .short("d")
-                .long("mem-dump")
-                .value_name("PROGRAM COUNTER")
-                .takes_value(true)
-                .help(concat!(
-                    "When executaion reaches this point, ",
-                    "contents of memory will be written to mem_dump.bin"
-                )),
-        ).arg(
-            Arg::with_name("FPS")
-                .short("f")
-                .long("fps")
-                .help("Print frames-per-second during emulator run"),
-        ).after_help(
+            arg!(-p --"program-counter" <PROGRAM_COUNTER> "Sets the initial program counter to the provided hex value")
+        )
+        .arg(
+            arg!(-d --"mem-dump" <MEM_DUMP> "When execution reaches this point, contents of memory will be written to mem_dump.bin")
+        )
+        .arg(
+            arg!(-f --fps "Print frames-per-second during emulator run")
+                .action(ArgAction::SetTrue)
+        )
+        .after_help(
             "EXAMPLES:
     neskimo mario.nes
     neskimo -l=testing.log donkey_kong.nes
     neskimo -p=C000 castlevania.nes
-    neskimo --logfile=testing.log --program-counter=0F00 my-cool-game.nes",
-        ).get_matches();
+    neskimo --logfile=testing.log --program-counter=0F00 my-cool-game.nes"
+        )
+        .get_matches();
 
-    // .unwrap() is safe here ROM is required, so clap will crash if it's not
+    // .expect() is safe here ROM is required, so clap will crash if it's not
     // there.
-    let file_name = matches.value_of("ROM").unwrap();
-    let rom = RomFile::new(&file_name.to_string());
+    let file_name = matches
+        .get_one::<String>("ROM")
+        .expect("ROM is required");
+    let rom = RomFile::new(file_name);
 
-    // Get logfile.
-    let logfile = matches.value_of("LOGFILE").map(|s| s.to_string());
-
-    // Get program counter.
+    // Get logfile, program counter, and memory dump counter.
+    let logfile = matches.get_one::<String>("LOGFILE").cloned();
     let pc = matches
-        .value_of("PROGRAM_COUNTER")
+        .get_one::<String>("PROGRAM_COUNTER")
         .and_then(|s| u16::from_str_radix(s, 16).ok());
-
     let dump_pc = matches
-        .value_of("MEM_DUMP")
+        .get_one::<String>("MEM_DUMP")
         .and_then(|s| u16::from_str_radix(s, 16).ok());
 
-    let fps = matches.is_present("FPS");
+    // Get the FPS flag.
+    let fps = *matches.get_one::<bool>("FPS").unwrap_or(&false);
 
     let options = Options {
         logfile,
@@ -88,7 +64,7 @@ fn main() {
 
     let mut nes = match rom {
         Ok(rom) => Nes::new(&rom, options),
-        Err(e) => panic!(e),
+        Err(e) => panic!("{}", e),
     };
 
     // Test screen that fades from black to blue and has a single pixel moving
