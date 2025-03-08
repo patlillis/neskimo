@@ -70,11 +70,9 @@ fn main() {
     let (mut gfx, _) = Gfx::new(fps);
 
     'run: loop {
-        let new_frame = nes.step();
+        nes.run_frame();
 
-        if new_frame {
-            gfx.composite(&mut nes.ppu.borrow_mut().screen);
-        }
+        gfx.composite(&mut nes.ppu.borrow_mut().screen);
 
         for event in gfx.events.poll_iter() {
             match event {

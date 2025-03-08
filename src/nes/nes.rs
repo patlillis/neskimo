@@ -1,12 +1,20 @@
 use crate::cpu::Cpu;
-use crate::nes::memory::{BasicMemory, MappedMemory, Memory, DEFAULT_MEMORY_SIZE};
-use crate::ppu::{Ppu, PPU_CYCLE_MULTIPLIER};
-use crate::rom::RomFile;
+use crate::nes::memory::{
+    BasicMemory, DEFAULT_MEMORY_SIZE, MappedMemory, Memory,
+};
+use crate::ppu::Ppu;
 use crate::rom::PRG_ROM_SIZE;
+use crate::rom::RomFile;
 use std::cell::RefCell;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::rc::Rc;
+use std::time::Instant;
+
+const CPU_FREQ: u32 = 1_789_773; // 1.789773 MHz
+const PPU_CYCLES_PER_CPU_CYCLE: u32 = 3; // PPU runs 3x faster than CPU
+const FRAME_RATE: u32 = 60;
+const CPU_CYCLES_PER_FRAME: u32 = CPU_FREQ / FRAME_RATE; // ~29780 cycles
 
 #[derive(Debug, Default)]
 pub struct Options {
@@ -23,7 +31,8 @@ pub struct Options {
 pub struct Nes {
     pub cpu: Cpu,
     pub ppu: Rc<RefCell<Ppu>>,
-    cycle: u32,
+    cycles: u32,
+    last_frame_start: std::time::Instant,
     logfile: Option<File>,
 }
 
@@ -86,34 +95,61 @@ impl Nes {
                 options.mem_dump_counter,
             ),
             ppu,
-            cycle: 0,
+            cycles: 0,
+            last_frame_start: Instant::now(),
             logfile: buffer,
         }
     }
 
     // Returns true if we're on a new frame.
-    pub fn step(&mut self) -> bool {
-        let cycles_taken = self.cpu.execute() * PPU_CYCLE_MULTIPLIER;
-        let (new_frame, _v_blank) = self.ppu.borrow_mut().step(cycles_taken);
+    pub fn run_frame(&mut self) {
+        let mut cpu_cycles_this_frame = 0;
+
+        while cpu_cycles_this_frame < CPU_CYCLES_PER_FRAME {
+            let cpu_cycles = self.cpu.execute();
+
+            let ppu_cycles = cpu_cycles * PPU_CYCLES_PER_CPU_CYCLE;
+            let (_new_frame, _v_blank) = self.ppu.borrow_mut().step(ppu_cycles);
+
+            // TODO: Handle NMI on VBlank
+            // if v_blank {
+            //     self.cpu.nmi = true;
+            // }
+
+            cpu_cycles_this_frame += cpu_cycles;
+        }
+
+        self.sync_frame();
 
         if self.logfile.is_some() {
             self.log();
         }
+    }
 
-        self.cycle += cycles_taken;
-
-        new_frame
+    fn sync_frame(&mut self) {
+        const FRAME_TIME: std::time::Duration =
+            std::time::Duration::from_nanos(16_666_667); // 60Hz
+        let elapsed = self.last_frame_start.elapsed();
+        if elapsed < FRAME_TIME {
+            std::thread::sleep(FRAME_TIME - elapsed);
+        } else {
+            // We're running behind, don't sleep
+            // Log if significant drift occurs
+            println!("Frame time drift: {:?}", elapsed - FRAME_TIME);
+        }
+        self.last_frame_start = std::time::Instant::now();
     }
 
     fn log(&mut self) {
         if let Some(ref mut file) = self.logfile {
-            let current_cycle = self.cycle % 341;
+            let current_cycle = self.cycles % 341;
             writeln!(
                 file,
                 "{} CYC:{:3}",
                 self.cpu.frame_log.log(),
                 current_cycle
-            ).ok();
+            )
+            .ok();
         }
     }
 }

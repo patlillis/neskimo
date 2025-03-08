@@ -1,13 +1,8 @@
 use crate::cpu::instruction::{BranchTaken, Instruction};
 use crate::nes::memory::Memory;
+use crate::utils::arithmetic::{concat_bytes, is_negative};
 use std;
 use std::fs::File;
-use std::thread;
-use std::time::Duration;
-use crate::utils::arithmetic::{concat_bytes, is_negative};
-
-// How long in nanoseconds it takes for a cpu cycle to complete.
-const CPU_CLOCK_SPEED: f32 = 558.65924;
 
 // Log from a single frame of execution.
 #[derive(Debug, Default)]
@@ -272,15 +267,6 @@ impl Cpu {
         self.irq = false;
         self.nmi = false;
         self.reset = false;
-    }
-
-    /// Sleeps the CPU for an amount of time corresponding to the passed cycles.
-    /// Time is determined by multiplying the cycles by the clock speed.
-    pub fn sleep(&mut self, cycles: u32) {
-        thread::sleep(Duration::new(
-            0,
-            (CPU_CLOCK_SPEED * cycles as f32) as u32,
-        ));
     }
 
     pub fn decode_operand_value(&mut self, operand: u8) {
