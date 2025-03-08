@@ -2,7 +2,7 @@ extern crate clap;
 extern crate neskimolib;
 extern crate sdl2;
 
-use clap::{arg, command, ArgAction};
+use clap::{ArgAction, arg, command};
 use neskimolib::gfx::Gfx;
 use neskimolib::nes::{Nes, Options};
 use neskimolib::rom::RomFile;
@@ -39,22 +39,20 @@ fn main() {
 
     // .expect() is safe here ROM is required, so clap will crash if it's not
     // there.
-    let file_name = matches
-        .get_one::<String>("ROM")
-        .expect("ROM is required");
+    let file_name = matches.get_one::<String>("ROM").expect("ROM is required");
     let rom = RomFile::new(file_name);
 
     // Get logfile, program counter, and memory dump counter.
-    let logfile = matches.get_one::<String>("LOGFILE").cloned();
+    let logfile = matches.get_one::<String>("logfile").cloned();
     let pc = matches
-        .get_one::<String>("PROGRAM_COUNTER")
+        .get_one::<String>("program-counter")
         .and_then(|s| u16::from_str_radix(s, 16).ok());
     let dump_pc = matches
-        .get_one::<String>("MEM_DUMP")
+        .get_one::<String>("mem-dump")
         .and_then(|s| u16::from_str_radix(s, 16).ok());
 
     // Get the FPS flag.
-    let fps = *matches.get_one::<bool>("FPS").unwrap_or(&false);
+    let fps = *matches.get_one::<bool>("fps").unwrap_or(&false);
 
     let options = Options {
         logfile,
