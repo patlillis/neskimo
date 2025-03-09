@@ -1,16 +1,9 @@
-// Re-export all symbols so that consumers can write "nes::cpu::Cpu" instead of
-// "nes::cpu::cpu::Cpu".
 mod cpu;
 pub use self::cpu::*;
 
-mod definition;
-pub use self::definition::*;
-
-mod instruction;
-pub use self::instruction::*;
-
-mod opcode;
-pub use self::opcode::*;
+pub mod definition;
+pub mod instruction;
+pub mod opcode;
 
 // Tests for the CPU.
 #[cfg(test)]

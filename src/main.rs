@@ -1,11 +1,17 @@
 extern crate clap;
-extern crate neskimolib;
 extern crate sdl2;
 
+mod cpu;
+mod gfx;
+mod nes;
+mod ppu;
+mod rom;
+mod utils;
+
 use clap::{ArgAction, arg, command};
-use neskimolib::gfx::Gfx;
-use neskimolib::nes::{Nes, Options};
-use neskimolib::rom::RomFile;
+use gfx::Gfx;
+use nes::{Nes, Options};
+use rom::RomFile;
 use sdl2::event::Event;
 
 // The version of neskimo that we're building.

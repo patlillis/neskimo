@@ -1,7 +1,6 @@
 use crate::cpu::instruction::{BranchTaken, Instruction};
 use crate::nes::memory::Memory;
 use crate::utils::arithmetic::{concat_bytes, is_negative};
-use std;
 use std::fs::File;
 
 // Log from a single frame of execution.
@@ -276,7 +275,7 @@ impl Cpu {
     }
 
     pub fn decode_operand_accumulator(&mut self) {
-        self.frame_log.decoded_args.push_str("A");
+        self.frame_log.decoded_args.push('A');
     }
 
     pub fn mem_dump(&self) {
@@ -707,7 +706,7 @@ impl Cpu {
     // the shifted value. C, Z and N flags are set appropriately.
     fn rotate_l(&mut self, value: u8) -> u8 {
         let c_flag_bit = self.registers.p.0 & C_FLAG;
-        let rotated_value = value << 1 | c_flag_bit;
+        let rotated_value = (value << 1) | c_flag_bit;
 
         let carry = value & 0x80 == 0x80;
         self.registers.p.set_c(carry);
@@ -746,7 +745,7 @@ impl Cpu {
     // the shifted value. C, Z and N flags are set appropriately.
     fn rotate_r(&mut self, value: u8) -> u8 {
         let c_flag_bit = (self.registers.p.0 & C_FLAG) << 7;
-        let rotated_value = value >> 1 | c_flag_bit;
+        let rotated_value = (value >> 1) | c_flag_bit;
 
         let carry = value & 0x01 == 0x01;
         self.registers.p.set_c(carry);

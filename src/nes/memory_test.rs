@@ -1,4 +1,7 @@
-use crate::nes::memory::{BasicMemory, MappedMemory, Memory, DEFAULT_MEMORY_SIZE};
+use crate::nes::memory::{
+    BasicMemory, DEFAULT_MEMORY_SIZE, MappedMemory, Memory,
+};
+use maplit::hashmap;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -91,9 +94,9 @@ fn test_store_bytes() {
     let mut memory = BasicMemory::with_default_size();
 
     // Initial store
-    memory.store_bytes(0x0000, &vec![0xff, 0xee, 0xdd]);
-    memory.store_bytes(0xf000, &vec![0x11, 0x22, 0x33]);
-    memory.store_bytes(0x33ff, &vec![0x77, 0x88, 0x99]);
+    memory.store_bytes(0x0000, &[0xff, 0xee, 0xdd]);
+    memory.store_bytes(0xf000, &[0x11, 0x22, 0x33]);
+    memory.store_bytes(0x33ff, &[0x77, 0x88, 0x99]);
 
     assert_eq!(memory.fetch(0x0000), 0xff);
     assert_eq!(memory.fetch(0x0001), 0xee);
@@ -142,7 +145,7 @@ fn test_mirror() {
         (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
         (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
     );
-    mapped_memory.add_mirrors(&hashmap!{
+    mapped_memory.add_mirrors(&hashmap! {
         0x0c00 => 0xc000,
         0x0d00 => 0xd000,
     });

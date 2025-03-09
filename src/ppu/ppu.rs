@@ -3,9 +3,6 @@ use crate::ppu::internal_memory::InternalMemory;
 use crate::rom::MirrorType;
 use arrayvec::ArrayVec;
 
-// Each CPU cycle takes as long as 3 PPU cycles.
-pub const PPU_CYCLE_MULTIPLIER: u32 = 3;
-
 // Emulated screen width in pixels.
 pub const SCREEN_WIDTH: usize = 256;
 // Emulated screen height in pixels.
@@ -27,7 +24,7 @@ pub const PRE_RENDER_SCANLINE: u16 = 261;
 // Total number of scanlines, numbered 0 - 261.
 pub const TOTAL_SCANLINE_COUNT: u16 = 262;
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[allow(dead_code)]
 static PALETTE: [u8; 192] = [
     124,124,124,    0,0,252,        0,0,188,        68,40,188,

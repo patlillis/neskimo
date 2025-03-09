@@ -1,15 +1,15 @@
 use crate::cpu::opcode::Opcode::*;
 #[allow(unused_imports)]
 use crate::cpu::{
-    //
-    Cpu,
-    Status,
     B_FLAG,
     C_FLAG,
+    //
+    Cpu,
     D_FLAG,
-    IRQ_VECTOR,
     I_FLAG,
+    IRQ_VECTOR,
     N_FLAG,
+    Status,
     U_FLAG,
     V_FLAG,
     Z_FLAG,
@@ -236,7 +236,7 @@ fn test_asl() {
         // instructions.
         let asl_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in asl_addresses.iter() {
-            cpu.memory.store(*addr as u16, asl_result.0);
+            cpu.memory.store(*addr, asl_result.0);
         }
 
         // X register for zero_x and abs_x.
@@ -814,26 +814,26 @@ fn test_flags() {
 
     // Carry flag
     cpu.execute();
-    assert!(cpu.registers.p.c() == true, "Carry flag not set");
+    assert!(cpu.registers.p.c(), "Carry flag not set");
     cpu.execute();
-    assert!(cpu.registers.p.c() == false, "Carry flag not cleared");
+    assert!(!cpu.registers.p.c(), "Carry flag not cleared");
 
     // Interrupt flag
     cpu.execute();
-    assert!(cpu.registers.p.i() == true, "Interrupt flag not set");
+    assert!(cpu.registers.p.i(), "Interrupt flag not set");
     cpu.execute();
-    assert!(cpu.registers.p.i() == false, "Interrupt flag not cleared");
+    assert!(!cpu.registers.p.i(), "Interrupt flag not cleared");
 
     // Overflow flag
     cpu.registers.p.set_v(true);
     cpu.execute();
-    assert!(cpu.registers.p.v() == false, "Overflow flag not cleared");
+    assert!(!cpu.registers.p.v(), "Overflow flag not cleared");
 
     // Decimal flag
     cpu.execute();
-    assert!(cpu.registers.p.d() == true, "Decimal flag not set");
+    assert!(cpu.registers.p.d(), "Decimal flag not set");
     cpu.execute();
-    assert!(cpu.registers.p.d() == false, "Decimal flag not cleared");
+    assert!(!cpu.registers.p.d(), "Decimal flag not cleared");
 }
 
 #[test]
@@ -1140,7 +1140,7 @@ fn test_lsr() {
         // instructions.
         let lsr_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in lsr_addresses.iter() {
-            cpu.memory.store(*addr as u16, lsr_result.0);
+            cpu.memory.store(*addr, lsr_result.0);
         }
 
         // X register for zero_x and abs_x.
@@ -1374,7 +1374,7 @@ fn test_rol() {
         // instructions.
         let rol_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in rol_addresses.iter() {
-            cpu.memory.store(*addr as u16, rol_result.0);
+            cpu.memory.store({ *addr }, rol_result.0);
         }
 
         // X register for zero_x and abs_x.
@@ -1464,7 +1464,7 @@ fn test_ror() {
         // instructions.
         let ror_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in ror_addresses.iter() {
-            cpu.memory.store(*addr as u16, ror_result.0);
+            cpu.memory.store({ *addr }, ror_result.0);
         }
 
         // X register for zero_x and abs_x.
@@ -1754,10 +1754,8 @@ fn test_subroutine() {
         0x0000,
         &[
             // Subroutine at 0x00ff
-            JSR as u8, 0xff, 0x00,
-            // Subroutine at 0x1234
-            JSR as u8, 0x34, 0x12,
-            // Subroutine at 0xff00
+            JSR as u8, 0xff, 0x00, // Subroutine at 0x1234
+            JSR as u8, 0x34, 0x12, // Subroutine at 0xff00
             JSR as u8, 0x00, 0xff,
         ],
     );

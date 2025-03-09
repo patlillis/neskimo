@@ -30,11 +30,9 @@ pub fn page_cross(addr1: u16, addr2: u16) -> PageCross {
     let page1 = page(addr1);
     let page2 = page(addr2);
 
-    if page1 > page2 {
-        PageCross::Backwards
-    } else if page1 < page2 {
-        PageCross::Forwards
-    } else {
-        PageCross::Same
+    match page1.cmp(&page2) {
+        std::cmp::Ordering::Greater => PageCross::Backwards,
+        std::cmp::Ordering::Less => PageCross::Forwards,
+        std::cmp::Ordering::Equal => PageCross::Same,
     }
 }

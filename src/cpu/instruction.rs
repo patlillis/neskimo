@@ -1,9 +1,9 @@
-use crate::cpu::{opcode, Cpu};
-use std;
+use super::{Cpu, opcode};
 use crate::utils::arithmetic::{add_relative, concat_bytes};
-use crate::utils::paging::{page_cross, PageCross};
+use crate::utils::paging::{PageCross, page_cross};
+use std;
 
-use crate::cpu::definition::*;
+use super::definition::*;
 
 // Whether a branch was taken. This is used to figure out whether we need to
 // take an extra cycle when executing a branch instruction.
@@ -163,7 +163,7 @@ impl Instruction {
     // byte is stored at 0x33ff, then the high byte would be fetched from
     // 0x3300 instead of 0x3400.
     fn indirect_address(&self, cpu: &mut Cpu) -> u16 {
-        cpu.frame_log.decoded_args.push_str("(");
+        cpu.frame_log.decoded_args.push('(');
         let address = self.absolute_address(cpu);
         let result = cpu.memory.fetch_u16_wrap_msb(address);
         cpu.frame_log

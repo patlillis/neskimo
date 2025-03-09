@@ -1,6 +1,6 @@
-mod internal_memory;
-mod vram;
+pub mod internal_memory;
 
-// PPU mod is the main export.
 mod ppu;
-pub use self::ppu::*;
+pub use ppu::*;
+
+pub mod vram;

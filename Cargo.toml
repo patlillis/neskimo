@@ -4,10 +4,6 @@ version = "0.4.0"
 authors = ["Pat Lillis <lillispm@gmail.com>"]
 edition = "2024"
 
-[lib]
-name = "neskimolib"
-path = "src/lib.rs"
-
 [[bin]]
 name = "neskimo"
 path = "src/main.rs"
@@ -15,7 +11,7 @@ path = "src/main.rs"
 [dependencies]
 arrayvec = "0.7.6"
 clap = { version = "4.5.31", features = ["cargo"] }
-enum_primitive = "0.1"
+num_enum = "0.7"
 log = "0.4.26"
 maplit = "1.0.0"
 num = "0.4.3"

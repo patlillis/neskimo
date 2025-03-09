@@ -1,3 +1,5 @@
+#![allow(clippy::upper_case_acronyms)]
+
 use crate::utils::io::read_binary;
 use std::fmt;
 use std::io::{Error, ErrorKind, Result};

@@ -2,8 +2,8 @@ use crate::ppu::{SCREEN_HEIGHT, SCREEN_SIZE, SCREEN_WIDTH};
 use sdl2::pixels::PixelFormatEnum::BGR24;
 use sdl2::render::{Canvas, TextureAccess, TextureCreator};
 use sdl2::video::{Window, WindowContext};
-use sdl2::{init, EventPump, Sdl};
-use std::time::{Instant};
+use sdl2::{EventPump, Sdl, init};
+use std::time::Instant;
 
 const FONT_HEIGHT: usize = 10;
 const FONT_GLYPH_COUNT: usize = 95;
@@ -19,7 +19,7 @@ const STATUS_LINE_Y: usize = SCREEN_HEIGHT - STATUS_LINE_PADDING - FONT_HEIGHT;
 // (c) Yusuke Kamiyamane, http://pinvoke.com/
 //
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 const FONT_GLYPHS: [u8; FONT_GLYPH_LENGTH] = [
       0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  // ' '
       0,  64,  64,  64,  64,  64,   0,  64,   0,   0,  // '!'
@@ -118,7 +118,7 @@ const FONT_GLYPHS: [u8; FONT_GLYPH_LENGTH] = [
       0,  80, 160,   0,   0,   0,   0,   0,   0,   0,  // '~'
 ];
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 const FONT_ADVANCES: [u8; FONT_GLYPH_COUNT] =
     [3 /*   */, 3 /* ! */, 4 /* " */, 6 /* # */, 6 /* $ */,
      8 /* % */, 6 /* & */, 2 /* ' */, 4 /* ( */, 4 /* ) */,
@@ -260,7 +260,8 @@ impl Gfx {
     /// window.
     pub fn composite(&mut self, ppu_screen: &mut [u8; SCREEN_SIZE]) {
         let new_time = Instant::now();
-        let duration_millis = new_time.duration_since(self.last_render).as_millis();
+        let duration_millis =
+            new_time.duration_since(self.last_render).as_millis();
         let duration = duration_millis as f32 / 1000.0;
         let fps = if duration == 0.0 { 0.0 } else { 1.0 / duration };
         self.last_render = new_time;
@@ -283,7 +284,8 @@ impl Gfx {
                 TextureAccess::Streaming,
                 SCREEN_WIDTH as u32,
                 SCREEN_HEIGHT as u32,
-            ).unwrap();
+            )
+            .unwrap();
 
         texture.update(None, ppu_screen, SCREEN_WIDTH * 3).unwrap();
 

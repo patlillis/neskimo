@@ -1,10 +1,11 @@
+use crate::utils;
+use log::warn;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io;
 use std::io::Write;
 use std::rc::Rc;
-use crate::utils;
 
 // 2^16 unsigned bytes.
 pub const DEFAULT_MEMORY_SIZE: usize = 65536;
@@ -167,8 +168,7 @@ impl MappedMemory {
                     "Address {:#04x} is already mirrored to address {:#04x}. ",
                     "Overriding with new mirroring."
                 ),
-                from,
-                old_mirror
+                from, old_mirror
             );
         }
     }
