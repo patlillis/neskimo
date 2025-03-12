@@ -14,3 +14,4 @@ SDL2.dll
 
 # RustRover
 .idea/
+.aider*

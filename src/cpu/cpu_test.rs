@@ -1,32 +1,19 @@
-use crate::cpu::opcode::Opcode::*;
 #[allow(unused_imports)]
-use crate::cpu::{
-    B_FLAG,
-    C_FLAG,
-    //
-    Cpu,
-    D_FLAG,
-    I_FLAG,
-    IRQ_VECTOR,
-    N_FLAG,
-    Status,
-    U_FLAG,
-    V_FLAG,
-    Z_FLAG,
+use crate::cpu::{Cpu, CpuFlags, CpuVectors};
+use crate::{
+    cpu::{cpu_state::Status, opcode::Opcode::*},
+    nes::memory::Memory,
 };
-use crate::nes::memory::BasicMemory;
 
-fn new_cpu() -> Cpu {
-    Cpu::new(
-        Box::new(BasicMemory::with_default_size()),
-        Option::None,
-        Option::None,
-    )
+fn new_cpu() -> (Memory, Cpu) {
+    let mut memory = Memory::new();
+    let mut cpu = Cpu::new(&memory, Option::None, Option::None);
+    (memory, cpu)
 }
 
 #[test]
 fn test_adc() {
-    let mut cpu = new_cpu();
+    let (mut memory, mut cpu) = new_cpu();
 
     // First entry is value to be added.
     // Second entry is value in accumulator before the add.
@@ -96,7 +83,7 @@ fn test_adc() {
             cpu.registers.a = adc_result.1;
             cpu.registers.p.0 = 0x00;
             cpu.registers.p.set_c(adc_result.2);
-            cpu.execute();
+            cpu.execute(&mut memory);
 
             assert!(
                 cpu.registers.a == adc_result.3,
@@ -114,7 +101,8 @@ fn test_adc() {
 
 #[test]
 fn test_and() {
-    let mut cpu = new_cpu();
+    let mut memory = Memory::new();
+    let mut cpu = Cpu::new(&memory, Option::None, Option::None);
 
     // First entry is value to be anded.
     // Second entry is value in accumulator before the and.
@@ -182,7 +170,7 @@ fn test_and() {
         for _ in 0..and_addresses.len() + 1 {
             cpu.registers.a = and_result.1;
             cpu.registers.p.0 = 0x00;
-            cpu.execute();
+            cpu.execute(&mut memory);
 
             assert!(
                 cpu.registers.a == and_result.2,
@@ -205,9 +193,9 @@ fn test_asl() {
     // First entry in tuple is value that should be shifted.
     // Second entry is expected processor status flags after that shift.
     let asl_results = [
-        (0x80, I_FLAG | C_FLAG | Z_FLAG),
-        (0xc0, I_FLAG | C_FLAG | N_FLAG),
-        (0x4f, I_FLAG | N_FLAG),
+        (0x80, CpuFlags::I | CpuFlags::C | CpuFlags::Z),
+        (0xc0, CpuFlags::I | CpuFlags::C | CpuFlags::N),
+        (0x4f, CpuFlags::I | CpuFlags::N),
     ];
 
     for asl_result in asl_results.iter() {
@@ -309,18 +297,18 @@ fn test_bit() {
 
     let expected_status_flags = [
         // Expected flags.
-        I_FLAG | Z_FLAG,
-        I_FLAG,
-        I_FLAG | Z_FLAG,
-        I_FLAG,
-        I_FLAG | V_FLAG,
-        I_FLAG,
-        I_FLAG | V_FLAG,
-        I_FLAG,
-        I_FLAG | N_FLAG,
-        I_FLAG,
-        I_FLAG | N_FLAG,
-        I_FLAG,
+        CpuFlags::I | CpuFlags::Z,
+        CpuFlags::I,
+        CpuFlags::I | CpuFlags::Z,
+        CpuFlags::I,
+        CpuFlags::I | CpuFlags::V,
+        CpuFlags::I,
+        CpuFlags::I | CpuFlags::V,
+        CpuFlags::I,
+        CpuFlags::I | CpuFlags::N,
+        CpuFlags::I,
+        CpuFlags::I | CpuFlags::N,
+        CpuFlags::I,
     ];
 
     cpu.memory.store_bytes(
@@ -384,14 +372,14 @@ fn test_branch() {
     // Second entry is processor flags for taking the branch.
     // Third entry is processor flags for not taking the branch.
     let branches = [
-        (BPL, I_FLAG, I_FLAG | N_FLAG),
-        (BMI, I_FLAG | N_FLAG, I_FLAG),
-        (BVC, I_FLAG, I_FLAG | V_FLAG),
-        (BVS, I_FLAG | V_FLAG, I_FLAG),
-        (BCC, I_FLAG, I_FLAG | C_FLAG),
-        (BCS, I_FLAG | C_FLAG, I_FLAG),
-        (BNE, I_FLAG, I_FLAG | Z_FLAG),
-        (BEQ, I_FLAG | Z_FLAG, I_FLAG),
+        (BPL, CpuFlags::I, CpuFlags::I | CpuFlags::N),
+        (BMI, CpuFlags::I | CpuFlags::N, CpuFlags::I),
+        (BVC, CpuFlags::I, CpuFlags::I | CpuFlags::V),
+        (BVS, CpuFlags::I | CpuFlags::V, CpuFlags::I),
+        (BCC, CpuFlags::I, CpuFlags::I | CpuFlags::C),
+        (BCS, CpuFlags::I | CpuFlags::C, CpuFlags::I),
+        (BNE, CpuFlags::I, CpuFlags::I | CpuFlags::Z),
+        (BEQ, CpuFlags::I | CpuFlags::Z, CpuFlags::I),
     ];
 
     for branch in branches.iter() {
@@ -432,7 +420,7 @@ fn test_brk_rti() {
     let mut cpu = new_cpu();
 
     // Interrupt handling routine is at 0xabcd.
-    cpu.memory.store_u16(IRQ_VECTOR, 0xabcd);
+    cpu.memory.store_u16(CpuVectors::IRQ, 0xabcd);
 
     // Initial program.
     cpu.memory.store(0x0000, BRK as u8);
@@ -464,7 +452,7 @@ fn test_brk_rti() {
         cpu.registers.pc
     );
     assert!(
-        cpu.registers.p.0 == (V_FLAG | C_FLAG | I_FLAG),
+        cpu.registers.p.0 == (CpuFlags::V | CpuFlags::C | CpuFlags::I),
         "RTI did not restore flags, instead found {:08b}",
         cpu.registers.p.0
     );
@@ -478,9 +466,9 @@ fn test_cmp() {
     // First entry in tuple is value that should be used for comparison.
     // Second entry is expected processor status flags after that comparison.
     let cmp_results = [
-        (5, I_FLAG | C_FLAG),
-        (15, I_FLAG | C_FLAG | Z_FLAG),
-        (100, I_FLAG | N_FLAG),
+        (5, CpuFlags::I | CpuFlags::C),
+        (15, CpuFlags::I | CpuFlags::C | CpuFlags::Z),
+        (100, CpuFlags::I | CpuFlags::N),
     ];
 
     for cmp_result in cmp_results.iter() {
@@ -560,9 +548,9 @@ fn test_cpx() {
     // First entry in tuple is value that should be used for comparison.
     // Second entry is expected processor status flags after that comparison.
     let cpx_results = [
-        (5, I_FLAG | C_FLAG),
-        (15, I_FLAG | Z_FLAG | C_FLAG),
-        (100, I_FLAG | N_FLAG),
+        (5, CpuFlags::I | CpuFlags::C),
+        (15, CpuFlags::I | CpuFlags::Z | CpuFlags::C),
+        (100, CpuFlags::I | CpuFlags::N),
     ];
 
     for cpx_result in cpx_results.iter() {
@@ -615,9 +603,9 @@ fn test_cpy() {
     // First entry in tuple is value that should be used for comparison.
     // Second entry is expected processor status flags after that comparison.
     let cpy_results = [
-        (5, I_FLAG | C_FLAG),
-        (15, I_FLAG | Z_FLAG | C_FLAG),
-        (100, I_FLAG | N_FLAG),
+        (5, CpuFlags::I | CpuFlags::C),
+        (15, CpuFlags::I | CpuFlags::Z | CpuFlags::C),
+        (100, CpuFlags::I | CpuFlags::N),
     ];
 
     for cpy_result in cpy_results.iter() {
@@ -719,11 +707,11 @@ fn test_eor() {
     // Third entry is expected result.
     // Fourth value is expected status register value.
     let eor_results = [
-        (0x00, 0x00, 0x00, I_FLAG | Z_FLAG),
-        (0xff, 0x80, 0x7f, I_FLAG),
-        (0xc0, 0xfd, 0x3d, I_FLAG),
-        (0xa5, 0x5a, 0xff, I_FLAG | N_FLAG),
-        (0x33, 0x33, 0x00, I_FLAG | Z_FLAG),
+        (0x00, 0x00, 0x00, CpuFlags::I | CpuFlags::Z),
+        (0xff, 0x80, 0x7f, CpuFlags::I),
+        (0xc0, 0xfd, 0x3d, CpuFlags::I),
+        (0xa5, 0x5a, 0xff, CpuFlags::I | CpuFlags::N),
+        (0x33, 0x33, 0x00, CpuFlags::I | CpuFlags::Z),
     ];
 
     for eor_result in eor_results.iter() {
@@ -1109,9 +1097,9 @@ fn test_lsr() {
     // First entry in tuple is value that should be shifted.
     // Second entry is expected processor status flags after that shift.
     let lsr_results = [
-        (0x01, I_FLAG | Z_FLAG | C_FLAG),
-        (0x03, I_FLAG | C_FLAG),
-        (0xf2, I_FLAG),
+        (0x01, CpuFlags::I | CpuFlags::Z | CpuFlags::C),
+        (0x03, CpuFlags::I | CpuFlags::C),
+        (0xf2, CpuFlags::I),
     ];
 
     for lsr_result in lsr_results.iter() {
@@ -1195,10 +1183,10 @@ fn test_ora() {
     // Third entry is expected result.
     // Fourth value is expected status register value.
     let ora_results = [
-        (0x00, 0x00, 0x00, I_FLAG | Z_FLAG),
-        (0xff, 0x80, 0xff, I_FLAG | N_FLAG),
-        (0xc0, 0xfd, 0xfd, I_FLAG | N_FLAG),
-        (0xa5, 0x5a, 0xff, I_FLAG | N_FLAG),
+        (0x00, 0x00, 0x00, CpuFlags::I | CpuFlags::Z),
+        (0xff, 0x80, 0xff, CpuFlags::I | CpuFlags::N),
+        (0xc0, 0xfd, 0xfd, CpuFlags::I | CpuFlags::N),
+        (0xa5, 0x5a, 0xff, CpuFlags::I | CpuFlags::N),
     ];
 
     for ora_result in ora_results.iter() {
@@ -1342,9 +1330,9 @@ fn test_rol() {
     // Third enty is expected value after rotating.
     // Fourth entry is expected processor status flags after rotating.
     let rol_results = [
-        (0x80, true, 0x01, I_FLAG | C_FLAG),
-        (0x00, false, 0x00, I_FLAG | Z_FLAG),
-        (0xff, false, 0xfe, I_FLAG | N_FLAG | C_FLAG),
+        (0x80, true, 0x01, CpuFlags::I | CpuFlags::C),
+        (0x00, false, 0x00, CpuFlags::I | CpuFlags::Z),
+        (0xff, false, 0xfe, CpuFlags::I | CpuFlags::N | CpuFlags::C),
     ];
 
     for rol_result in rol_results.iter() {
@@ -1374,7 +1362,7 @@ fn test_rol() {
         // instructions.
         let rol_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in rol_addresses.iter() {
-            cpu.memory.store({ *addr }, rol_result.0);
+            cpu.memory.store(*addr, rol_result.0);
         }
 
         // X register for zero_x and abs_x.
@@ -1432,9 +1420,9 @@ fn test_ror() {
     // Third enty is expected value after rotating.
     // Fourth entry is expected processor status flags after rotating.
     let ror_results = [
-        (0x01, true, 0x80, I_FLAG | N_FLAG | C_FLAG),
-        (0x00, false, 0x00, I_FLAG | Z_FLAG),
-        (0xff, false, 0x7f, I_FLAG | C_FLAG),
+        (0x01, true, 0x80, CpuFlags::I | CpuFlags::N | CpuFlags::C),
+        (0x00, false, 0x00, CpuFlags::I | CpuFlags::Z),
+        (0xff, false, 0x7f, CpuFlags::I | CpuFlags::C),
     ];
 
     for ror_result in ror_results.iter() {
@@ -1464,7 +1452,7 @@ fn test_ror() {
         // instructions.
         let ror_addresses = [0x002a, 0x003a, 0x123a, 0x234a];
         for addr in ror_addresses.iter() {
-            cpu.memory.store({ *addr }, ror_result.0);
+            cpu.memory.store(*addr, ror_result.0);
         }
 
         // X register for zero_x and abs_x.
@@ -1523,9 +1511,15 @@ fn test_sbc() {
     // Fourth entry is expected outcome.
     // Fifth value is expected status register value.
     let sbc_results = [
-        (0x01, 0x00, true, 0xff, I_FLAG | N_FLAG),
-        (0x01, 0x80, true, 0x7f, I_FLAG | V_FLAG | C_FLAG),
-        (0xff, 0x7f, false, 0x7f, I_FLAG),
+        (0x01, 0x00, true, 0xff, CpuFlags::I | CpuFlags::N),
+        (
+            0x01,
+            0x80,
+            true,
+            0x7f,
+            CpuFlags::I | CpuFlags::V | CpuFlags::C,
+        ),
+        (0xff, 0x7f, false, 0x7f, CpuFlags::I),
     ];
 
     for sbc_result in sbc_results.iter() {
@@ -1776,7 +1770,7 @@ fn test_subroutine() {
             cpu.execute();
         }
         assert!(
-            cpu.registers.p.0 == I_FLAG | C_FLAG,
+            cpu.registers.p.0 == CpuFlags::I | CpuFlags::C,
             "Carry flag not set after subroutine."
         );
     }

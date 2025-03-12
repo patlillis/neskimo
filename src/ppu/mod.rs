@@ -1,8 +1,7 @@
-pub mod internal_memory;
+pub mod memory;
 pub mod vram;
 
 use crate::nes::memory::Memory;
-use crate::ppu::internal_memory::InternalMemory;
 use crate::rom::MirrorType;
 use arrayvec::ArrayVec;
 

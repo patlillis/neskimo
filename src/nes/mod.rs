@@ -4,10 +4,9 @@ pub mod memory;
 #[cfg(test)]
 mod memory_test;
 
+use memory::Memory;
+
 use crate::cpu::Cpu;
-use crate::nes::memory::{
-    BasicMemory, DEFAULT_MEMORY_SIZE, MappedMemory, Memory,
-};
 use crate::ppu::Ppu;
 use crate::rom::PRG_ROM_SIZE;
 use crate::rom::RomFile;
@@ -36,7 +35,9 @@ pub struct Options {
 
 pub struct Nes {
     pub cpu: Cpu,
+    cpu_memory: Memory,
     pub ppu: Rc<RefCell<Ppu>>,
+    ppu_memory: Memory,
     cycles: u32,
     last_frame_start: std::time::Instant,
     logfile: Option<File>,
@@ -54,12 +55,12 @@ impl Nes {
                 .ok()
         });
 
-        let mut memory = MappedMemory::new();
-        memory.add_mapping(
-            Rc::new(RefCell::new(BasicMemory::with_default_size())),
-            (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
-            (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
-        );
+        let mut memory = Memory::new();
+        // memory.add_mapping(
+        // Rc::new(RefCell::new(BasicMemory::with_default_size())),
+        // (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
+        // (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),
+        // );
         let ppu = Rc::new(RefCell::new(Ppu::new(rom.mirror_type)));
         memory.add_mapping(
             ppu.clone(),
@@ -96,11 +97,13 @@ impl Nes {
 
         Nes {
             cpu: Cpu::new(
-                Box::new(memory),
+                &memory,
                 options.program_counter,
                 options.mem_dump_counter,
             ),
+            cpu_memory: memory,
             ppu,
+            ppu_memory: Memory::new(),
             cycles: 0,
             last_frame_start: Instant::now(),
             logfile: buffer,
@@ -112,7 +115,7 @@ impl Nes {
         let mut cpu_cycles_this_frame = 0;
 
         while cpu_cycles_this_frame < CPU_CYCLES_PER_FRAME {
-            let cpu_cycles = self.cpu.execute();
+            let cpu_cycles = self.cpu.execute(&self.cpu_memory);
 
             let ppu_cycles = cpu_cycles * PPU_CYCLES_PER_CPU_CYCLE;
             let (_new_frame, _v_blank) = self.ppu.borrow_mut().step(ppu_cycles);

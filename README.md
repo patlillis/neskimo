@@ -109,7 +109,7 @@ Inspiration drawn from these fantastic projects:
 - [nes-rs](https://github.com/Reshurum/nes-rs) by Walter Kuppens (written in
   Rust)
 - [sprocketnes](https://github.com/pcwalton/sprocketnes) by Patrick Walton
-  (written in Rust)
+  (written in Rust)`
 - [pinky](https://github.com/koute/pinky) by Koute (written in Rust)
 - [oxidenes](https://github.com/iamsix/oxidenes) by iamsix (written in Rust)
 
