@@ -1,12 +1,9 @@
-#[allow(unused_imports)]
+use super::memory::CpuMemory;
 use crate::cpu::{Cpu, CpuFlags, CpuVectors};
-use crate::{
-    cpu::{cpu_state::Status, opcode::Opcode::*},
-    nes::memory::Memory,
-};
+use crate::cpu::{cpu_state::Status, opcode::Opcode::*};
 
-fn new_cpu() -> (Memory, Cpu) {
-    let mut memory = Memory::new();
+fn new_cpu() -> (CpuMemory, Cpu) {
+    let mut memory = CpuMemory::new();
     let mut cpu = Cpu::new(&memory, Option::None, Option::None);
     (memory, cpu)
 }
@@ -101,7 +98,7 @@ fn test_adc() {
 
 #[test]
 fn test_and() {
-    let mut memory = Memory::new();
+    let mut memory = CpuMemory::new();
     let mut cpu = Cpu::new(&memory, Option::None, Option::None);
 
     // First entry is value to be anded.

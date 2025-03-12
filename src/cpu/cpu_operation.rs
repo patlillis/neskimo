@@ -1,17 +1,17 @@
-use crate::nes::memory::Memory;
 use crate::utils::arithmetic::concat_bytes;
 
 use super::Cpu;
 use super::cpu_state::{CpuFlags, CpuVectors};
 use super::instruction::BranchTaken;
+use super::memory::CpuMemory;
 
 pub struct CpuOperation<'a> {
     cpu: &'a mut Cpu,
-    memory: &'a mut Memory,
+    memory: &'a mut CpuMemory,
 }
 
 impl<'a> CpuOperation<'a> {
-    pub fn new(cpu: &mut Cpu, memory: &mut Memory) -> CpuOperation<'a> {
+    pub fn new(cpu: &mut Cpu, memory: &mut CpuMemory) -> CpuOperation<'a> {
         CpuOperation { cpu, memory }
     }
 

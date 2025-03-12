@@ -1,12 +1,9 @@
-pub mod memory;
-
 // Tests for various NES stuff.
 #[cfg(test)]
 mod memory_test;
 
-use memory::Memory;
-
 use crate::cpu::Cpu;
+use crate::cpu::memory::CpuMemory;
 use crate::ppu::Ppu;
 use crate::rom::PRG_ROM_SIZE;
 use crate::rom::RomFile;
@@ -35,7 +32,7 @@ pub struct Options {
 
 pub struct Nes {
     pub cpu: Cpu,
-    cpu_memory: Memory,
+    cpu_memory: CpuMemory,
     pub ppu: Rc<RefCell<Ppu>>,
     ppu_memory: Memory,
     cycles: u32,
@@ -55,7 +52,7 @@ impl Nes {
                 .ok()
         });
 
-        let mut memory = Memory::new();
+        let mut memory = CpuMemory::new();
         // memory.add_mapping(
         // Rc::new(RefCell::new(BasicMemory::with_default_size())),
         // (0x00..DEFAULT_MEMORY_SIZE).map(|x| x as u16),

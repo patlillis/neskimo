@@ -1,6 +1,62 @@
+/*
+Random thoughts
+
+```rust
+struct Memory {
+    cpu: CPU,
+    ppu: PPU,
+    apu: APU,
+    prg_rom: Vec<u8>,
+    chr_rom: Vec<u8>,
+}
+
+impl Memory {
+    fn read(&self, address: u16) -> u8 {
+        match address {
+            0x0000..=0x1FFF => self.cpu.ram[(address & 0x07FF) as usize], // RAM
+            0x2000..=0x3FFF => self.ppu_read(address & 0x0007), // PPU Registers
+            0x4000..=0x4017 => self.apu_read(address), // APU Registers
+            0x8000..=0xFFFF => self.prg_rom[(address - 0x8000) as usize], // PRG ROM
+            _ => 0, // Undefined address
+        }
+    }
+
+    fn write(&mut self, address: u16, value: u8) {
+        match address {
+            0x0000..=0x1FFF => self.cpu.ram[(address & 0x07FF) as usize] = value, // RAM
+            0x2000..=0x3FFF => self.ppu_write(address & 0x0007, value), // PPU Registers
+            0x4000..=0x4017 => self.apu_write(address, value), // APU Registers
+            0x8000..=0xFFFF => { /* Handle PRG ROM, typically not writable */ },
+            _ => {}
+        }
+    }
+
+    fn ppu_read(&self, address: u16) -> u8 {
+        // Implement PPU register reading logic
+    }
+
+    fn ppu_write(&mut self, address: u16, value: u8) {
+        // Implement PPU register writing logic
+    }
+
+    fn apu_read(&self, address: u16) -> u8 {
+        // Implement APU register reading logic
+    }
+
+    fn apu_write(&mut self, address: u16, value: u8) {
+        // Implement APU register writing logic
+    }
+}
+*/
+
+
 // use crate::nes::memory::Memory;
 // use crate::ppu::vram::Vram;
 // use crate::rom::MirrorType;
+
+pub struct PpuMemory {
+    vram: 
+}
 
 // pub struct InternalMemory {
 //     vram: Vram,

@@ -1,8 +1,8 @@
 use cpu_state::{CpuFlags, CpuVectors};
+use memory::CpuMemory;
 
 use self::cpu_state::CpuState;
 use self::instruction::Instruction;
-use crate::nes::memory::Memory;
 use crate::utils::arithmetic::is_negative;
 
 pub mod cpu_operation;
@@ -57,7 +57,7 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new(
-        memory: &Memory,
+        memory: &CpuMemory,
         program_counter: Option<u16>,
         mem_dump_counter: Option<u16>,
     ) -> Cpu {
@@ -105,7 +105,7 @@ impl Cpu {
     // }
 
     // Executes the instruction at PC and returns the number of cycles taken.
-    pub fn execute(&mut self, memory: &Memory) -> u32 {
+    pub fn execute(&mut self, memory: &CpuMemory) -> u32 {
         self.frame_log = Log {
             pc: self.registers.pc,
             registers: self.registers.log(),
@@ -136,7 +136,7 @@ impl Cpu {
 
     // Checks the interrupt lines, and sets the pc to the
     // value in the correct interrupt vector if neccesary.
-    fn check_interrupts(&mut self, memory: &Memory) {
+    fn check_interrupts(&mut self, memory: &CpuMemory) {
         if self.irq && !self.registers.p.i() {
             self.handle_irq(memory);
             self.irq = false;
@@ -150,7 +150,7 @@ impl Cpu {
     }
 
     // Handle interrupt on the IRQ line.
-    fn handle_irq(&mut self, memory: &Memory) {
+    fn handle_irq(&mut self, memory: &CpuMemory) {
         // Push return address and status onto stack. CpuFlags::U is 1, CpuFlags::B is 0.
         let pc = self.registers.pc;
         let status = (self.registers.p.0 | CpuFlags::U) & !CpuFlags::B;
@@ -166,7 +166,7 @@ impl Cpu {
     }
 
     // Handle interrupt on the NMI line.
-    fn handle_nmi(&mut self, memory: &Memory) {
+    fn handle_nmi(&mut self, memory: &CpuMemory) {
         // Push return address and status onto stack. CpuFlags::U is 1, CpuFlags::B is 0.
         let pc = self.registers.pc;
         let status = (self.registers.p.0 | CpuFlags::U) & !CpuFlags::B;
@@ -186,7 +186,7 @@ impl Cpu {
     // the read/write bus set to "read", so no memory was modified. However,
     // the stack pointer was decremented 3 times, which is why the stack pointer
     // on startup is set to 0xfd (0x00 - 3).
-    fn handle_reset(&mut self, memory: &Memory) {
+    fn handle_reset(&mut self, memory: &CpuMemory) {
         let vector = memory.fetch_u16(CpuVectors::RESET);
         self.registers.pc = vector;
     }
